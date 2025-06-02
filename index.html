@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İş Takip Sorgulama Paneli</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    tr.green { background-color: #c6efce; }
+    tr.red { background-color: #ffc7ce; }
+    input, select { margin-right: 10px; padding: 5px; }
+  </style>
+</head>
+<body>
+  <h2>İş Takip Sorgulama Paneli</h2>
+  <label>İş Başlığı: <input type="text" id="titleFilter"></label>
+  <label>Sorumlu: <input type="text" id="responsibleFilter"></label>
+  <label>Durum: 
+    <select id="statusFilter">
+      <option value="">Tümü</option>
+      <option value="Bekliyor">Bekliyor</option>
+      <option value="Devam Ediyor">Devam Ediyor</option>
+      <option value="Tamamlandı">Tamamlandı</option>
+    </select>
+  </label>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>İş Başlığı</th>
+        <th>İş Tanımı</th>
+        <th>Sorumlu</th>
+        <th>Başlangıç</th>
+        <th>Bitiş</th>
+        <th>Durum</th>
+        <th>Öncelik</th>
+        <th>Not</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const SHEET_ID = "1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY";
+    const SHEET_GID = "0"; // ilk sayfa (Form Yanıtları 1)
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
+
+    async function fetchData() {
+      const res = await fetch(SHEET_URL);
+      const text = await res.text();
+      const json = JSON.parse(text.substring(47).slice(0, -2));
+      return json.table.rows.map(row => row.c.map(cell => cell ? cell.v : ""));
+    }
+
+    function renderTable(data) {
+      const tbody = document.querySelector("#dataTable tbody");
+      tbody.innerHTML = "";
+
+      const titleFilter = document.getElementById("titleFilter").value.toLowerCase();
+      const responsibleFilter = document.getElementById("responsibleFilter").value.toLowerCase();
+      const statusFilter = document.getElementById("statusFilter").value;
+
+      data.forEach(row => {
+        const [timestamp, title, desc, responsible, start, end, status, priority, note] = row;
+        if (
+          (!titleFilter || title.toLowerCase().includes(titleFilter)) &&
+          (!responsibleFilter || responsible.toLowerCase().includes(responsibleFilter)) &&
+          (!statusFilter || status === statusFilter)
+        ) {
+          const tr = document.createElement("tr");
+          tr.className = status === "Tamamlandı" ? "green" : (new Date(end) < new Date() ? "red" : "");
+
+          [title, desc, responsible, start, end, status, priority, note].forEach(cell => {
+            const td = document.createElement("td");
+            td.textContent = cell;
+            tr.appendChild(td);
+          });
+
+          tbody.appendChild(tr);
+        }
+      });
+    }
+
+    async function loadAndRender() {
+      const data = await fetchData();
+      renderTable(data);
+    }
+
+    document.querySelectorAll("input, select").forEach(el => {
+      el.addEventListener("input", loadAndRender);
+    });
+
+    loadAndRender();
+  </script>
+</body>
+</html>
