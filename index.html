@@ -4,97 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>İş Takip Sistemi</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root {
-      --primary: #2c3e50;
-      --accent: #18bc9c;
-      --light: #ecf0f1;
-      --dark: #34495e;
-      --warning: #f39c12;
-      --danger: #e74c3c;
-      --success: #2ecc71;
-    }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      background-color: var(--light);
-      color: var(--dark);
-    }
-    header {
-      background-color: var(--primary);
-      color: white;
-      padding: 20px;
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: bold;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      background-color: white;
-      padding: 10px 0;
-      flex-wrap: wrap;
-    }
-    nav button {
-      background: none;
-      border: none;
-      padding: 10px 20px;
-      margin: 5px;
-      font-size: 1rem;
-      cursor: pointer;
-      border-bottom: 3px solid transparent;
-      color: var(--primary);
-    }
-    nav button.active {
-      border-color: var(--accent);
-      font-weight: bold;
-      color: var(--accent);
-    }
-    section {
-      display: none;
-      padding: 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
-    section.active {
-      display: block;
-    }
-    .card {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      padding: 15px;
-      margin-bottom: 15px;
-      border-left: 6px solid var(--primary);
-    }
-    .card.green { border-left-color: var(--success); background-color: #e9f9ee; }
-    .card.red { border-left-color: var(--danger); background-color: #fdecea; }
-    .chart-container {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-    label {
-      margin-right: 10px;
-      color: var(--primary);
-    }
-    input, select {
-      padding: 6px;
-      margin: 5px 10px 10px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
+    body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 0; }
+    header { background: #2c3e50; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    nav { background: #34495e; padding: 10px; text-align: center; }
+    .tablink { margin: 0 5px; padding: 10px 20px; border: none; background: #bdc3c7; color: #2c3e50; cursor: pointer; font-weight: bold; border-radius: 5px; }
+    .tablink.active { background: #1abc9c; color: white; }
+    section { display: none; padding: 1rem; max-width: 1000px; margin: auto; }
+    section.active { display: block; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; font-size: 14px; }
+    th { background: #ecf0f1; }
+    input, select { margin: 5px; padding: 5px; font-size: 14px; }
+    iframe { width: 100%; height: 900px; border: none; }
   </style>
 </head>
 <body>
   <header>📋 İş ve Süreç Takip Sistemi</header>
   <nav>
     <button class="tablink active" onclick="switchTab('ana')">🏠 Ana Sayfa</button>
-    <button class="tablink" onclick="switchTab('grafikler')">📊 Grafikler</button>
     <button class="tablink" onclick="switchTab('formekrani')">📝 Veri Girişi</button>
+    <button class="tablink" onclick="switchTab('ozet')">📊 Sorumlu Özeti</button>
   </nav>
 
   <section id="ana" class="active">
@@ -110,16 +40,15 @@
     <div id="cardContainer"></div>
   </section>
 
-  <section id="grafikler">
-    <h3>📊 Grafiksel Analiz</h3>
-    <div class="chart-container"><canvas id="durumChart"></canvas></div>
-    <div class="chart-container"><canvas id="sorumluChart"></canvas></div>
-    <div class="chart-container"><canvas id="ayChart"></canvas></div>
-  </section>
-
   <section id="formekrani">
     <h3>📝 Yeni Kayıt Ekle</h3>
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="1000" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
+    <p><a href="https://forms.gle/euosi3bVqsMn5zBp9" target="_blank" style="color:#2980b9; font-weight:bold;">➡ Google Formu Buradan Aç</a></p>
+    <p>Form yeni sekmede açılacaktır. Veriler tabloya otomatik yansıyacaktır.</p>
+  </section>
+
+  <section id="ozet">
+    <h3>📊 Sorumlu Özeti</h3>
+    <div id="summaryContainer"></div>
   </section>
 
   <script>
@@ -132,14 +61,14 @@
       document.querySelectorAll('.tablink').forEach(b => b.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
       event.target.classList.add('active');
-      if (tabId === 'grafikler') loadAndRender();
       if (tabId === 'ana') refreshData();
+      if (tabId === 'ozet') renderSummary();
     }
 
     function formatDate(dateStr) {
       const d = new Date(dateStr);
       if (isNaN(d)) return dateStr;
-      return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+      return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
 
     async function fetchData() {
@@ -155,55 +84,36 @@
       const titleFilter = document.getElementById("titleFilter").value.toLowerCase();
       const responsibleFilter = document.getElementById("responsibleFilter").value.toLowerCase();
       const statusFilter = document.getElementById("statusFilter").value;
-      const today = new Date();
-      let reminderFlag = false;
-      let reminderText = "";
+
+      let table = `<table><tr>
+        <th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
+        <th>Başlangıç</th><th>Bitiş</th><th>Durum</th>
+        <th>Öncelik</th><th>Not</th>
+      </tr>`;
 
       data.forEach(row => {
-        const [timestamp, title, desc, responsible, start, end, status, priority, note, reminderDays] = row;
+        const [ , title, desc, responsible, start, end, status, priority, note] = row;
         if (!title) return;
         if (
           (!titleFilter || title.toLowerCase().includes(titleFilter)) &&
           (!responsibleFilter || responsible.toLowerCase().includes(responsibleFilter)) &&
           (!statusFilter || status === statusFilter)
         ) {
-          const div = document.createElement("div");
-          div.className = "card";
-
-          const startDate = new Date(start);
-          const endDate = new Date(end);
-          const reminder = parseInt(reminderDays);
-          let isReminder = false;
-          if (!isNaN(reminder)) {
-            const remindDate = new Date(startDate);
-            remindDate.setDate(remindDate.getDate() + reminder);
-            isReminder = remindDate.toDateString() === today.toDateString();
-            if (isReminder) {
-              reminderFlag = true;
-              reminderText += `\n🔔 ${title} - ${responsible} (${formatDate(start)} → ${formatDate(end)})`;
-            }
-          }
-
-          if (status === "Tamamlandı") div.classList.add("green");
-          else if (endDate < today) div.classList.add("red");
-
-          div.innerHTML = `
-            <p><strong>İş Başlığı:</strong> ${title}</p>
-            <p><strong>İş Tanımı:</strong> ${desc}</p>
-            <p><strong>Sorumlu:</strong> ${responsible}</p>
-            <p><strong>Başlangıç:</strong> ${formatDate(start)}</p>
-            <p><strong>Bitiş:</strong> ${formatDate(end)}</p>
-            <p><strong>Durum:</strong> ${status}</p>
-            <p><strong>Öncelik:</strong> ${priority}</p>
-            <p><strong>Not:</strong> ${note}</p>
-          `;
-          container.appendChild(div);
+          table += `<tr>
+            <td>${title}</td>
+            <td>${desc}</td>
+            <td>${responsible}</td>
+            <td>${formatDate(start)}</td>
+            <td>${formatDate(end)}</td>
+            <td>${status}</td>
+            <td>${priority}</td>
+            <td>${note}</td>
+          </tr>`;
         }
       });
 
-      if (reminderFlag) {
-        alert("BUGÜN HATIRLATILACAK İŞLER:" + reminderText);
-      }
+      table += `</table>`;
+      container.innerHTML = table;
     }
 
     async function refreshData() {
@@ -211,35 +121,24 @@
       renderTable(data);
     }
 
-    async function loadAndRender() {
+    async function renderSummary() {
       const data = await fetchData();
-      renderTable(data);
-
-      const durumlar = {};
-      const sorumlular = {};
-      const aylik = {};
+      const summary = {};
       data.forEach(row => {
-        const durum = row[6] || "Belirsiz";
-        const sorumlu = row[3] || "Bilinmeyen";
-        const tarih = new Date(row[4]);
-        const ayKey = `${tarih.getFullYear()}-${(tarih.getMonth()+1).toString().padStart(2, '0')}`;
-
-        durumlar[durum] = (durumlar[durum] || 0) + 1;
-        sorumlular[sorumlu] = (sorumlular[sorumlu] || 0) + 1;
-        if (!isNaN(tarih)) aylik[ayKey] = (aylik[ayKey] || 0) + 1;
+        const responsible = row[3] || "Bilinmeyen";
+        const status = row[6] || "Bilinmiyor";
+        if (!summary[responsible]) summary[responsible] = { total: 0, Tamamlandı: 0, Bekliyor: 0 };
+        summary[responsible].total++;
+        if (status === "Tamamlandı") summary[responsible].Tamamlandı++;
+        else summary[responsible].Bekliyor++;
       });
 
-      new Chart(document.getElementById("durumChart"), {
-        type: 'pie', data: { labels: Object.keys(durumlar), datasets: [{ data: Object.values(durumlar) }] }
-      });
-
-      new Chart(document.getElementById("sorumluChart"), {
-        type: 'bar', data: { labels: Object.keys(sorumlular), datasets: [{ data: Object.values(sorumlular) }] }
-      });
-
-      new Chart(document.getElementById("ayChart"), {
-        type: 'line', data: { labels: Object.keys(aylik), datasets: [{ data: Object.values(aylik) }] }
-      });
+      let html = "<table><tr><th>Sorumlu</th><th>Toplam</th><th>Tamamlandı</th><th>Bekliyor</th></tr>";
+      for (let key in summary) {
+        html += `<tr><td>${key}</td><td>${summary[key].total}</td><td>${summary[key].Tamamlandı}</td><td>${summary[key].Bekliyor}</td></tr>`;
+      }
+      html += "</table>";
+      document.getElementById("summaryContainer").innerHTML = html;
     }
 
     refreshData();
