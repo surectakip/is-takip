@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>İş Takip Sorgulama Paneli</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: Arial; padding: 20px; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -12,6 +13,8 @@
     tr.green { background-color: #c6efce; }
     tr.red { background-color: #ffc7ce; }
     input, select { margin-right: 10px; padding: 5px; }
+    .charts { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 40px; }
+    .chart-container { width: 45%; }
   </style>
 </head>
 <body>
@@ -43,9 +46,24 @@
     <tbody></tbody>
   </table>
 
+  <div class="charts">
+    <div class="chart-container">
+      <canvas id="chartSorumlu"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="chartDurum"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="chartOncelik"></canvas>
+    </div>
+    <div class="chart-container">
+      <canvas id="chartAylik"></canvas>
+    </div>
+  </div>
+
   <script>
     const SHEET_ID = "1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY";
-    const SHEET_GID = "124100404"; // Doğru sekme ID'si
+    const SHEET_GID = "124100404";
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
 
     async function fetchData() {
@@ -84,9 +102,56 @@
       });
     }
 
+    function groupCount(data, index) {
+      const counts = {};
+      data.forEach(row => {
+        const key = row[index] || "Bilinmeyen";
+        counts[key] = (counts[key] || 0) + 1;
+      });
+      return counts;
+    }
+
+    function groupMonthly(data, index) {
+      const counts = {};
+      data.forEach(row => {
+        const date = new Date(row[index]);
+        if (!isNaN(date)) {
+          const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          counts[key] = (counts[key] || 0) + 1;
+        }
+      });
+      return counts;
+    }
+
+    function renderChart(id, labels, values, type = 'bar') {
+      new Chart(document.getElementById(id), {
+        type: type,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: id,
+            data: values,
+            backgroundColor: [
+              '#3366cc','#dc3912','#ff9900','#109618','#990099','#0099c6','#dd4477','#66aa00'
+            ]
+          }]
+        }
+      });
+    }
+
     async function loadAndRender() {
       const data = await fetchData();
       renderTable(data);
+
+      const sorumlular = groupCount(data, 3);
+      const durumlar = groupCount(data, 6);
+      const oncelikler = groupCount(data, 7);
+      const aylik = groupMonthly(data, 4);
+
+      renderChart("chartSorumlu", Object.keys(sorumlular), Object.values(sorumlular));
+      renderChart("chartDurum", Object.keys(durumlar), Object.values(durumlar), 'pie');
+      renderChart("chartOncelik", Object.keys(oncelikler), Object.values(oncelikler), 'pie');
+      renderChart("chartAylik", Object.keys(aylik), Object.values(aylik));
     }
 
     document.querySelectorAll("input, select").forEach(el => {
