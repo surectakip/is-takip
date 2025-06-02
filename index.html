@@ -65,9 +65,27 @@
       if (tabId === 'ozet') renderSummary();
     }
 
-    function formatDate(dateStr) {
-      const d = new Date(dateStr);
-      if (isNaN(d)) return dateStr;
+    function formatDate(input) {
+      if (typeof input === 'string') {
+        if (input.startsWith("Date(")) {
+          try {
+            const match = input.match(/Date\((\d+),(\d+),(\d+)\)/);
+            if (match) {
+              const year = parseInt(match[1]);
+              const month = parseInt(match[2]);
+              const day = parseInt(match[3]);
+              return `${String(day).padStart(2, '0')}/${String(month + 1).padStart(2, '0')}/${year}`;
+            }
+          } catch (e) { return input; }
+        }
+        return input;
+      }
+      if (typeof input === 'object' && input && 'v' in input) {
+        const d = new Date(input.v);
+        return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      }
+      const d = new Date(input);
+      if (isNaN(d)) return input;
       return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
     }
 
