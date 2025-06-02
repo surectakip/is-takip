@@ -1,6 +1,6 @@
 <script>
 const SHEET_ID = "1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY";
-const SHEET_GID = "124100404";
+const SHEET_GID = "0";
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
 
 function switchTab(tabId) {
@@ -14,6 +14,7 @@ function switchTab(tabId) {
 
 function formatDate(dateStr) {
   const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
   return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}.${d.getFullYear()}`;
 }
 
@@ -36,6 +37,7 @@ function renderTable(data) {
 
   data.forEach(row => {
     const [timestamp, title, desc, responsible, start, end, status, priority, note, reminderDays] = row;
+    if (!title) return; // boş satırı atla
     if (
       (!titleFilter || title.toLowerCase().includes(titleFilter)) &&
       (!responsibleFilter || responsible.toLowerCase().includes(responsibleFilter)) &&
@@ -88,7 +90,7 @@ async function refreshData() {
 async function loadAndRender() {
   const data = await fetchData();
   renderTable(data);
-  // chart rendering burada yapılacak
+  // grafik işlemleri buraya eklenecek
 }
 
 refreshData();
