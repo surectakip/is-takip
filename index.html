@@ -34,6 +34,7 @@
   <nav>
     <button class="tablink active" onclick="switchTab('sorgu')">🔍 Sorgu Ekranı</button>
     <button class="tablink" onclick="switchTab('grafikler')">📊 Grafikler</button>
+    <button class="tablink" onclick="switchTab('formekrani')">📝 Veri Girişi</button>
   </nav>
 
   <section id="sorgu" class="active">
@@ -61,6 +62,11 @@
     </div>
   </section>
 
+  <section id="formekrani">
+    <h3>📝 Yeni İş Kaydı</h3>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSepUADX2qaYktcB3vsECD5INGvl1VKi3KuGYIXQAk5WTe-2fw/viewform?embedded=true" width="100%" height="1000" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
+  </section>
+
   <script>
     function switchTab(tabId) {
       document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
@@ -73,8 +79,6 @@
     const SHEET_ID = "1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY";
     const SHEET_GID = "124100404";
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
-
-    let chartSorumlu, chartDurum, chartOncelik, chartAylik;
 
     async function fetchData() {
       const res = await fetch(SHEET_URL);
