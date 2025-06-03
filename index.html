@@ -6,18 +6,68 @@
   <title>İş Takip Paneli</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; }
-    header { background: #004080; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
-    nav { display: flex; background: #cce0ff; justify-content: center; gap: 1rem; padding: 0.5rem; }
-    nav button { padding: 0.5rem 1rem; border: none; background: #0066cc; color: white; border-radius: 5px; cursor: pointer; }
-    nav button.active { background: #004080; }
-    section { display: none; padding: 1rem; }
-    section.active { display: block; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-    tr.complete { background-color: #e6ffe6; }
-    tr.late { background-color: #ffe6e6; }
-    #charts canvas { max-width: 100%; margin: 1rem auto; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+    header {
+      background: #004080;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    nav {
+      display: flex;
+      background: #cce0ff;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.5rem;
+    }
+    nav button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background: #0066cc;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    nav button.active {
+      background: #004080;
+    }
+    section {
+      display: none;
+      padding: 1rem;
+    }
+    section.active {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    tr.complete {
+      background-color: #e6ffe6;
+    }
+    tr.late {
+      background-color: #ffe6e6;
+    }
+    #charts canvas {
+      max-width: 100%;
+      margin: 1rem auto;
+    }
+    .filter-section select, .filter-section button {
+      margin-right: 1rem;
+      padding: 0.5rem;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
@@ -27,7 +77,7 @@
     <button onclick="showTab('summary')">Sorumlu Özeti</button>
     <button onclick="showTab('charts')">Grafikler</button>
     <button onclick="showTab('form')">Veri Girişi</button>
-    <button onclick="showTab('formsummary')">Form Yanıt Özeti</button>
+    <button onclick="showTab('filtered')">Filtreli Liste</button>
   </nav>
 
   <section id="home" class="active">
@@ -37,7 +87,7 @@
           <th>İş Başlığı</th>
           <th>İş Tanımı</th>
           <th>Sorumlu</th>
-          <th>Başlangıç Tarihi</th>
+          <th>Başlangıç T</th>
           <th>Bitiş Tarihi</th>
           <th>Durum</th>
           <th>Öncelik</th>
@@ -66,28 +116,28 @@
     <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
   </section>
 
-  <section id="formsummary">
-    <h2>Form Yanıt Özeti</h2>
-    <table>
+  <section id="filtered">
+    <div class="filter-section">
+      <select id="filterTitle"><option value="">İş Başlığı</option></select>
+      <select id="filterResponsible"><option value="">Sorumlu</option></select>
+      <select id="filterStatus"><option value="">Durum</option></select>
+      <button onclick="applyFilters()">Filtrele</button>
+      <button onclick="clearFilters()">Temizle</button>
+    </div>
+    <table id="filteredTable">
       <thead>
-        <tr><th>Kategori</th><th>Değer</th><th>Adet</th></tr>
+        <tr>
+          <th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th><th>Başlangıç T</th><th>Bitiş Tarihi</th><th>Durum</th><th>Öncelik</th><th>Not</th>
+        </tr>
       </thead>
-      <tbody>
-        <tr><td>İş Başlığı</td><td>yol çizgi çalışması</td><td>1</td></tr>
-        <tr><td>İş Başlığı</td><td>Dalaman Yol Bakım İhalesi</td><td>1</td></tr>
-        <tr><td>Sorumlu</td><td>Ulaşım DB</td><td>2</td></tr>
-        <tr><td>Durum</td><td>Tamamlandı</td><td>2</td></tr>
-        <tr><td>Durum</td><td>Devam Ediyor</td><td>4</td></tr>
-        <tr><td>Öncelik</td><td>Yüksek</td><td>3</td></tr>
-        <tr><td>Öncelik</td><td>Düşük</td><td>2</td></tr>
-      </tbody>
+      <tbody></tbody>
     </table>
-    <p style="font-size:0.9em;color:gray;">* Bu tablo örnek verilerle statik hazırlanmıştır. Gerçek form yanıtlarından oluşturulması için Google Forms API veya Sheets bağlantısı gerekir.</p>
   </section>
 
   <script>
     const sheetUrl = "https://opensheet.elk.sh/1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY/Form_Responses1";
     const today = new Date();
+    let allData = [];
 
     function showTab(tabId) {
       document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
@@ -99,14 +149,20 @@
     fetch(sheetUrl)
       .then(res => res.json())
       .then(data => {
+        allData = data;
         const tbody = document.querySelector("#taskTable tbody");
         const summaryBody = document.querySelector("#summaryTable tbody");
+        const filteredBody = document.querySelector("#filteredTable tbody");
         const responsibleCounts = {};
         const statusCounts = {};
         const priorityCounts = {};
 
+        const titleSet = new Set();
+        const responsibleSet = new Set();
+        const statusSet = new Set();
+
         data.forEach(row => {
-          const start = row["Başlangıç Tarihi"] || "";
+          const start = row["Başlangıç T"] || "";
           const end = row["Bitiş Tarihi"] || "";
           const isLate = new Date(end) < today && row["Durum"] !== "Tamamlandı";
 
@@ -114,7 +170,7 @@
           if (row["Durum"] === "Tamamlandı") tr.classList.add("complete");
           else if (isLate) tr.classList.add("late");
 
-          tr.innerHTML = `
+          const html = `
             <td>${row["İş Başlığı"] || ""}</td>
             <td>${row["İş Tanımı"] || ""}</td>
             <td>${row["Sorumlu"] || ""}</td>
@@ -122,9 +178,13 @@
             <td>${end}</td>
             <td>${row["Durum"] || ""}</td>
             <td>${row["Öncelik"] || ""}</td>
-            <td>${row["Not"] || ""}</td>
-          `;
+            <td>${row["Not"] || ""}</td>`;
+
+          tr.innerHTML = html;
           tbody.appendChild(tr);
+
+          const summaryTr = tr.cloneNode(true);
+          filteredBody.appendChild(summaryTr);
 
           const sorumlu = row["Sorumlu"] || "Bilinmiyor";
           const durum = row["Durum"];
@@ -135,6 +195,10 @@
 
           statusCounts[durum] = (statusCounts[durum] || 0) + 1;
           priorityCounts[row["Öncelik"]] = (priorityCounts[row["Öncelik"]] || 0) + 1;
+
+          titleSet.add(row["İş Başlığı"]);
+          responsibleSet.add(sorumlu);
+          statusSet.add(durum);
         });
 
         for (const sorumlu in responsibleCounts) {
@@ -160,7 +224,44 @@
           },
           options: { indexAxis: 'y' }
         });
+
+        titleSet.forEach(val => document.getElementById("filterTitle").innerHTML += `<option>${val}</option>`);
+        responsibleSet.forEach(val => document.getElementById("filterResponsible").innerHTML += `<option>${val}</option>`);
+        statusSet.forEach(val => document.getElementById("filterStatus").innerHTML += `<option>${val}</option>`);
       });
+
+    function applyFilters() {
+      const title = document.getElementById("filterTitle").value;
+      const resp = document.getElementById("filterResponsible").value;
+      const status = document.getElementById("filterStatus").value;
+      const body = document.querySelector("#filteredTable tbody");
+      body.innerHTML = "";
+
+      allData.filter(row =>
+        (!title || row["İş Başlığı"] === title) &&
+        (!resp || row["Sorumlu"] === resp) &&
+        (!status || row["Durum"] === status)
+      ).forEach(row => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${row["İş Başlığı"] || ""}</td>
+          <td>${row["İş Tanımı"] || ""}</td>
+          <td>${row["Sorumlu"] || ""}</td>
+          <td>${row["Başlangıç T"] || ""}</td>
+          <td>${row["Bitiş Tarihi"] || ""}</td>
+          <td>${row["Durum"] || ""}</td>
+          <td>${row["Öncelik"] || ""}</td>
+          <td>${row["Not"] || ""}</td>`;
+        body.appendChild(tr);
+      });
+    }
+
+    function clearFilters() {
+      document.getElementById("filterTitle").value = "";
+      document.getElementById("filterResponsible").value = "";
+      document.getElementById("filterStatus").value = "";
+      applyFilters();
+    }
   </script>
 </body>
 </html>
