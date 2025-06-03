@@ -3,158 +3,244 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>İş ve Süreç Takip Sistemi</title>
+  <title>İş ve Süreç Takip</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    body { background: #f7f9fc; font-family: sans-serif; }
-    header { background: #0d6efd; color: white; padding: 1rem; text-align: center; margin-bottom: 1rem; }
-    nav { margin-bottom: 1rem; text-align: center; }
-    nav button { margin: 0.3rem; }
-    section { display: none; padding: 1rem; }
-    section.active { display: block; }
-    table { width: 100%; margin-top: 1rem; }
-    th, td { white-space: nowrap; }
-    .tamamlandi { background-color: #d4edda !important; }
-    .gecikti { background-color: #f8d7da !important; }
-    canvas { max-width: 600px; margin: 2rem auto; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #2a4365;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      background-color: #edf2f7;
+      border-bottom: 1px solid #ccc;
+    }
+    nav button {
+      background: none;
+      border: none;
+      padding: 1rem;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    nav button.active {
+      border-bottom: 2px solid #2b6cb0;
+      font-weight: bold;
+    }
+    .tab {
+      display: none;
+      padding: 1rem;
+    }
+    .tab.active {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 0.5rem;
+      text-align: left;
+    }
+    tr.completed {
+      background-color: #c6f6d5;
+    }
+    tr.overdue {
+      background-color: #fed7d7;
+    }
+    .chart-container {
+      max-width: 600px;
+      margin: auto;
+    }
+    .alert-box {
+      background-color: #fefcbf;
+      border-left: 5px solid #d69e2e;
+      padding: 1rem;
+      margin: 1rem 0;
+      display: none;
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>İş ve Süreç Takip Sistemi</h1>
   </header>
-
   <nav>
-    <button onclick="showSection('tablo')" class="btn btn-outline-primary">Ana Sayfa</button>
-    <button onclick="showSection('ozet')" class="btn btn-outline-success">Sorumlu Özeti</button>
-    <button onclick="showSection('grafikler')" class="btn btn-outline-warning">Grafikler</button>
-    <button onclick="showSection('form')" class="btn btn-outline-info">Veri Girişi</button>
+    <button class="tablink active" onclick="openTab(event, 'listTab')">📋 İş Listesi</button>
+    <button class="tablink" onclick="openTab(event, 'summaryTab')">👤 Sorumlu Özeti</button>
+    <button class="tablink" onclick="openTab(event, 'chartTab')">📊 Grafikler</button>
+    <button class="tablink" onclick="openTab(event, 'formTab')">📝 Veri Giriş</button>
   </nav>
 
-  <section id="tablo" class="active">
-    <div class="input-group mb-3">
-      <input type="text" id="filterTitle" class="form-control" placeholder="İş Başlığına göre filtrele">
-      <input type="text" id="filterResponsible" class="form-control" placeholder="Sorumluya göre filtrele">
-      <button class="btn btn-primary" onclick="applyFilters()">Filtrele</button>
-      <button class="btn btn-secondary" onclick="clearFilters()">Temizle</button>
+  <div class="alert-box" id="reminderBox"></div>
+
+  <div id="listTab" class="tab active">
+    <input type="text" id="searchInput" placeholder="İş başlığı ara..." oninput="applyFilters()" />
+    <select id="statusFilter" onchange="applyFilters()">
+      <option value="">Durum (hepsi)</option>
+      <option value="Tamamlandı">Tamamlandı</option>
+      <option value="Bekliyor">Bekliyor</option>
+    </select>
+    <button onclick="resetFilters()">Temizle</button>
+    <table>
+      <thead>
+        <tr>
+          <th>İş Başlığı</th>
+          <th>İş Tanımı</th>
+          <th>Sorumlu</th>
+          <th>Başlangıç Tarihi</th>
+          <th>Bitiş Tarihi</th>
+          <th>Durum</th>
+          <th>Öncelik</th>
+          <th>Not</th>
+        </tr>
+      </thead>
+      <tbody id="taskTable"></tbody>
+    </table>
+  </div>
+
+  <div id="summaryTab" class="tab">
+    <div id="summaryContent"></div>
+  </div>
+
+  <div id="chartTab" class="tab">
+    <div class="chart-container">
+      <canvas id="statusChart"></canvas>
     </div>
-    <div class="table-responsive">
-      <table class="table table-bordered table-sm">
-        <thead>
-          <tr>
-            <th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th><th>Başlangıç Tarihi</th><th>Bitiş Tarihi</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
-          </tr>
-        </thead>
-        <tbody id="dataBody"></tbody>
-      </table>
+    <div class="chart-container">
+      <canvas id="priorityChart"></canvas>
     </div>
-  </section>
+  </div>
 
-  <section id="ozet">
-    <div id="summary"></div>
-  </section>
-
-  <section id="grafikler">
-    <canvas id="chartDurum"></canvas>
-    <canvas id="chartOncelik"></canvas>
-    <canvas id="chartAy"></canvas>
-  </section>
-
-  <section id="form">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
-  </section>
+  <div id="formTab" class="tab">
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0">Yükleniyor…</iframe>
+  </div>
 
   <script>
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY/gviz/tq?tqx=out:json";
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQYXYjhYHdZCwqROFjR2Gu4vCtbZgO19ltAx9G7CvDyzJb_WjLMF8TFpkmy3bhHPj02ezA1SY0HHz3l/pub?output=csv';
     let globalData = [];
 
-    function showSection(id) {
-      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
+    function openTab(evt, tabName) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tablink').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabName).classList.add('active');
+      evt.currentTarget.classList.add('active');
     }
 
-    function fetchData() {
-      fetch(sheetUrl)
-        .then(res => res.text())
-        .then(rep => JSON.parse(rep.substr(47).slice(0, -2)))
-        .then(json => {
-          const rows = json.table.rows.map(r => r.c.map(c => c ? c.v : ""));
-          globalData = rows.map(row => ({
-            title: row[1], desc: row[2], responsible: row[3],
-            start: row[4], end: row[5], status: row[6],
-            priority: row[7], note: row[8], reminder: row[9]
-          }));
-          renderTable(globalData);
-          renderSummary();
-          renderCharts();
-        });
+    function applyFilters() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+      const filtered = globalData.filter(row => {
+        return row.title.toLowerCase().includes(search) && (status === '' || row.status === status);
+      });
+      renderTable(filtered);
+    }
+
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('statusFilter').value = '';
+      renderTable(globalData);
     }
 
     function renderTable(data) {
-      const tbody = document.getElementById('dataBody');
-      tbody.innerHTML = "";
-      data.forEach(item => {
+      const tbody = document.getElementById('taskTable');
+      tbody.innerHTML = '';
+      const now = new Date();
+      data.forEach(row => {
         const tr = document.createElement('tr');
-        if (item.status.toLowerCase().includes('tamam')) tr.classList.add('tamamlandi');
-        if (new Date(item.end) < new Date() && !item.status.toLowerCase().includes('tamam')) tr.classList.add('gecikti');
-        tr.innerHTML = `<td>${item.title}</td><td>${item.desc}</td><td>${item.responsible}</td><td>${item.start}</td><td>${item.end}</td><td>${item.status}</td><td>${item.priority}</td><td>${item.note}</td><td>${item.reminder}</td>`;
+        if (row.status.toLowerCase() === 'tamamlandı') tr.classList.add('completed');
+        else if (new Date(row.end) < now) tr.classList.add('overdue');
+        tr.innerHTML = `
+          <td>${row.title}</td>
+          <td>${row.desc}</td>
+          <td>${row.responsible}</td>
+          <td>${row.start}</td>
+          <td>${row.end}</td>
+          <td>${row.status}</td>
+          <td>${row.priority}</td>
+          <td>${row.note}</td>
+        `;
         tbody.appendChild(tr);
       });
     }
 
-    function applyFilters() {
-      const title = document.getElementById("filterTitle").value.toLowerCase();
-      const responsible = document.getElementById("filterResponsible").value.toLowerCase();
-      const filtered = globalData.filter(d =>
-        d.title.toLowerCase().includes(title) &&
-        d.responsible.toLowerCase().includes(responsible)
-      );
-      renderTable(filtered);
-    }
-
-    function clearFilters() {
-      document.getElementById("filterTitle").value = "";
-      document.getElementById("filterResponsible").value = "";
-      renderTable(globalData);
-    }
-
-    function renderSummary() {
+    function renderSummary(data) {
       const summary = {};
-      globalData.forEach(d => {
-        summary[d.responsible] = (summary[d.responsible] || 0) + 1;
+      data.forEach(row => {
+        if (!summary[row.responsible]) summary[row.responsible] = { total: 0, done: 0 };
+        summary[row.responsible].total++;
+        if (row.status.toLowerCase() === 'tamamlandı') summary[row.responsible].done++;
       });
-      let html = '<ul class="list-group">';
-      for (let k in summary) {
-        html += `<li class="list-group-item d-flex justify-content-between align-items-center">${k}<span class="badge bg-primary rounded-pill">${summary[k]}</span></li>`;
-      }
-      html += '</ul>';
-      document.getElementById('summary').innerHTML = html;
+      const content = Object.entries(summary).map(([person, stats]) => `
+        <p><strong>${person}</strong>: ${stats.done} / ${stats.total} tamamlandı</p>
+      `).join('');
+      document.getElementById('summaryContent').innerHTML = content;
     }
 
-    function renderCharts() {
-      const durumCounts = {}, oncelikCounts = {}, ayCounts = {};
-      globalData.forEach(d => {
-        durumCounts[d.status] = (durumCounts[d.status] || 0) + 1;
-        oncelikCounts[d.priority] = (oncelikCounts[d.priority] || 0) + 1;
-        const ay = new Date(d.start).toLocaleString('tr-TR', { month: 'short' });
-        ayCounts[ay] = (ayCounts[ay] || 0) + 1;
+    function renderCharts(data) {
+      const statusCount = {}, priorityCount = {};
+      const months = {};
+      data.forEach(row => {
+        statusCount[row.status] = (statusCount[row.status] || 0) + 1;
+        priorityCount[row.priority] = (priorityCount[row.priority] || 0) + 1;
+        const m = new Date(row.start).toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+        months[m] = (months[m] || 0) + 1;
       });
-      new Chart(document.getElementById("chartDurum"), {
+      new Chart(document.getElementById('statusChart'), {
         type: 'pie',
-        data: { labels: Object.keys(durumCounts), datasets: [{ data: Object.values(durumCounts) }] }
+        data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount) }] }
       });
-      new Chart(document.getElementById("chartOncelik"), {
+      new Chart(document.getElementById('priorityChart'), {
         type: 'bar',
-        data: { labels: Object.keys(oncelikCounts), datasets: [{ data: Object.values(oncelikCounts) }] }
-      });
-      new Chart(document.getElementById("chartAy"), {
-        type: 'line',
-        data: { labels: Object.keys(ayCounts), datasets: [{ data: Object.values(ayCounts), fill: false, borderColor: 'blue' }] }
+        data: { labels: Object.keys(priorityCount), datasets: [{ label: 'Öncelik', data: Object.values(priorityCount) }] }
       });
     }
 
-    fetchData();
+    function showReminders(data) {
+      const now = new Date();
+      const messages = data.filter(row => {
+        const end = new Date(row.end);
+        return (end.toDateString() === now.toDateString() || end < now) && row.status.toLowerCase() !== 'tamamlandı';
+      }).map(row => `⏰ <strong>${row.title}</strong> işi ${row.end} tarihi itibarıyla tamamlanmalıydı!`);
+      const box = document.getElementById('reminderBox');
+      if (messages.length > 0) {
+        box.innerHTML = messages.join('<br>');
+        box.style.display = 'block';
+      } else {
+        box.style.display = 'none';
+      }
+    }
+
+    fetch(sheetUrl)
+      .then(res => res.text())
+      .then(text => {
+        const rows = text.trim().split('\n').slice(1).map(row => row.split(','));
+        globalData = rows.map(cols => ({
+          timestamp: cols[0],
+          title: cols[1],
+          desc: cols[2],
+          responsible: cols[3],
+          start: cols[4],
+          end: cols[5],
+          status: cols[6],
+          priority: cols[7],
+          note: cols[8],
+          reminder: cols[9]
+        }));
+        renderTable(globalData);
+        renderSummary(globalData);
+        renderCharts(globalData);
+        showReminders(globalData);
+      });
   </script>
 </body>
 </html>
