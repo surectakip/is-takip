@@ -1,246 +1,190 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>İş ve Süreç Takip</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İş Takip Sistemi</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    header {
-      background-color: #2a4365;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      background-color: #edf2f7;
-      border-bottom: 1px solid #ccc;
-    }
-    nav button {
-      background: none;
-      border: none;
-      padding: 1rem;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-    nav button.active {
-      border-bottom: 2px solid #2b6cb0;
-      font-weight: bold;
-    }
-    .tab {
-      display: none;
-      padding: 1rem;
-    }
-    .tab.active {
-      display: block;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    tr.completed {
-      background-color: #c6f6d5;
-    }
-    tr.overdue {
-      background-color: #fed7d7;
-    }
-    .chart-container {
-      max-width: 600px;
-      margin: auto;
-    }
-    .alert-box {
-      background-color: #fefcbf;
-      border-left: 5px solid #d69e2e;
-      padding: 1rem;
-      margin: 1rem 0;
-      display: none;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8f8f8; }
+    header { background-color: #023047; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    nav { display: flex; background: #219ebc; justify-content: center; gap: 1rem; padding: 1rem; }
+    nav button { padding: 0.5rem 1rem; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; background: #ffb703; color: black; }
+    section { display: none; padding: 1rem; }
+    section.active { display: block; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: white; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    tr.completed { background: #c8f7c5; }
+    tr.overdue { background: #f8d7da; }
+    canvas { max-width: 100%; height: auto; margin: 2rem auto; display: block; }
+    .filter-controls { margin-bottom: 1rem; }
+    .warning { background: #ffcccb; padding: 1rem; border-radius: 5px; margin-bottom: 1rem; }
+    iframe { border: none; width: 100%; height: 600px; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>İş ve Süreç Takip Sistemi</h1>
-  </header>
+  <header>İş ve Süreç Takip Sistemi</header>
   <nav>
-    <button class="tablink active" onclick="openTab(event, 'listTab')">📋 İş Listesi</button>
-    <button class="tablink" onclick="openTab(event, 'summaryTab')">👤 Sorumlu Özeti</button>
-    <button class="tablink" onclick="openTab(event, 'chartTab')">📊 Grafikler</button>
-    <button class="tablink" onclick="openTab(event, 'formTab')">📝 Veri Giriş</button>
+    <button onclick="showSection('list')">Ana Sayfa</button>
+    <button onclick="showSection('summary')">Sorumlu Özeti</button>
+    <button onclick="showSection('charts')">Grafikler</button>
+    <button onclick="showSection('form')">Veri Girişi</button>
   </nav>
 
-  <div class="alert-box" id="reminderBox"></div>
-
-  <div id="listTab" class="tab active">
-    <input type="text" id="searchInput" placeholder="İş başlığı ara..." oninput="applyFilters()" />
-    <select id="statusFilter" onchange="applyFilters()">
-      <option value="">Durum (hepsi)</option>
-      <option value="Tamamlandı">Tamamlandı</option>
-      <option value="Bekliyor">Bekliyor</option>
-    </select>
-    <button onclick="resetFilters()">Temizle</button>
-    <table>
+  <section id="list" class="active">
+    <div class="filter-controls">
+      <input type="text" id="searchInput" placeholder="İş başlığına göre ara">
+      <button onclick="filterTable()">Filtrele</button>
+      <button onclick="resetFilter()">Temizle</button>
+    </div>
+    <div id="warningContainer"></div>
+    <table id="dataTable">
       <thead>
         <tr>
-          <th>İş Başlığı</th>
-          <th>İş Tanımı</th>
-          <th>Sorumlu</th>
-          <th>Başlangıç Tarihi</th>
-          <th>Bitiş Tarihi</th>
-          <th>Durum</th>
-          <th>Öncelik</th>
-          <th>Not</th>
+          <th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
+          <th>Başlangıç Tarihi</th><th>Bitiş Tarihi</th><th>Durum</th><th>Öncelik</th><th>Not</th>
         </tr>
       </thead>
-      <tbody id="taskTable"></tbody>
+      <tbody></tbody>
     </table>
-  </div>
+  </section>
 
-  <div id="summaryTab" class="tab">
-    <div id="summaryContent"></div>
-  </div>
+  <section id="summary">
+    <ul id="summaryList"></ul>
+  </section>
 
-  <div id="chartTab" class="tab">
-    <div class="chart-container">
-      <canvas id="statusChart"></canvas>
-    </div>
-    <div class="chart-container">
-      <canvas id="priorityChart"></canvas>
-    </div>
-  </div>
+  <section id="charts">
+    <canvas id="statusChart"></canvas>
+    <canvas id="priorityChart"></canvas>
+    <canvas id="monthlyChart"></canvas>
+  </section>
 
-  <div id="formTab" class="tab">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0">Yükleniyor…</iframe>
-  </div>
+  <section id="form">
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true">Yükleniyor…</iframe>
+  </section>
 
   <script>
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQYXYjhYHdZCwqROFjR2Gu4vCtbZgO19ltAx9G7CvDyzJb_WjLMF8TFpkmy3bhHPj02ezA1SY0HHz3l/pub?output=csv';
+    const sheetURL = 'https://opensheet.elk.sh/1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY/Form_Responses1';
     let globalData = [];
 
-    function openTab(evt, tabName) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.tablink').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(tabName).classList.add('active');
-      evt.currentTarget.classList.add('active');
+    function showSection(id) {
+      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
     }
 
-    function applyFilters() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const status = document.getElementById('statusFilter').value;
-      const filtered = globalData.filter(row => {
-        return row.title.toLowerCase().includes(search) && (status === '' || row.status === status);
-      });
-      renderTable(filtered);
+    function fetchData() {
+      fetch(sheetURL)
+        .then(res => res.json())
+        .then(data => {
+          globalData = data;
+          renderTable();
+          renderSummary();
+          renderCharts();
+          checkReminders();
+        });
     }
 
-    function resetFilters() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('statusFilter').value = '';
-      renderTable(globalData);
-    }
-
-    function renderTable(data) {
-      const tbody = document.getElementById('taskTable');
+    function renderTable() {
+      const tbody = document.querySelector('#dataTable tbody');
       tbody.innerHTML = '';
-      const now = new Date();
-      data.forEach(row => {
+      globalData.forEach(row => {
         const tr = document.createElement('tr');
-        if (row.status.toLowerCase() === 'tamamlandı') tr.classList.add('completed');
-        else if (new Date(row.end) < now) tr.classList.add('overdue');
+        const today = new Date();
+        const bitis = new Date(row['Bitiş Tarihi']);
+        if (row['Durum'] === 'Tamamlandı') tr.classList.add('completed');
+        else if (bitis < today) tr.classList.add('overdue');
         tr.innerHTML = `
-          <td>${row.title}</td>
-          <td>${row.desc}</td>
-          <td>${row.responsible}</td>
-          <td>${row.start}</td>
-          <td>${row.end}</td>
-          <td>${row.status}</td>
-          <td>${row.priority}</td>
-          <td>${row.note}</td>
+          <td>${row['İş Başlığı']}</td>
+          <td>${row['İş Tanımı']}</td>
+          <td>${row['Sorumlu']}</td>
+          <td>${row['Başlangıç Tarihi']}</td>
+          <td>${row['Bitiş Tarihi']}</td>
+          <td>${row['Durum']}</td>
+          <td>${row['Öncelik']}</td>
+          <td>${row['Not']}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    function renderSummary(data) {
-      const summary = {};
-      data.forEach(row => {
-        if (!summary[row.responsible]) summary[row.responsible] = { total: 0, done: 0 };
-        summary[row.responsible].total++;
-        if (row.status.toLowerCase() === 'tamamlandı') summary[row.responsible].done++;
-      });
-      const content = Object.entries(summary).map(([person, stats]) => `
-        <p><strong>${person}</strong>: ${stats.done} / ${stats.total} tamamlandı</p>
-      `).join('');
-      document.getElementById('summaryContent').innerHTML = content;
-    }
-
-    function renderCharts(data) {
-      const statusCount = {}, priorityCount = {};
-      const months = {};
-      data.forEach(row => {
-        statusCount[row.status] = (statusCount[row.status] || 0) + 1;
-        priorityCount[row.priority] = (priorityCount[row.priority] || 0) + 1;
-        const m = new Date(row.start).toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
-        months[m] = (months[m] || 0) + 1;
-      });
-      new Chart(document.getElementById('statusChart'), {
-        type: 'pie',
-        data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount) }] }
-      });
-      new Chart(document.getElementById('priorityChart'), {
-        type: 'bar',
-        data: { labels: Object.keys(priorityCount), datasets: [{ label: 'Öncelik', data: Object.values(priorityCount) }] }
+    function filterTable() {
+      const keyword = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = globalData.filter(row => row['İş Başlığı'].toLowerCase().includes(keyword));
+      const tbody = document.querySelector('#dataTable tbody');
+      tbody.innerHTML = '';
+      filtered.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row['İş Başlığı']}</td>
+          <td>${row['İş Tanımı']}</td>
+          <td>${row['Sorumlu']}</td>
+          <td>${row['Başlangıç Tarihi']}</td>
+          <td>${row['Bitiş Tarihi']}</td>
+          <td>${row['Durum']}</td>
+          <td>${row['Öncelik']}</td>
+          <td>${row['Not']}</td>
+        `;
+        tbody.appendChild(tr);
       });
     }
 
-    function showReminders(data) {
-      const now = new Date();
-      const messages = data.filter(row => {
-        const end = new Date(row.end);
-        return (end.toDateString() === now.toDateString() || end < now) && row.status.toLowerCase() !== 'tamamlandı';
-      }).map(row => `⏰ <strong>${row.title}</strong> işi ${row.end} tarihi itibarıyla tamamlanmalıydı!`);
-      const box = document.getElementById('reminderBox');
-      if (messages.length > 0) {
-        box.innerHTML = messages.join('<br>');
-        box.style.display = 'block';
-      } else {
-        box.style.display = 'none';
+    function resetFilter() {
+      document.getElementById('searchInput').value = '';
+      renderTable();
+    }
+
+    function renderSummary() {
+      const list = document.getElementById('summaryList');
+      list.innerHTML = '';
+      const counts = {};
+      globalData.forEach(row => {
+        const k = row['Sorumlu'];
+        counts[k] = counts[k] || { toplam: 0, tamam: 0 };
+        counts[k].toplam++;
+        if (row['Durum'] === 'Tamamlandı') counts[k].tamam++;
+      });
+      for (const k in counts) {
+        const li = document.createElement('li');
+        li.textContent = `${k}: ${counts[k].tamam} / ${counts[k].toplam} tamamlandı`;
+        list.appendChild(li);
       }
     }
 
-    fetch(sheetUrl)
-      .then(res => res.text())
-      .then(text => {
-        const rows = text.trim().split('\n').slice(1).map(row => row.split(','));
-        globalData = rows.map(cols => ({
-          timestamp: cols[0],
-          title: cols[1],
-          desc: cols[2],
-          responsible: cols[3],
-          start: cols[4],
-          end: cols[5],
-          status: cols[6],
-          priority: cols[7],
-          note: cols[8],
-          reminder: cols[9]
-        }));
-        renderTable(globalData);
-        renderSummary(globalData);
-        renderCharts(globalData);
-        showReminders(globalData);
+    function renderCharts() {
+      const durumlar = {}, oncelikler = {}, aylik = {};
+      globalData.forEach(row => {
+        durumlar[row['Durum']] = (durumlar[row['Durum']] || 0) + 1;
+        oncelikler[row['Öncelik']] = (oncelikler[row['Öncelik']] || 0) + 1;
+        const ay = new Date(row['Başlangıç Tarihi']).toLocaleString('tr-TR', { month: 'short', year: 'numeric' });
+        aylik[ay] = (aylik[ay] || 0) + 1;
       });
+      new Chart(document.getElementById('statusChart'), {
+        type: 'pie', data: { labels: Object.keys(durumlar), datasets: [{ data: Object.values(durumlar) }] },
+      });
+      new Chart(document.getElementById('priorityChart'), {
+        type: 'bar', data: { labels: Object.keys(oncelikler), datasets: [{ label: 'Öncelik', data: Object.values(oncelikler) }] },
+      });
+      new Chart(document.getElementById('monthlyChart'), {
+        type: 'line', data: { labels: Object.keys(aylik), datasets: [{ label: 'Aylık İşler', data: Object.values(aylik) }] },
+      });
+    }
+
+    function checkReminders() {
+      const container = document.getElementById('warningContainer');
+      container.innerHTML = '';
+      const today = new Date();
+      globalData.forEach(row => {
+        const end = new Date(row['Bitiş Tarihi']);
+        if (end <= today && row['Durum'] !== 'Tamamlandı') {
+          const div = document.createElement('div');
+          div.className = 'warning';
+          div.textContent = `⚠️ ${row['İş Başlığı']} işi ${row['Bitiş Tarihi']} tarihinde tamamlanmamış!`;
+          container.appendChild(div);
+        }
+      });
+    }
+
+    fetchData();
   </script>
 </body>
 </html>
