@@ -1,190 +1,114 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>İş Takip Sistemi</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f8f8f8; }
-    header { background-color: #023047; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
-    nav { display: flex; background: #219ebc; justify-content: center; gap: 1rem; padding: 1rem; }
-    nav button { padding: 0.5rem 1rem; font-weight: bold; cursor: pointer; border: none; border-radius: 5px; background: #ffb703; color: black; }
-    section { display: none; padding: 1rem; }
-    section.active { display: block; }
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: white; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    tr.completed { background: #c8f7c5; }
-    tr.overdue { background: #f8d7da; }
-    canvas { max-width: 100%; height: auto; margin: 2rem auto; display: block; }
-    .filter-controls { margin-bottom: 1rem; }
-    .warning { background: #ffcccb; padding: 1rem; border-radius: 5px; margin-bottom: 1rem; }
-    iframe { border: none; width: 100%; height: 600px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İş Takip Formu</title>
+    <style>
+        /* Kendi CSS stilinizi buraya ekleyebilirsiniz */
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        form { max-width: 600px; margin: 20px auto; padding: 25px; border: 1px solid #e0e0e0; border-radius: 10px; background-color: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; margin-bottom: 30px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #555; }
+        input[type="text"], 
+        input[type="date"], 
+        textarea,
+        select {
+            width: calc(100% - 20px); /* Padding'i hesaba kat */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box; 
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #responseMessage {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
 </head>
 <body>
-  <header>İş ve Süreç Takip Sistemi</header>
-  <nav>
-    <button onclick="showSection('list')">Ana Sayfa</button>
-    <button onclick="showSection('summary')">Sorumlu Özeti</button>
-    <button onclick="showSection('charts')">Grafikler</button>
-    <button onclick="showSection('form')">Veri Girişi</button>
-  </nav>
+    <h1>İş Takip Formu</h1>
 
-  <section id="list" class="active">
-    <div class="filter-controls">
-      <input type="text" id="searchInput" placeholder="İş başlığına göre ara">
-      <button onclick="filterTable()">Filtrele</button>
-      <button onclick="resetFilter()">Temizle</button>
-    </div>
-    <div id="warningContainer"></div>
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
-          <th>Başlangıç Tarihi</th><th>Bitiş Tarihi</th><th>Durum</th><th>Öncelik</th><th>Not</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+    <form id="taskForm">
+        <label for="date">Tarih:</label>
+        <input type="date" id="date" name="Tarih" required>
 
-  <section id="summary">
-    <ul id="summaryList"></ul>
-  </section>
+        <label for="task">Yapılacak İş:</label>
+        <input type="text" id="task" name="Yapılacak İş" required>
 
-  <section id="charts">
-    <canvas id="statusChart"></canvas>
-    <canvas id="priorityChart"></canvas>
-    <canvas id="monthlyChart"></canvas>
-  </section>
+        <label for="status">Durum:</label>
+        <select id="status" name="Durum">
+            <option value="Beklemede">Beklemede</option>
+            <option value="Devam Ediyor">Devam Ediyor</option>
+            <option value="Tamamlandı">Tamamlandı</option>
+        </select>
 
-  <section id="form">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true">Yükleniyor…</iframe>
-  </section>
+        <button type="submit">Gönder</button>
+    </form>
 
-  <script>
-    const sheetURL = 'https://opensheet.elk.sh/1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY/Form_Responses1';
-    let globalData = [];
+    <div id="responseMessage"></div>
 
-    function showSection(id) {
-      document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
+    <script>
+        // BURAYA, Apps Script'ten kopyaladığınız Web Uygulaması URL'sini yapıştırın!
+        const scriptURL = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; 
+        const form = document.getElementById('taskForm');
+        const responseMessage = document.getElementById('responseMessage');
 
-    function fetchData() {
-      fetch(sheetURL)
-        .then(res => res.json())
-        .then(data => {
-          globalData = data;
-          renderTable();
-          renderSummary();
-          renderCharts();
-          checkReminders();
+        form.addEventListener('submit', e => {
+            e.preventDefault(); // Formun varsayılan gönderimini engeller
+
+            responseMessage.textContent = 'Veri gönderiliyor...';
+            responseMessage.className = ''; // Önceki stil sınıflarını temizle
+
+            // FormData ile form alanlarını otomatik olarak alır
+            fetch(scriptURL, {
+                method: 'POST',
+                body: new FormData(form) 
+            })
+            .then(response => response.json()) // Apps Script'ten gelen JSON yanıtını ayrıştır
+            .then(data => {
+                if (data.result === 'success') {
+                    responseMessage.textContent = 'Veri başarıyla gönderildi!';
+                    responseMessage.className = 'success'; // Başarılı mesaj stilini uygula
+                    form.reset(); // Formu temizle
+                } else {
+                    responseMessage.textContent = 'Hata oluştu: ' + data.error;
+                    responseMessage.className = 'error'; // Hata mesaj stilini uygula
+                }
+            })
+            .catch(error => {
+                responseMessage.textContent = 'İletişim hatası: ' + error.message;
+                responseMessage.className = 'error';
+                console.error('Hata!', error.message);
+            });
         });
-    }
-
-    function renderTable() {
-      const tbody = document.querySelector('#dataTable tbody');
-      tbody.innerHTML = '';
-      globalData.forEach(row => {
-        const tr = document.createElement('tr');
-        const today = new Date();
-        const bitis = new Date(row['Bitiş Tarihi']);
-        if (row['Durum'] === 'Tamamlandı') tr.classList.add('completed');
-        else if (bitis < today) tr.classList.add('overdue');
-        tr.innerHTML = `
-          <td>${row['İş Başlığı']}</td>
-          <td>${row['İş Tanımı']}</td>
-          <td>${row['Sorumlu']}</td>
-          <td>${row['Başlangıç Tarihi']}</td>
-          <td>${row['Bitiş Tarihi']}</td>
-          <td>${row['Durum']}</td>
-          <td>${row['Öncelik']}</td>
-          <td>${row['Not']}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function filterTable() {
-      const keyword = document.getElementById('searchInput').value.toLowerCase();
-      const filtered = globalData.filter(row => row['İş Başlığı'].toLowerCase().includes(keyword));
-      const tbody = document.querySelector('#dataTable tbody');
-      tbody.innerHTML = '';
-      filtered.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row['İş Başlığı']}</td>
-          <td>${row['İş Tanımı']}</td>
-          <td>${row['Sorumlu']}</td>
-          <td>${row['Başlangıç Tarihi']}</td>
-          <td>${row['Bitiş Tarihi']}</td>
-          <td>${row['Durum']}</td>
-          <td>${row['Öncelik']}</td>
-          <td>${row['Not']}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function resetFilter() {
-      document.getElementById('searchInput').value = '';
-      renderTable();
-    }
-
-    function renderSummary() {
-      const list = document.getElementById('summaryList');
-      list.innerHTML = '';
-      const counts = {};
-      globalData.forEach(row => {
-        const k = row['Sorumlu'];
-        counts[k] = counts[k] || { toplam: 0, tamam: 0 };
-        counts[k].toplam++;
-        if (row['Durum'] === 'Tamamlandı') counts[k].tamam++;
-      });
-      for (const k in counts) {
-        const li = document.createElement('li');
-        li.textContent = `${k}: ${counts[k].tamam} / ${counts[k].toplam} tamamlandı`;
-        list.appendChild(li);
-      }
-    }
-
-    function renderCharts() {
-      const durumlar = {}, oncelikler = {}, aylik = {};
-      globalData.forEach(row => {
-        durumlar[row['Durum']] = (durumlar[row['Durum']] || 0) + 1;
-        oncelikler[row['Öncelik']] = (oncelikler[row['Öncelik']] || 0) + 1;
-        const ay = new Date(row['Başlangıç Tarihi']).toLocaleString('tr-TR', { month: 'short', year: 'numeric' });
-        aylik[ay] = (aylik[ay] || 0) + 1;
-      });
-      new Chart(document.getElementById('statusChart'), {
-        type: 'pie', data: { labels: Object.keys(durumlar), datasets: [{ data: Object.values(durumlar) }] },
-      });
-      new Chart(document.getElementById('priorityChart'), {
-        type: 'bar', data: { labels: Object.keys(oncelikler), datasets: [{ label: 'Öncelik', data: Object.values(oncelikler) }] },
-      });
-      new Chart(document.getElementById('monthlyChart'), {
-        type: 'line', data: { labels: Object.keys(aylik), datasets: [{ label: 'Aylık İşler', data: Object.values(aylik) }] },
-      });
-    }
-
-    function checkReminders() {
-      const container = document.getElementById('warningContainer');
-      container.innerHTML = '';
-      const today = new Date();
-      globalData.forEach(row => {
-        const end = new Date(row['Bitiş Tarihi']);
-        if (end <= today && row['Durum'] !== 'Tamamlandı') {
-          const div = document.createElement('div');
-          div.className = 'warning';
-          div.textContent = `⚠️ ${row['İş Başlığı']} işi ${row['Bitiş Tarihi']} tarihinde tamamlanmamış!`;
-          container.appendChild(div);
-        }
-      });
-    }
-
-    fetchData();
-  </script>
+    </script>
 </body>
 </html>
