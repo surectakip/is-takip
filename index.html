@@ -5,23 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>İş ve Süreç Takip</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #f5f5f5;
     }
     header {
       background-color: #2a4365;
       color: white;
       padding: 1rem;
       text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     nav {
       display: flex;
       justify-content: center;
       background-color: #edf2f7;
       border-bottom: 1px solid #ccc;
+      flex-wrap: wrap;
     }
     nav button {
       background: none;
@@ -29,14 +33,23 @@
       padding: 1rem;
       cursor: pointer;
       font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+    nav button:hover {
+      background-color: #e2e8f0;
     }
     nav button.active {
-      border-bottom: 2px solid #2b6cb0;
+      border-bottom: 3px solid #2b6cb0;
       font-weight: bold;
+      color: #2b6cb0;
     }
     .tab {
       display: none;
       padding: 1rem;
+      background-color: white;
+      margin: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     .tab.active {
       display: block;
@@ -45,11 +58,33 @@
       width: 100%;
       border-collapse: collapse;
       margin-top: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
+      border: 1px solid #ddd;
+      padding: 0.75rem;
       text-align: left;
+    }
+    th {
+      background-color: #2a4365;
+      color: white;
+      cursor: pointer;
+      position: relative;
+    }
+    th:hover {
+      background-color: #1e365d;
+    }
+    th.sort-asc::after {
+      content: " ↑";
+    }
+    th.sort-desc::after {
+      content: " ↓";
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
     }
     tr.completed {
       background-color: #c6f6d5;
@@ -57,16 +92,72 @@
     tr.overdue {
       background-color: #fed7d7;
     }
+    .filter-container {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+    .filter-container input, .filter-container select {
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    .filter-container button {
+      padding: 0.5rem 1rem;
+      background-color: #2a4365;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .filter-container button:hover {
+      background-color: #1e365d;
+    }
     .chart-container {
-      max-width: 600px;
-      margin: auto;
+      background-color: white;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .chart-container canvas {
+      max-width: 100%;
     }
     .alert-box {
       background-color: #fefcbf;
       border-left: 5px solid #d69e2e;
       padding: 1rem;
-      margin: 1rem 0;
+      margin: 1rem;
+      border-radius: 4px;
       display: none;
+    }
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.2rem;
+      color: #4a5568;
+    }
+    .summary-table {
+      width: 100%;
+      margin-top: 1rem;
+    }
+    .summary-table th {
+      background-color: #4a5568;
+    }
+    .responsive-table {
+      overflow-x: auto;
+    }
+    @media (max-width: 768px) {
+      nav button {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+      }
+      .tab {
+        margin: 0.5rem;
+        padding: 0.75rem;
+      }
     }
   </style>
 </head>
@@ -84,133 +175,443 @@
   <div class="alert-box" id="reminderBox"></div>
 
   <div id="listTab" class="tab active">
-    <input type="text" id="searchInput" placeholder="İş başlığı ara..." oninput="applyFilters()" />
-    <select id="statusFilter" onchange="applyFilters()">
-      <option value="">Durum (hepsi)</option>
-      <option value="Tamamlandı">Tamamlandı</option>
-      <option value="Bekliyor">Bekliyor</option>
-    </select>
-    <button onclick="resetFilters()">Temizle</button>
-    <table>
-      <thead>
-        <tr>
-          <th>İş Başlığı</th>
-          <th>İş Tanımı</th>
-          <th>Sorumlu</th>
-          <th>Başlangıç Tarihi</th>
-          <th>Bitiş Tarihi</th>
-          <th>Durum</th>
-          <th>Öncelik</th>
-          <th>Not</th>
-        </tr>
-      </thead>
-      <tbody id="taskTable"></tbody>
-    </table>
+    <div class="filter-container">
+      <input type="text" id="searchInput" placeholder="İş başlığı ara..." oninput="applyFilters()" />
+      <select id="responsibleFilter" onchange="applyFilters()">
+        <option value="">Sorumlu (hepsi)</option>
+      </select>
+      <select id="statusFilter" onchange="applyFilters()">
+        <option value="">Durum (hepsi)</option>
+        <option value="Tamamlandı">Tamamlandı</option>
+        <option value="Bekliyor">Bekliyor</option>
+      </select>
+      <select id="priorityFilter" onchange="applyFilters()">
+        <option value="">Öncelik (hepsi)</option>
+        <option value="Yüksek">Yüksek</option>
+        <option value="Orta">Orta</option>
+        <option value="Düşük">Düşük</option>
+      </select>
+      <button onclick="resetFilters()">Filtreleri Temizle</button>
+    </div>
+    <div class="responsive-table">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable('title')">İş Başlığı</th>
+            <th onclick="sortTable('desc')">İş Tanımı</th>
+            <th onclick="sortTable('responsible')">Sorumlu</th>
+            <th onclick="sortTable('start')">Başlangıç Tarihi</th>
+            <th onclick="sortTable('end')">Bitiş Tarihi</th>
+            <th onclick="sortTable('status')">Durum</th>
+            <th onclick="sortTable('priority')">Öncelik</th>
+            <th>Not</th>
+          </tr>
+        </thead>
+        <tbody id="taskTable">
+          <tr>
+            <td colspan="8" class="loading">Veriler yükleniyor...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <div id="summaryTab" class="tab">
-    <div id="summaryContent"></div>
+    <h2>Sorumlu Bazında İş Dağılımı</h2>
+    <div class="responsive-table">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Sorumlu</th>
+            <th>Toplam İş</th>
+            <th>Tamamlanan</th>
+            <th>Bekleyen</th>
+            <th>Tamamlanma Oranı</th>
+          </tr>
+        </thead>
+        <tbody id="summaryTable"></tbody>
+      </table>
+    </div>
+    <div class="chart-container">
+      <canvas id="responsibleChart"></canvas>
+    </div>
   </div>
 
   <div id="chartTab" class="tab">
     <div class="chart-container">
+      <h2>Görev Durumları</h2>
       <canvas id="statusChart"></canvas>
     </div>
     <div class="chart-container">
+      <h2>Öncelik Dağılımı</h2>
       <canvas id="priorityChart"></canvas>
+    </div>
+    <div class="chart-container">
+      <h2>Aylık İş Dağılımı</h2>
+      <canvas id="monthlyChart"></canvas>
     </div>
   </div>
 
   <div id="formTab" class="tab">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0">Yükleniyor…</iframe>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
   </div>
 
   <script>
+    // Google Sheets URL'si
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQYXYjhYHdZCwqROFjR2Gu4vCtbZgO19ltAx9G7CvDyzJb_WjLMF8TFpkmy3bhHPj02ezA1SY0HHz3l/pub?output=csv';
+    
+    // Global değişkenler
     let globalData = [];
+    let currentSortColumn = '';
+    let sortDirection = 1; // 1: artan, -1: azalan
 
+    // Sekme değiştirme fonksiyonu
     function openTab(evt, tabName) {
       document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
       document.querySelectorAll('.tablink').forEach(btn => btn.classList.remove('active'));
       document.getElementById(tabName).classList.add('active');
       evt.currentTarget.classList.add('active');
+      
+      // Grafik sekmesine geçişte grafikleri yeniden çiz
+      if (tabName === 'chartTab' || tabName === 'summaryTab') {
+        renderCharts();
+      }
     }
 
-    function applyFilters() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      const status = document.getElementById('statusFilter').value;
-      const filtered = globalData.filter(row => {
-        return row.title.toLowerCase().includes(search) && (status === '' || row.status === status);
+    // Tablo sıralama fonksiyonu
+    function sortTable(column) {
+      // Sütun başlıklarındaki sıralama işaretlerini kaldır
+      document.querySelectorAll('th').forEach(th => {
+        th.classList.remove('sort-asc', 'sort-desc');
       });
-      renderTable(filtered);
-    }
-
-    function resetFilters() {
-      document.getElementById('searchInput').value = '';
-      document.getElementById('statusFilter').value = '';
+      
+      // Aynı sütuna tekrar tıklandığında sıralama yönünü değiştir
+      if (currentSortColumn === column) {
+        sortDirection *= -1;
+      } else {
+        currentSortColumn = column;
+        sortDirection = 1;
+      }
+      
+      // Sıralama işaretini ekle
+      const header = document.querySelector(`th[onclick="sortTable('${column}')"]`);
+      if (header) {
+        header.classList.add(sortDirection === 1 ? 'sort-asc' : 'sort-desc');
+      }
+      
+      // Veriyi sırala
+      globalData.sort((a, b) => {
+        if (a[column] < b[column]) return -1 * sortDirection;
+        if (a[column] > b[column]) return 1 * sortDirection;
+        return 0;
+      });
+      
+      // Tabloyu güncelle
       renderTable(globalData);
     }
 
+    // Filtreleme fonksiyonu
+    function applyFilters() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const responsible = document.getElementById('responsibleFilter').value;
+      const status = document.getElementById('statusFilter').value;
+      const priority = document.getElementById('priorityFilter').value;
+      
+      const filtered = globalData.filter(row => {
+        return (
+          row.title.toLowerCase().includes(search) &&
+          (responsible === '' || row.responsible === responsible) &&
+          (status === '' || row.status === status) &&
+          (priority === '' || row.priority === priority)
+        );
+      });
+      
+      renderTable(filtered);
+    }
+
+    // Filtreleri temizleme fonksiyonu
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('responsibleFilter').value = '';
+      document.getElementById('statusFilter').value = '';
+      document.getElementById('priorityFilter').value = '';
+      renderTable(globalData);
+    }
+
+    // Tablo oluşturma fonksiyonu
     function renderTable(data) {
       const tbody = document.getElementById('taskTable');
       tbody.innerHTML = '';
+      
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8">Filtreleme sonucu bulunamadı</td></tr>';
+        return;
+      }
+      
       const now = new Date();
       data.forEach(row => {
         const tr = document.createElement('tr');
-        if (row.status.toLowerCase() === 'tamamlandı') tr.classList.add('completed');
-        else if (new Date(row.end) < now) tr.classList.add('overdue');
+        
+        // Duruma göre renklendirme
+        if (row.status.toLowerCase() === 'tamamlandı') {
+          tr.classList.add('completed');
+        } else if (new Date(row.end) < now) {
+          tr.classList.add('overdue');
+        }
+        
         tr.innerHTML = `
           <td>${row.title}</td>
           <td>${row.desc}</td>
           <td>${row.responsible}</td>
-          <td>${row.start}</td>
-          <td>${row.end}</td>
+          <td>${formatDate(row.start)}</td>
+          <td>${formatDate(row.end)}</td>
           <td>${row.status}</td>
           <td>${row.priority}</td>
-          <td>${row.note}</td>
+          <td>${row.note || '-'}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
+    // Sorumlu özeti tablosu oluşturma
     function renderSummary(data) {
       const summary = {};
+      
+      // Verileri grupla
       data.forEach(row => {
-        if (!summary[row.responsible]) summary[row.responsible] = { total: 0, done: 0 };
+        if (!summary[row.responsible]) {
+          summary[row.responsible] = {
+            total: 0,
+            done: 0,
+            waiting: 0,
+            overdue: 0
+          };
+        }
+        
         summary[row.responsible].total++;
-        if (row.status.toLowerCase() === 'tamamlandı') summary[row.responsible].done++;
+        
+        if (row.status.toLowerCase() === 'tamamlandı') {
+          summary[row.responsible].done++;
+        } else {
+          summary[row.responsible].waiting++;
+          
+          // Geciken görev kontrolü
+          if (new Date(row.end) < new Date()) {
+            summary[row.responsible].overdue++;
+          }
+        }
       });
-      const content = Object.entries(summary).map(([person, stats]) => `
-        <p><strong>${person}</strong>: ${stats.done} / ${stats.total} tamamlandı</p>
-      `).join('');
-      document.getElementById('summaryContent').innerHTML = content;
+      
+      // Tabloyu doldur
+      const tbody = document.getElementById('summaryTable');
+      tbody.innerHTML = '';
+      
+      Object.entries(summary).forEach(([person, stats]) => {
+        const completionRate = Math.round((stats.done / stats.total) * 100);
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${person}</td>
+          <td>${stats.total}</td>
+          <td>${stats.done}</td>
+          <td>${stats.waiting} (${stats.overdue} geciken)</td>
+          <td>
+            <div style="background:#e2e8f0; height:20px; width:100%; position:relative;">
+              <div style="background:#48bb78; height:100%; width:${completionRate}%"></div>
+              <span style="position:absolute; left:50%; top:0; transform:translateX(-50%);">${completionRate}%</span>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
-    function renderCharts(data) {
-      const statusCount = {}, priorityCount = {};
-      const months = {};
-      data.forEach(row => {
+    // Grafikleri oluşturma fonksiyonu
+    function renderCharts() {
+      // Durum grafiği
+      const statusCount = {};
+      const priorityCount = {};
+      const responsibleCount = {};
+      const monthlyCount = {};
+      
+      globalData.forEach(row => {
+        // Durum sayımı
         statusCount[row.status] = (statusCount[row.status] || 0) + 1;
+        
+        // Öncelik sayımı
         priorityCount[row.priority] = (priorityCount[row.priority] || 0) + 1;
-        const m = new Date(row.start).toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
-        months[m] = (months[m] || 0) + 1;
+        
+        // Sorumlu sayımı
+        responsibleCount[row.responsible] = (responsibleCount[row.responsible] || 0) + 1;
+        
+        // Aylık sayım
+        const month = new Date(row.start).toLocaleString('tr-TR', { month: 'long', year: 'numeric' });
+        monthlyCount[month] = (monthlyCount[month] || 0) + 1;
       });
-      new Chart(document.getElementById('statusChart'), {
+      
+      // Durum grafiği
+      const statusCtx = document.getElementById('statusChart').getContext('2d');
+      new Chart(statusCtx, {
         type: 'pie',
-        data: { labels: Object.keys(statusCount), datasets: [{ data: Object.values(statusCount) }] }
+        data: {
+          labels: Object.keys(statusCount),
+          datasets: [{
+            data: Object.values(statusCount),
+            backgroundColor: [
+              '#48bb78', // Tamamlandı
+              '#e53e3e', // Bekliyor
+              '#4299e1'  // Diğer
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Görev Durumları' },
+            datalabels: {
+              formatter: (value, ctx) => {
+                const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / sum) * 100);
+                return `${percentage}%`;
+              },
+              color: '#fff',
+              font: { weight: 'bold' }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
       });
-      new Chart(document.getElementById('priorityChart'), {
+      
+      // Öncelik grafiği
+      const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+      new Chart(priorityCtx, {
         type: 'bar',
-        data: { labels: Object.keys(priorityCount), datasets: [{ label: 'Öncelik', data: Object.values(priorityCount) }] }
+        data: {
+          labels: Object.keys(priorityCount),
+          datasets: [{
+            label: 'Görev Sayısı',
+            data: Object.values(priorityCount),
+            backgroundColor: [
+              '#f56565', // Yüksek
+              '#f6ad55', // Orta
+              '#68d391'  // Düşük
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } },
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Öncelik Dağılımı' }
+          }
+        }
+      });
+      
+      // Sorumlu grafiği
+      const responsibleCtx = document.getElementById('responsibleChart').getContext('2d');
+      new Chart(responsibleCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(responsibleCount),
+          datasets: [{
+            data: Object.values(responsibleCount),
+            backgroundColor: [
+              '#4299e1', '#9f7aea', '#ed64a6', '#f56565', 
+              '#f6ad55', '#68d391', '#4fd1c5', '#63b3ed'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' },
+            title: { display: true, text: 'Sorumlu Dağılımı' },
+            datalabels: {
+              formatter: (value, ctx) => {
+                const sum = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                const percentage = Math.round((value / sum) * 100);
+                return `${percentage}%`;
+              },
+              color: '#fff',
+              font: { weight: 'bold' }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+      
+      // Aylık grafik
+      const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+      
+      // Ayları sırala
+      const sortedMonths = Object.keys(monthlyCount).sort((a, b) => {
+        return new Date(a) - new Date(b);
+      });
+      
+      const monthlyData = sortedMonths.map(month => monthlyCount[month]);
+      
+      new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+          labels: sortedMonths,
+          datasets: [{
+            label: 'Aylık Görev Sayısı',
+            data: monthlyData,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: { y: { beginAtZero: true } },
+          plugins: {
+            title: { display: true, text: 'Aylık Görev Dağılımı' }
+          }
+        }
       });
     }
 
+    // Tarih formatlama fonksiyonu
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      
+      return date.toLocaleDateString('tr-TR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+
+    // Hatırlatıcıları göster
     function showReminders(data) {
       const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      
       const messages = data.filter(row => {
-        const end = new Date(row.end);
-        return (end.toDateString() === now.toDateString() || end < now) && row.status.toLowerCase() !== 'tamamlandı';
-      }).map(row => `⏰ <strong>${row.title}</strong> işi ${row.end} tarihi itibarıyla tamamlanmalıydı!`);
+        const endDate = new Date(row.end);
+        const taskEnd = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        
+        return (
+          (taskEnd.getTime() === today.getTime() || taskEnd < today) && 
+          row.status.toLowerCase() !== 'tamamlandı'
+        );
+      }).map(row => {
+        const endDate = new Date(row.end);
+        const daysLate = Math.floor((today - endDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysLate > 0) {
+          return `⏰ <strong>${row.title}</strong> işi ${daysLate} gün önce (${formatDate(row.end)}) tamamlanmalıydı!`;
+        } else {
+          return `⏰ <strong>${row.title}</strong> işi bugün (${formatDate(row.end)}) tamamlanmalı!`;
+        }
+      });
+      
       const box = document.getElementById('reminderBox');
       if (messages.length > 0) {
         box.innerHTML = messages.join('<br>');
@@ -220,27 +621,68 @@
       }
     }
 
-    fetch(sheetUrl)
-      .then(res => res.text())
-      .then(text => {
-        const rows = text.trim().split('\n').slice(1).map(row => row.split(','));
-        globalData = rows.map(cols => ({
-          timestamp: cols[0],
-          title: cols[1],
-          desc: cols[2],
-          responsible: cols[3],
-          start: cols[4],
-          end: cols[5],
-          status: cols[6],
-          priority: cols[7],
-          note: cols[8],
-          reminder: cols[9]
-        }));
-        renderTable(globalData);
-        renderSummary(globalData);
-        renderCharts(globalData);
-        showReminders(globalData);
-      });
+    // Veriyi yükle
+    function loadData() {
+      fetch(sheetUrl)
+        .then(res => {
+          if (!res.ok) throw new Error('Veri alınamadı');
+          return res.text();
+        })
+        .then(text => {
+          const rows = text.trim().split('\n').slice(1).map(row => {
+            // CSV satırlarını virgülle ayır, tırnak içindeki virgülleri koru
+            const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+            return cols.map(col => col.replace(/^"|"$/g, '').trim());
+          });
+          
+          globalData = rows.map(cols => ({
+            timestamp: cols[0],
+            title: cols[1] || '-',
+            desc: cols[2] || '-',
+            responsible: cols[3] || '-',
+            start: cols[4] || '-',
+            end: cols[5] || '-',
+            status: cols[6] || 'Bekliyor',
+            priority: cols[7] || 'Orta',
+            note: cols[8] || ''
+          }));
+          
+          // Sorumlu filtre seçeneklerini doldur
+          const responsibleFilter = document.getElementById('responsibleFilter');
+          const responsibles = [...new Set(globalData.map(item => item.responsible))].sort();
+          
+          responsibles.forEach(responsible => {
+            const option = document.createElement('option');
+            option.value = responsible;
+            option.textContent = responsible;
+            responsibleFilter.appendChild(option);
+          });
+          
+          // Verileri işle
+          renderTable(globalData);
+          renderSummary(globalData);
+          renderCharts();
+          showReminders(globalData);
+        })
+        .catch(error => {
+          console.error('Veri yükleme hatası:', error);
+          document.getElementById('taskTable').innerHTML = `
+            <tr><td colspan="8">Veri yüklenirken hata oluştu: ${error.message}</td></tr>
+          `;
+        });
+    }
+
+    // Sayfa yüklendiğinde veriyi çek
+    document.addEventListener('DOMContentLoaded', () => {
+      loadData();
+      
+      // Her 5 dakikada bir veriyi yenile
+      setInterval(loadData, 5 * 60 * 1000);
+    });
+
+    // Grafik etiketleri için Türkçe ayarlar
+    Chart.defaults.global.defaultFontFamily = 'Arial';
+    Chart.defaults.global.locale = 'tr';
   </script>
 </body>
 </html>
