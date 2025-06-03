@@ -81,7 +81,7 @@
           <th>İş Başlığı</th>
           <th>İş Tanımı</th>
           <th>Sorumlu</th>
-          <th>Başlangıç Tarihi</th>
+          <th>Başlangıç T</th>
           <th>Bitiş Tarihi</th>
           <th>Durum</th>
           <th>Öncelik</th>
@@ -131,7 +131,7 @@
         const priorityCounts = {};
 
         data.forEach(row => {
-          const start = row["Başlangıç Tarihi"] || "";
+          const start = row["Başlangıç T"] || "";
           const end = row["Bitiş Tarihi"] || "";
           const isLate = new Date(end) < today && row["Durum"] !== "Tamamlandı";
 
