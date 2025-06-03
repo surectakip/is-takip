@@ -93,7 +93,12 @@
   </section>
 
   <section id="summary">
-    <ul id="responsibleSummary"></ul>
+    <table id="summaryTable">
+      <thead>
+        <tr><th>Sorumlu</th><th>Toplam</th><th>Tamamlandı</th><th>Bekliyor</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </section>
 
   <section id="charts">
@@ -120,6 +125,7 @@
       .then(res => res.json())
       .then(data => {
         const tbody = document.querySelector("#taskTable tbody");
+        const summaryBody = document.querySelector("#summaryTable tbody");
         const responsibleCounts = {};
         const statusCounts = {};
         const priorityCounts = {};
@@ -127,38 +133,41 @@
         data.forEach(row => {
           const start = row["Başlangıç Tarihi"] || "";
           const end = row["Bitiş Tarihi"] || "";
-          const startDate = new Date(start);
-          const endDate = new Date(end);
-          const isLate = today > endDate && row["Durum"] !== "Tamamlandı";
-          const isToday = today.toDateString() === endDate.toDateString();
+          const isLate = new Date(end) < today && row["Durum"] !== "Tamamlandı";
 
           const tr = document.createElement("tr");
           if (row["Durum"] === "Tamamlandı") tr.classList.add("complete");
-          else if (isLate || isToday) tr.classList.add("late");
+          else if (isLate) tr.classList.add("late");
 
           tr.innerHTML = `
-            <td>${row["İş Başlığı"] || "-"}</td>
-            <td>${row["İş Tanımı"] || "-"}</td>
-            <td>${row["Sorumlu"] || "-"}</td>
+            <td>${row["İş Başlığı"] || ""}</td>
+            <td>${row["İş Tanımı"] || ""}</td>
+            <td>${row["Sorumlu"] || ""}</td>
             <td>${start}</td>
             <td>${end}</td>
-            <td>${row["Durum"] || "-"}</td>
-            <td>${row["Öncelik"] || "-"}</td>
-            <td>${row["Not"] || "-"}</td>
+            <td>${row["Durum"] || ""}</td>
+            <td>${row["Öncelik"] || ""}</td>
+            <td>${row["Not"] || ""}</td>
           `;
           tbody.appendChild(tr);
 
-          responsibleCounts[row["Sorumlu"]] = (responsibleCounts[row["Sorumlu"]] || 0) + 1;
-          statusCounts[row["Durum"]] = (statusCounts[row["Durum"]] || 0) + 1;
+          const sorumlu = row["Sorumlu"] || "Bilinmiyor";
+          const durum = row["Durum"];
+          if (!responsibleCounts[sorumlu]) responsibleCounts[sorumlu] = { total: 0, done: 0, pending: 0 };
+          responsibleCounts[sorumlu].total++;
+          if (durum === "Tamamlandı") responsibleCounts[sorumlu].done++;
+          else if (durum === "Bekliyor") responsibleCounts[sorumlu].pending++;
+
+          statusCounts[durum] = (statusCounts[durum] || 0) + 1;
           priorityCounts[row["Öncelik"]] = (priorityCounts[row["Öncelik"]] || 0) + 1;
         });
 
-        const ul = document.getElementById("responsibleSummary");
-        Object.keys(responsibleCounts).forEach(key => {
-          const li = document.createElement("li");
-          li.textContent = `${key}: ${responsibleCounts[key]} iş`;
-          ul.appendChild(li);
-        });
+        for (const sorumlu in responsibleCounts) {
+          const tr = document.createElement("tr");
+          const { total, done, pending } = responsibleCounts[sorumlu];
+          tr.innerHTML = `<td>${sorumlu}</td><td>${total}</td><td>${done}</td><td>${pending}</td>`;
+          summaryBody.appendChild(tr);
+        }
 
         new Chart(document.getElementById("statusChart"), {
           type: 'pie',
