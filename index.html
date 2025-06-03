@@ -6,66 +6,18 @@
   <title>İş Takip Paneli</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-    }
-    header {
-      background: #004080;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
-    }
-    nav {
-      display: flex;
-      background: #cce0ff;
-      justify-content: center;
-      gap: 1rem;
-      padding: 0.5rem;
-    }
-    nav button {
-      padding: 0.5rem 1rem;
-      border: none;
-      background: #0066cc;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    nav button.active {
-      background: #004080;
-    }
-    section {
-      display: none;
-      padding: 1rem;
-    }
-    section.active {
-      display: block;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    tr.complete {
-      background-color: #e6ffe6;
-    }
-    tr.late {
-      background-color: #ffe6e6;
-    }
-    #charts canvas {
-      max-width: 100%;
-      margin: 1rem auto;
-    }
-    iframe {
-      border: none;
-    }
+    body { font-family: Arial, sans-serif; margin: 0; background: #f9f9f9; }
+    header { background: #004080; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; }
+    nav { display: flex; background: #cce0ff; justify-content: center; gap: 1rem; padding: 0.5rem; flex-wrap: wrap; }
+    nav button { padding: 0.5rem 1rem; border: none; background: #0066cc; color: white; border-radius: 5px; cursor: pointer; }
+    nav button.active { background: #004080; }
+    section { display: none; padding: 1rem; }
+    section.active { display: block; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+    tr.complete { background-color: #e6ffe6; }
+    tr.late { background-color: #ffe6e6; }
+    #charts canvas { max-width: 100%; margin: 1rem auto; }
   </style>
 </head>
 <body>
@@ -75,21 +27,14 @@
     <button onclick="showTab('summary')">Sorumlu Özeti</button>
     <button onclick="showTab('charts')">Grafikler</button>
     <button onclick="showTab('form')">Veri Girişi</button>
-    <button onclick="showTab('googleSummary')">Form Yanıt Özeti</button>
+    <button onclick="showTab('formSummary')">Form Yanıt Özeti</button>
   </nav>
 
   <section id="home" class="active">
     <table id="taskTable">
       <thead>
         <tr>
-          <th>İş Başlığı</th>
-          <th>İş Tanımı</th>
-          <th>Sorumlu</th>
-          <th>Başlangıç Tarihi</th>
-          <th>Bitiş Tarihi</th>
-          <th>Durum</th>
-          <th>Öncelik</th>
-          <th>Not</th>
+          <th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th><th>Başlangıç Tarihi</th><th>Bitiş Tarihi</th><th>Durum</th><th>Öncelik</th><th>Not</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -98,9 +43,7 @@
 
   <section id="summary">
     <table id="summaryTable">
-      <thead>
-        <tr><th>Sorumlu</th><th>Toplam</th><th>Tamamlandı</th><th>Bekliyor</th></tr>
-      </thead>
+      <thead><tr><th>Sorumlu</th><th>Toplam</th><th>Tamamlandı</th><th>Bekliyor</th></tr></thead>
       <tbody></tbody>
     </table>
   </section>
@@ -111,11 +54,13 @@
   </section>
 
   <section id="form">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800">Yükleniyor…</iframe>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
   </section>
 
-  <section id="googleSummary">
-    <iframe src="https://docs.google.com/forms/d/e/1GFX2SgU_9i-9rnmuDZSiNtEUT4X86fHfOsC72OcPecE/viewanalytics" width="100%" height="800">Yükleniyor…</iframe>
+  <section id="formSummary">
+    <h3>Form Yanıt Özeti</h3>
+    <p>Bu sekmede, form yanıtlarının sayısal özeti yer alacaktır.</p>
+    <ul id="summaryStats"></ul>
   </section>
 
   <script>
@@ -134,9 +79,11 @@
       .then(data => {
         const tbody = document.querySelector("#taskTable tbody");
         const summaryBody = document.querySelector("#summaryTable tbody");
+        const summaryStats = document.getElementById("summaryStats");
         const responsibleCounts = {};
         const statusCounts = {};
         const priorityCounts = {};
+        const jobCounts = {};
 
         data.forEach(row => {
           const start = row["Başlangıç Tarihi"] || "";
@@ -161,6 +108,7 @@
 
           const sorumlu = row["Sorumlu"] || "Bilinmiyor";
           const durum = row["Durum"];
+          const baslik = row["İş Başlığı"] || "Diğer";
           if (!responsibleCounts[sorumlu]) responsibleCounts[sorumlu] = { total: 0, done: 0, pending: 0 };
           responsibleCounts[sorumlu].total++;
           if (durum === "Tamamlandı") responsibleCounts[sorumlu].done++;
@@ -168,6 +116,7 @@
 
           statusCounts[durum] = (statusCounts[durum] || 0) + 1;
           priorityCounts[row["Öncelik"]] = (priorityCounts[row["Öncelik"]] || 0) + 1;
+          jobCounts[baslik] = (jobCounts[baslik] || 0) + 1;
         });
 
         for (const sorumlu in responsibleCounts) {
@@ -176,6 +125,12 @@
           tr.innerHTML = `<td>${sorumlu}</td><td>${total}</td><td>${done}</td><td>${pending}</td>`;
           summaryBody.appendChild(tr);
         }
+
+        Object.keys(jobCounts).slice(0, 10).forEach(key => {
+          const li = document.createElement("li");
+          li.textContent = `${key}: ${jobCounts[key]} kayıt`;
+          summaryStats.appendChild(li);
+        });
 
         new Chart(document.getElementById("statusChart"), {
           type: 'pie',
