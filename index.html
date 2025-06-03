@@ -108,15 +108,6 @@
       document.querySelector(`[href='#${tabId}']`).classList.add('active');
     }
 
-    function formatDate(input) {
-      const date = new Date(input);
-      if (isNaN(date)) return "";
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}/${month}/${year}`;
-    }
-
     async function fetchData() {
       const res = await fetch("https://docs.google.com/spreadsheets/d/1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY/gviz/tq?tqx=out:json");
       const text = await res.text();
@@ -124,9 +115,6 @@
       const data = json.table.rows.map(row => row.c.map(cell => cell?.v || ""));
       globalThis.globalData = data;
       renderTable(data);
-      renderCharts(data);
-      renderSummary(data);
-      checkReminders(data);
     }
 
     function renderTable(data) {
@@ -138,8 +126,8 @@
           <td>${title}</td>
           <td>${desc}</td>
           <td>${responsible}</td>
-          <td>${formatDate(start)}</td>
-          <td>${formatDate(end)}</td>
+          <td>${start}</td>
+          <td>${end}</td>
           <td>${status}</td>
           <td>${priority}</td>
           <td>${note}</td>
@@ -164,78 +152,6 @@
       document.getElementById("responsibleFilter").value = "";
       document.getElementById("statusFilter").value = "";
       renderTable(globalData);
-    }
-
-    function checkReminders(data) {
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const reminders = [];
-      data.forEach(row => {
-        const [ , title, , , startRaw, endRaw, , , , reminderDays ] = row;
-        const start = new Date(startRaw);
-        const end = new Date(endRaw);
-        if (!isNaN(start) && reminderDays) {
-          const reminderDate = new Date(start);
-          reminderDate.setDate(reminderDate.getDate() + parseInt(reminderDays));
-          reminderDate.setHours(0,0,0,0);
-          if (reminderDate.getTime() === today.getTime()) {
-            reminders.push(`🔔 ${title} - Hatırlatma günü geldi.`);
-          }
-        }
-        if (!isNaN(end)) {
-          end.setHours(0,0,0,0);
-          if (end.getTime() === today.getTime()) {
-            reminders.push(`⏰ ${title} - Bitiş süresi bugün doluyor.`);
-          }
-        }
-      });
-      if (reminders.length > 0) {
-        const list = document.getElementById("reminderList");
-        list.innerHTML = reminders.map(item => `<li>${item}</li>`).join("");
-        document.getElementById("reminderModal").style.display = "flex";
-      }
-    }
-
-    function renderCharts(data) {
-      const statusCounts = {}, priorityCounts = {}, monthCounts = {};
-      data.forEach(row => {
-        const status = row[6];
-        const priority = row[7];
-        const date = new Date(row[4]);
-        const month = isNaN(date) ? "Bilinmeyen" : date.toLocaleString('tr-TR', { month: 'long' });
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
-        priorityCounts[priority] = (priorityCounts[priority] || 0) + 1;
-        monthCounts[month] = (monthCounts[month] || 0) + 1;
-      });
-      new Chart(document.getElementById("durumChart"), {
-        type: 'pie',
-        data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts) }] }
-      });
-      new Chart(document.getElementById("oncelikChart"), {
-        type: 'bar',
-        data: { labels: Object.keys(priorityCounts), datasets: [{ data: Object.values(priorityCounts) }] }
-      });
-      new Chart(document.getElementById("ayChart"), {
-        type: 'line',
-        data: { labels: Object.keys(monthCounts), datasets: [{ data: Object.values(monthCounts) }] }
-      });
-    }
-
-    function renderSummary(data) {
-      const summary = {};
-      data.forEach(row => {
-        const responsible = row[3];
-        const status = row[6];
-        if (!summary[responsible]) summary[responsible] = { toplam: 0, tamamlandı: 0, bekliyor: 0 };
-        summary[responsible].toplam++;
-        if (status.toLowerCase() === "tamamlandı") summary[responsible].tamamlandı++;
-        else summary[responsible].bekliyor++;
-      });
-      let html = `<h5 class="mt-4">Sorumlu Özeti</h5><table class="table table-bordered"><thead><tr><th>Sorumlu</th><th>Toplam</th><th>Tamamlandı</th><th>Bekliyor</th></tr></thead><tbody>`;
-      for (const [key, val] of Object.entries(summary)) {
-        html += `<tr><td>${key}</td><td>${val.toplam}</td><td>${val.tamamlandı}</td><td>${val.bekliyor}</td></tr>`;
-      }
-      html += `</tbody></table>`;
-      document.getElementById("summaryList").innerHTML = html;
     }
 
     fetchData();
