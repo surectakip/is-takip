@@ -6,14 +6,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-    nav button { margin: 8px; padding: 10px 14px; font-size: 15px; cursor: pointer; }
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    nav button { margin: 5px; padding: 10px 15px; font-size: 14px; cursor: pointer; }
     .hidden { display: none; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #eee; }
-    canvas { background: white; padding: 10px; border-radius: 8px; margin-top: 20px; }
-    .gecikmis { background-color: #ffdddd !important; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f0f0f0; }
+    .gecikmis { background-color: #ffe0e0; }
+    canvas { margin-top: 20px; background: white; padding: 10px; border-radius: 8px; }
+    #editModal { display:none; position:fixed; top:20%; left:30%; background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:1000; }
   </style>
 </head>
 <body>
@@ -21,7 +22,6 @@
   <nav>
     <button onclick="showTab('panel')">📋 Ana Tablo</button>
     <button onclick="showTab('analiz')">📊 Analiz</button>
-    <button onclick="showTab('form')">📝 Veri Girişi</button>
     <button onclick="fetchData()">🔄 Yenile</button>
   </nav>
 
@@ -42,20 +42,30 @@
     <canvas id="chartTamamlanmamis"></canvas>
   </section>
 
-  <section id="form" class="hidden">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="1800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
-  </section>
+  <div id="editModal">
+    <h3>Durumu Güncelle</h3>
+    <form id="editForm">
+      <input type="hidden" id="editTimestamp" name="timestamp">
+      <label>Yeni Durum:</label>
+      <select id="editDurum" name="durum" required>
+        <option value="">Seçiniz</option>
+        <option value="Tamamlandı">Tamamlandı</option>
+        <option value="Devam Ediyor">Devam Ediyor</option>
+        <option value="Beklemede">Beklemede</option>
+      </select>
+      <br><br>
+      <button type="submit">Güncelle</button>
+      <button type="button" onclick="document.getElementById('editModal').style.display='none'">İptal</button>
+    </form>
+  </div>
 
   <script>
     const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
     const sheetName = 'Form Yanıtları 1';
-    const query = encodeURIComponent('SELECT *');
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${encodeURIComponent('SELECT *')}`;
 
     function showTab(id) {
-      ['panel','analiz','form'].forEach(sec => {
-        document.getElementById(sec).classList.add('hidden');
-      });
+      ['panel','analiz'].forEach(sec => document.getElementById(sec).classList.add('hidden'));
       document.getElementById(id).classList.remove('hidden');
     }
 
@@ -74,16 +84,11 @@
             const cells = row.c.map(cell => cell?.v || '');
             const [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat] = cells;
 
-            const tr = document.createElement("tr");
+            const parsedDate = parseDate(bitis);
+            const gecikmisMi = parsedDate < now && durum !== "Tamamlandı";
 
-            // Geçmiş iş tespiti
-            let parsedDate = new Date(bitis);
-            if (typeof bitis === "string" && bitis.includes(".")) {
-              const [gun, ay, yil] = bitis.split(".");
-              parsedDate = new Date(`${yil}-${ay}-${gun}`);
-            }
-            const isGecikmis = !isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı";
-            if (isGecikmis) tr.classList.add("gecikmis");
+            const tr = document.createElement("tr");
+            if (gecikmisMi) tr.classList.add("gecikmis");
 
             [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
               const td = document.createElement("td");
@@ -91,17 +96,14 @@
               tr.appendChild(td);
             });
 
-            // Güncelle butonu
-            const tdEdit = document.createElement("td");
             const editBtn = document.createElement("button");
             editBtn.textContent = "🖊";
-            editBtn.onclick = () => alert("Durum güncelleme özelliği yakında aktif olacak.");
+            editBtn.onclick = () => openEditModal(timestamp);
+            const tdEdit = document.createElement("td");
             tdEdit.appendChild(editBtn);
             tr.appendChild(tdEdit);
-
             tbody.appendChild(tr);
 
-            // Grafik verisi
             if (durum === "Beklemede" || durum === "Devam Ediyor") {
               bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
             }
@@ -110,7 +112,6 @@
             }
           });
 
-          // Bekleyen işler grafiği
           new Chart(document.getElementById('chartBekleyen'), {
             type: 'bar',
             data: {
@@ -119,7 +120,6 @@
             }
           });
 
-          // Tamamlanmamış işler grafiği
           new Chart(document.getElementById('chartTamamlanmamis'), {
             type: 'bar',
             data: {
@@ -129,6 +129,39 @@
           });
         });
     }
+
+    function parseDate(dateStr) {
+      if (typeof dateStr === 'string' && dateStr.includes('.')) {
+        const [g, a, y] = dateStr.split('.');
+        return new Date(`${y}-${a}-${g}`);
+      }
+      return new Date(dateStr);
+    }
+
+    function openEditModal(ts) {
+      document.getElementById("editTimestamp").value = ts;
+      document.getElementById("editDurum").value = "";
+      document.getElementById("editModal").style.display = "block";
+    }
+
+    document.getElementById("editForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const ts = document.getElementById("editTimestamp").value;
+      const durum = document.getElementById("editDurum").value;
+
+      fetch("https://script.google.com/macros/s/AKfycbzAzuQlXv7iQTYjdNolNLdbeOMzWXRuMQz3kCYbpV57yhvUoNvAiJSvIM7vbLYA3FwEMA/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "timestamp=" + encodeURIComponent(ts) + "&durum=" + encodeURIComponent(durum)
+      })
+      .then(response => response.text())
+      .then(result => {
+        alert("Güncelleme: " + result);
+        document.getElementById("editModal").style.display = "none";
+        fetchData();
+      })
+      .catch(error => alert("Hata oluştu: " + error));
+    });
 
     fetchData();
   </script>
