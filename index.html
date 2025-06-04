@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>İş Takip Paneli</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
@@ -15,6 +16,8 @@
     #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
     #modalContent { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 500px; }
     #modalContent input, #modalContent textarea, #modalContent select { width: 100%; margin-bottom: 10px; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 40px; }
+    canvas { background: white; border-radius: 10px; padding: 10px; }
   </style>
 </head>
 <body>
@@ -58,6 +61,13 @@
     <tbody></tbody>
   </table>
 
+  <div class="charts">
+    <canvas id="chartDurum"></canvas>
+    <canvas id="chartOncelik"></canvas>
+    <canvas id="chartAy"></canvas>
+    <canvas id="chartSorumlu"></canvas>
+  </div>
+
   <!-- Modal -->
   <div id="modal">
     <div id="modalContent">
@@ -100,6 +110,7 @@
         const data = JSON.parse(rep.substr(47).slice(0, -2));
         const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
         const sorumlular = new Set();
+        const durumlar = {}, oncelikler = {}, aylik = {}, sorumluSayisi = {};
 
         data.table.rows.forEach(row => {
           const cells = row.c.map(cell => cell?.v || '');
@@ -113,6 +124,12 @@
           table.appendChild(tr);
 
           sorumlular.add(cells[3]);
+          durumlar[cells[5]] = (durumlar[cells[5]] || 0) + 1;
+          oncelikler[cells[6]] = (oncelikler[cells[6]] || 0) + 1;
+
+          const ay = (cells[3] || '').substring(0,7); // yyyy-mm
+          aylik[ay] = (aylik[ay] || 0) + 1;
+          sorumluSayisi[cells[3]] = (sorumluSayisi[cells[3]] || 0) + 1;
         });
 
         const sorumluSelect = document.getElementById('sorumluFilter');
@@ -121,6 +138,30 @@
           opt.value = name;
           opt.text = name;
           sorumluSelect.appendChild(opt);
+        });
+
+        new Chart(document.getElementById('chartDurum'), {
+          type: 'pie',
+          data: { labels: Object.keys(durumlar), datasets: [{ data: Object.values(durumlar) }] },
+          options: { plugins: { title: { display: true, text: 'Durum Dağılımı' } } }
+        });
+
+        new Chart(document.getElementById('chartOncelik'), {
+          type: 'pie',
+          data: { labels: Object.keys(oncelikler), datasets: [{ data: Object.values(oncelikler) }] },
+          options: { plugins: { title: { display: true, text: 'Öncelik Dağılımı' } } }
+        });
+
+        new Chart(document.getElementById('chartAy'), {
+          type: 'bar',
+          data: { labels: Object.keys(aylik), datasets: [{ label: 'İş Sayısı', data: Object.values(aylik) }] },
+          options: { plugins: { title: { display: true, text: 'Ay Bazında İşler' } } }
+        });
+
+        new Chart(document.getElementById('chartSorumlu'), {
+          type: 'bar',
+          data: { labels: Object.keys(sorumluSayisi), datasets: [{ label: 'İş Sayısı', data: Object.values(sorumluSayisi) }] },
+          options: { plugins: { title: { display: true, text: 'Sorumluya Göre İşler' } } }
         });
       });
 
