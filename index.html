@@ -28,8 +28,8 @@
   <section id="gecikmis" class="hidden"><h3>Süresi Geçmiş İşler</h3><table id="lateTable"></table></section>
   <section id="analiz" class="hidden">
     <h3>Analiz</h3>
-    <canvas id="chartDurum"></canvas><br />
-    <canvas id="chartSorumlu"></canvas>
+    <canvas id="chartDurum" height="150"></canvas><br />
+    <canvas id="chartSorumlu" height="150"></canvas>
   </section>
   <section id="form" class="hidden">
     <h3>Veri Girişi</h3>
@@ -70,9 +70,10 @@
 
   function drawLateTable(rows) {
     const lateRows = rows.filter(r => {
-      const tarih = new Date(r[5]);
+      const dateStr = r[5];
       const bugun = new Date();
-      return r[6] !== "Tamamlandı" && tarih < bugun;
+      const parsed = Date.parse(dateStr);
+      return parsed && r[6] !== "Tamamlandı" && new Date(parsed) < bugun;
     });
     drawTable("lateTable", ["Zaman", "İş Başlığı", "İş Tanımı", "Sorumlu", "Başlangıç", "Bitiş", "Durum", "Öncelik", "Not", "Hatırlatma"], lateRows);
   }
@@ -80,9 +81,9 @@
   function drawCharts(rows) {
     const durumlar = {};
     const sorumlu = {};
-
     rows.forEach(r => {
-      const d = r[6]; const s = r[3];
+      const d = r[6] || "Bilinmiyor";
+      const s = r[3] || "Tanımsız";
       durumlar[d] = (durumlar[d] || 0) + 1;
       sorumlu[s] = (sorumlu[s] || 0) + 1;
     });
@@ -91,7 +92,7 @@
       type: "pie",
       data: {
         labels: Object.keys(durumlar),
-        datasets: [{ data: Object.values(durumlar) }]
+        datasets: [{ label: "Durum Dağılımı", data: Object.values(durumlar) }]
       }
     });
 
