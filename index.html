@@ -13,6 +13,9 @@
     th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
     th { background-color: #eee; }
     canvas { background: white; padding: 10px; border-radius: 8px; margin-top: 20px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 20px; border-radius: 8px; width: 400px; }
+    .modal-content input, .modal-content select, .modal-content textarea { width: 100%; margin-bottom: 10px; padding: 8px; }
   </style>
 </head>
 <body>
@@ -20,21 +23,15 @@
   <nav>
     <button onclick="showTab('panel')">📋 İş Paneli</button>
     <button onclick="showTab('grafikler')">📊 Grafikler</button>
+    <button onclick="showModal()">➕ Yeni İş Ekle</button>
   </nav>
 
   <section id="panel">
     <table id="dataTable">
       <thead>
         <tr>
-          <th>İş Başlığı</th>
-          <th>İş Tanımı</th>
-          <th>Sorumlu</th>
-          <th>Başlangıç</th>
-          <th>Bitiş</th>
-          <th>Durum</th>
-          <th>Öncelik</th>
-          <th>Not</th>
-          <th>Hatırlatma</th>
+          <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
+          <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -53,6 +50,28 @@
     </table>
   </section>
 
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <form action="https://docs.google.com/forms/d/e/1FAIpQLSd6m5Xf_zNjtcUdMLzItAKefJw8VWvG7aCJG5M9rZVnaFvQSA/formResponse" method="POST" target="_blank">
+        <input name="entry.1393658962" placeholder="İş Başlığı" required>
+        <textarea name="entry.1066526511" placeholder="İş Tanımı" required></textarea>
+        <input name="entry.1020445605" placeholder="Sorumlu" required>
+        <input name="entry.1868761740" type="date" placeholder="Başlangıç Tarihi" required>
+        <input name="entry.1035766112" type="date" placeholder="Bitiş Tarihi" required>
+        <select name="entry.1973101287" required>
+          <option value="">Durum</option><option value="Devam Ediyor">Devam Ediyor</option><option value="Beklemede">Beklemede</option><option value="Tamamlandı">Tamamlandı</option>
+        </select>
+        <select name="entry.1612889266" required>
+          <option value="">Öncelik</option><option value="Yüksek">Yüksek</option><option value="Orta">Orta</option><option value="Düşük">Düşük</option>
+        </select>
+        <textarea name="entry.1365925555" placeholder="Not"></textarea>
+        <input name="entry.729044839" type="number" placeholder="Hatırlatma (gün)">
+        <button type="submit">Gönder</button>
+        <button type="button" onclick="closeModal()">İptal</button>
+      </form>
+    </div>
+  </div>
+
   <script>
     const sheetID = '1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY';
     const sheetName = 'Form_Responses1';
@@ -63,6 +82,14 @@
       document.getElementById('panel').classList.add('hidden');
       document.getElementById('grafikler').classList.add('hidden');
       document.getElementById(id).classList.remove('hidden');
+    }
+
+    function showModal() {
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
     }
 
     fetch(url)
@@ -76,18 +103,16 @@
 
         data.table.rows.forEach(row => {
           const cells = row.c.map(cell => cell?.v || '');
-          const [ , baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat ] = cells;
+          const [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat] = cells;
 
-          // Tabloya yaz
           const tr = document.createElement("tr");
-          [baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
+          [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
             const td = document.createElement("td");
             td.textContent = text;
             tr.appendChild(td);
           });
           tbody.appendChild(tr);
 
-          // Analiz
           if (durum === "Beklemede" || durum === "Devam Ediyor") {
             bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
           }
@@ -95,7 +120,6 @@
             tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
           }
 
-          // 🔧 Tarih karşılaştırmasını Date objesi ile yap
           const parsedDate = new Date(bitis);
           const now = new Date();
           if (bitis && !isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı") {
@@ -121,10 +145,4 @@
 
         gecikmis.forEach(item => {
           const tr = document.createElement("tr");
-          tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
-          gecikmisBody.appendChild(tr);
-        });
-      });
-  </script>
-</body>
-</html>
+          tr.inner
