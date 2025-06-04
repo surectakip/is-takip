@@ -3,9 +3,11 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş Takip Sistemi - Filtreli Sürüm</title>
+  <title>İş Takip Sistemi - Filtre + Export</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
     nav button, select { margin: 5px; padding: 10px; font-size: 14px; }
@@ -16,7 +18,7 @@
   </style>
 </head>
 <body>
-  <h1>İş Takip Sistemi - Filtreli</h1>
+  <h1>İş Takip Sistemi - Filtreleme ve Export</h1>
 
   <div>
     <label>Sorumlu:</label>
@@ -37,6 +39,9 @@
       <option value="Orta">Orta</option>
       <option value="Düşük">Düşük</option>
     </select>
+
+    <button onclick="exportExcel()">📥 Excel</button>
+    <button onclick="exportPDF()">📄 PDF</button>
   </div>
 
   <table id="dataTable">
@@ -48,6 +53,9 @@
     </thead>
     <tbody></tbody>
   </table>
+  <div id="alertBox" style="margin-top: 20px; background: #ffdddd; border: 1px solid red; padding: 15px; display: none;">
+    <strong>Uyarı:</strong> Süresi geçmiş <span id="expiredCount"></span> iş bulunuyor!
+  </div>
 
   <script>
     const sheetID = '1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY';
@@ -81,7 +89,21 @@
           sorumluSelect.appendChild(opt);
         });
 
+        
         applyFilters();
+        const now = new Date();
+        let geciken = 0;
+        allRows.forEach(r => {
+          const tarih = new Date(r.bitis);
+          if (r.bitis && !isNaN(tarih) && tarih < now && r.durum !== "Tamamlandı") {
+            geciken++;
+          }
+        });
+        if (geciken > 0) {
+          document.getElementById("expiredCount").textContent = geciken;
+          document.getElementById("alertBox").style.display = "block";
+        }
+    
       });
 
     function applyFilters() {
@@ -106,6 +128,32 @@
           });
           tbody.appendChild(tr);
         });
+    }
+
+    function exportExcel() {
+      const wb = XLSX.utils.book_new();
+      const table = document.getElementById("dataTable");
+      const ws = XLSX.utils.table_to_sheet(table);
+      XLSX.utils.book_append_sheet(wb, ws, "İşler");
+      XLSX.writeFile(wb, "is_takip.xlsx");
+    }
+
+    function exportPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.text("İş Takip Tablosu", 10, 10);
+      const rows = [];
+      const trs = document.querySelectorAll("#dataTable tbody tr");
+      trs.forEach(tr => {
+        const cols = Array.from(tr.children).map(td => td.textContent);
+        rows.push(cols);
+      });
+      doc.autoTable({
+        head: [[ "Zaman", "Başlık", "Tanım", "Sorumlu", "Başlangıç", "Bitiş", "Durum", "Öncelik", "Not", "Hatırlatma" ]],
+        body: rows,
+        startY: 20
+      });
+      doc.save("is_takip.pdf");
     }
   </script>
 </body>
