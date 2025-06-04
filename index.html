@@ -1,193 +1,266 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş Takip Sistemi - Filtre + Export</title>
+  <title>İş Takip Sistemi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
-    nav button, select { margin: 5px; padding: 10px; font-size: 14px; }
+    nav button { margin-right: 10px; padding: 10px 15px; font-size: 16px; cursor: pointer; }
     .hidden { display: none; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
     th { background-color: #eee; }
+    canvas { background: white; padding: 10px; border-radius: 8px; margin-top: 20px; }
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+    .modal-content { background: white; padding: 20px; border-radius: 8px; width: 400px; }
+    .modal-content input, .modal-content select, .modal-content textarea { width: 100%; margin-bottom: 10px; padding: 8px; }
+
+    #loginScreen { max-width: 400px; margin: 100px auto; text-align: center; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px #ccc; }
+    #alertBox { margin-top: 20px; background: #ffdddd; border: 1px solid red; padding: 15px; display: none; }
   </style>
 </head>
-
 <body onload="checkAccess()">
+
 <div id="loginScreen">
   <h2>🔐 Giriş Yap</h2>
   <input type="password" id="loginPassword" placeholder="Şifre" style="padding:10px; font-size:16px;">
   <button onclick="login()" style="padding:10px 20px; font-size:16px;">Giriş</button>
   <p id="loginError" style="color:red;"></p>
 </div>
+
 <div id="appContent" style="display:none;">
+  <h1>📋 İş Takip Sistemi</h1>
+  <nav>
+    <button onclick="showTab('panel')">İş Paneli</button>
+    <button onclick="showTab('grafikler')">Grafikler</button>
+    <button onclick="showModal()">Yeni İş Ekle</button>
+    <button onclick="exportToExcel()">Excel</button>
+    <button onclick="exportToPDF()">PDF</button>
+  </nav>
 
-  <h1>İş Takip Sistemi - Filtreleme ve Export</h1>
-
-  <div>
-    <label>Sorumlu:</label>
-    <select id="filterSorumlu" onchange="applyFilters()"><option value="">Tümü</option></select>
-
-    <label>Durum:</label>
-    <select id="filterDurum" onchange="applyFilters()">
-      <option value="">Tümü</option>
-      <option value="Devam Ediyor">Devam Ediyor</option>
-      <option value="Beklemede">Beklemede</option>
-      <option value="Tamamlandı">Tamamlandı</option>
-    </select>
-
-    <label>Öncelik:</label>
-    <select id="filterOncelik" onchange="applyFilters()">
-      <option value="">Tümü</option>
-      <option value="Yüksek">Yüksek</option>
-      <option value="Orta">Orta</option>
-      <option value="Düşük">Düşük</option>
-    </select>
-
-    <button onclick="exportExcel()">📥 Excel</button>
-    <button onclick="exportPDF()">📄 PDF</button>
+  <div style="margin-top: 10px;">
+    <label>Sorumlu: <select id="filterSorumlu" onchange="applyFilters()"></select></label>
+    <label>Durum: <select id="filterDurum" onchange="applyFilters()"></select></label>
+    <label>Öncelik: <select id="filterOncelik" onchange="applyFilters()"></select></label>
   </div>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
-        <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-  <div id="alertBox" style="margin-top: 20px; background: #ffdddd; border: 1px solid red; padding: 15px; display: none;">
-    <strong>Uyarı:</strong> Süresi geçmiş <span id="expiredCount"></span> iş bulunuyor!
+  <section id="panel">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
+          <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div id="alertBox">
+      <strong>Uyarı:</strong> Süresi geçmiş <span id="expiredCount"></span> iş bulunuyor!
+    </div>
+  </section>
+
+  <section id="grafikler" class="hidden">
+    <canvas id="chartBekleyen"></canvas>
+    <canvas id="chartTamamlanmamis"></canvas>
+    <h2>Süresi Geçmiş İşler</h2>
+    <table id="gecikmisTable">
+      <thead><tr><th>İş Başlığı</th><th>Sorumlu</th><th>Bitiş Tarihi</th><th>Durum</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <form action="https://docs.google.com/forms/d/e/1FAIpQLSd6m5Xf_zNjtcUdMLzItAKefJw8VWvG7aCJG5M9rZVnaFvQSA/formResponse" method="POST" target="_blank">
+        <input name="entry.1393658962" placeholder="İş Başlığı" required>
+        <textarea name="entry.1066526511" placeholder="İş Tanımı" required></textarea>
+        <input name="entry.1020445605" placeholder="Sorumlu" required>
+        <input name="entry.1868761740" type="date" placeholder="Başlangıç Tarihi" required>
+        <input name="entry.1035766112" type="date" placeholder="Bitiş Tarihi" required>
+        <select name="entry.1973101287" required>
+          <option value="">Durum</option><option value="Devam Ediyor">Devam Ediyor</option><option value="Beklemede">Beklemede</option><option value="Tamamlandı">Tamamlandı</option>
+        </select>
+        <select name="entry.1612889266" required>
+          <option value="">Öncelik</option><option value="Yüksek">Yüksek</option><option value="Orta">Orta</option><option value="Düşük">Düşük</option>
+        </select>
+        <textarea name="entry.1365925555" placeholder="Not"></textarea>
+        <input name="entry.729044839" type="number" placeholder="Hatırlatma (gün)">
+        <button type="submit">Gönder</button>
+        <button type="button" onclick="closeModal()">İptal</button>
+      </form>
+    </div>
   </div>
-
-  <script>
-    const sheetID = '1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY';
-    const sheetName = 'Form_Responses1';
-    const query = encodeURIComponent('SELECT *');
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
-    let allRows = [];
-
-    fetch(url)
-      .then(res => res.text())
-      .then(rep => {
-        const data = JSON.parse(rep.substr(47).slice(0, -2));
-        const tbody = document.querySelector("#dataTable tbody");
-
-        const sorumlular = new Set();
-
-        data.table.rows.forEach(row => {
-          const cells = row.c.map(cell => cell?.v || '');
-          const [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat] = cells;
-
-          allRows.push({ timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat });
-
-          sorumlular.add(sorumlu);
-        });
-
-        const sorumluSelect = document.getElementById("filterSorumlu");
-        Array.from(sorumlular).sort().forEach(name => {
-          const opt = document.createElement("option");
-          opt.value = name;
-          opt.textContent = name;
-          sorumluSelect.appendChild(opt);
-        });
-
-        
-        applyFilters();
-        const now = new Date();
-        let geciken = 0;
-        allRows.forEach(r => {
-          const tarih = new Date(r.bitis);
-          if (r.bitis && !isNaN(tarih) && tarih < now && r.durum !== "Tamamlandı") {
-            geciken++;
-          }
-        });
-        if (geciken > 0) {
-          document.getElementById("expiredCount").textContent = geciken;
-          document.getElementById("alertBox").style.display = "block";
-        }
-    
-      });
-
-    function applyFilters() {
-      const fSorumlu = document.getElementById("filterSorumlu").value;
-      const fDurum = document.getElementById("filterDurum").value;
-      const fOncelik = document.getElementById("filterOncelik").value;
-      const tbody = document.querySelector("#dataTable tbody");
-      tbody.innerHTML = "";
-
-      allRows
-        .filter(r =>
-          (!fSorumlu || r.sorumlu === fSorumlu) &&
-          (!fDurum || r.durum === fDurum) &&
-          (!fOncelik || r.oncelik === fOncelik)
-        )
-        .forEach(r => {
-          const tr = document.createElement("tr");
-          [r.timestamp, r.baslik, r.tanim, r.sorumlu, r.baslangic, r.bitis, r.durum, r.oncelik, r.notlar, r.hatirlat].forEach(text => {
-            const td = document.createElement("td");
-            td.textContent = text;
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
-        });
-    }
-
-    function exportExcel() {
-      const wb = XLSX.utils.book_new();
-      const table = document.getElementById("dataTable");
-      const ws = XLSX.utils.table_to_sheet(table);
-      XLSX.utils.book_append_sheet(wb, ws, "İşler");
-      XLSX.writeFile(wb, "is_takip.xlsx");
-    }
-
-    function exportPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      doc.text("İş Takip Tablosu", 10, 10);
-      const rows = [];
-      const trs = document.querySelectorAll("#dataTable tbody tr");
-      trs.forEach(tr => {
-        const cols = Array.from(tr.children).map(td => td.textContent);
-        rows.push(cols);
-      });
-      doc.autoTable({
-        head: [[ "Zaman", "Başlık", "Tanım", "Sorumlu", "Başlangıç", "Bitiş", "Durum", "Öncelik", "Not", "Hatırlatma" ]],
-        body: rows,
-        startY: 20
-      });
-      doc.save("is_takip.pdf");
-    }
-  </script>
-
 </div>
+
 <script>
-function login() {
-  const pass = document.getElementById("loginPassword").value;
-  if (pass === "1234") {
-    localStorage.setItem("loginSuccess", "true");
-    location.reload();
-  } else {
-    document.getElementById("loginError").textContent = "Hatalı şifre!";
+  const correctPassword = "sl620(Ku";
+  function login() {
+    const pass = document.getElementById("loginPassword").value;
+    if (pass === correctPassword) {
+      localStorage.setItem("loginSuccess", "true");
+      location.reload();
+    } else {
+      document.getElementById("loginError").textContent = "Hatalı şifre!";
+    }
   }
-}
-function checkAccess() {
-  const ok = localStorage.getItem("loginSuccess");
-  if (ok === "true") {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("appContent").style.display = "block";
-  } else {
-    document.getElementById("loginScreen").style.display = "block";
-    document.getElementById("appContent").style.display = "none";
+  function checkAccess() {
+    const ok = localStorage.getItem("loginSuccess");
+    if (ok === "true") {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("appContent").style.display = "block";
+    }
   }
-}
+
+  const sheetID = '1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY';
+  const sheetName = 'Form_Responses1';
+  const query = encodeURIComponent('SELECT *');
+  const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+  const allRows = [];
+
+  function showTab(id) {
+    document.getElementById('panel').classList.add('hidden');
+    document.getElementById('grafikler').classList.add('hidden');
+    document.getElementById(id).classList.remove('hidden');
+  }
+
+  function showModal() {
+    document.getElementById('modal').style.display = 'flex';
+  }
+
+  function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+  }
+
+  function applyFilters() {
+    const sorumlu = document.getElementById("filterSorumlu").value;
+    const durum = document.getElementById("filterDurum").value;
+    const oncelik = document.getElementById("filterOncelik").value;
+    const tbody = document.querySelector("#dataTable tbody");
+    tbody.innerHTML = '';
+    let geciken = 0;
+
+    allRows.forEach(r => {
+      const tarih = new Date(r.bitis);
+      const now = new Date();
+      const gecmis = r.bitis && !isNaN(tarih) && tarih < now && r.durum !== "Tamamlandı";
+
+      const match =
+        (sorumlu === '' || r.sorumlu === sorumlu) &&
+        (durum === '' || r.durum === durum) &&
+        (oncelik === '' || r.oncelik === oncelik);
+
+      if (match) {
+        const tr = document.createElement("tr");
+        [r.timestamp, r.baslik, r.tanim, r.sorumlu, r.baslangic, r.bitis, r.durum, r.oncelik, r.notlar, r.hatirlat].forEach(val => {
+          const td = document.createElement("td");
+          td.textContent = val;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+
+      if (gecmis) geciken++;
+    });
+
+    document.getElementById("expiredCount").textContent = geciken;
+    document.getElementById("alertBox").style.display = geciken > 0 ? "block" : "none";
+  }
+
+  function exportToExcel() {
+    const table = document.getElementById("dataTable");
+    const wb = XLSX.utils.table_to_book(table);
+    XLSX.writeFile(wb, "is_takip.xlsx");
+  }
+
+  function exportToPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("İş Takip Tablosu", 14, 10);
+    doc.autoTable({ html: '#dataTable' });
+    doc.save("is_takip.pdf");
+  }
+
+  fetch(url)
+    .then(res => res.text())
+    .then(rep => {
+      const data = JSON.parse(rep.substr(47).slice(0, -2));
+      const tbody = document.querySelector("#dataTable tbody");
+      const gecikmisBody = document.querySelector("#gecikmisTable tbody");
+
+      const bekleyen = {}, tamamlanmamis = {}, gecikmis = [];
+      const sorumlular = new Set(), durumlar = new Set(), oncelikler = new Set();
+
+      data.table.rows.forEach(row => {
+        const cells = row.c.map(cell => cell?.v || '');
+        const [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat] = cells;
+        allRows.push({ timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat });
+
+        sorumlular.add(sorumlu);
+        durumlar.add(durum);
+        oncelikler.add(oncelik);
+
+        const tr = document.createElement("tr");
+        [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
+          const td = document.createElement("td");
+          td.textContent = text;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+
+        if (durum === "Beklemede" || durum === "Devam Ediyor") {
+          bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
+        }
+        if (durum !== "Tamamlandı") {
+          tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
+        }
+
+        const parsedDate = new Date(bitis);
+        const now = new Date();
+        if (bitis && !isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı") {
+          gecikmis.push({ baslik, sorumlu, bitis, durum });
+        }
+      });
+
+      [sorumlular, durumlar, oncelikler].forEach((set, i) => {
+        const id = ["filterSorumlu", "filterDurum", "filterOncelik"][i];
+        const select = document.getElementById(id);
+        select.innerHTML = '<option value="">Hepsi</option>';
+        [...set].forEach(val => {
+          const opt = document.createElement("option");
+          opt.value = val;
+          opt.textContent = val;
+          select.appendChild(opt);
+        });
+      });
+
+      applyFilters();
+
+      new Chart(document.getElementById('chartBekleyen'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(bekleyen),
+          datasets: [{ label: 'Bekleyen İşler', data: Object.values(bekleyen), backgroundColor: 'orange' }]
+        }
+      });
+
+      new Chart(document.getElementById('chartTamamlanmamis'), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(tamamlanmamis),
+          datasets: [{ label: 'Tamamlanmamış İşler', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }]
+        }
+      });
+
+      gecikmis.forEach(item => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
+        gecikmisBody.appendChild(tr);
+      });
+    });
 </script>
 </body>
-
 </html>
