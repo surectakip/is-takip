@@ -2,33 +2,81 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş Takip - Grafikler</title>
+  <title>İş Takip Paneli</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; }
-    h2 { margin-top: 40px; }
-    canvas { background: white; padding: 20px; border-radius: 8px; }
-    .chart-container { margin-bottom: 40px; }
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    nav { display: flex; gap: 20px; margin-bottom: 20px; }
+    nav button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .hidden { display: none; }
     table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
-    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background: #e0e0e0; }
+    .filters, .actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+    select, button, input { padding: 8px; font-size: 14px; }
+    .highlight { background-color: #fff3cd; }
+    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    #modalContent { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 500px; }
+    #modalContent input, #modalContent textarea, #modalContent select { width: 100%; margin-bottom: 10px; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 40px; }
+    canvas { background: white; border-radius: 10px; padding: 10px; }
   </style>
 </head>
 <body>
-  <h1>İş Takip Grafik Analizi</h1>
+  <h1>İş Takip Sistemi</h1>
 
-  <div class="chart-container">
-    <h2>Sorumluya Göre Bekleyen İş Sayısı</h2>
-    <canvas id="chartBekleyen"></canvas>
-  </div>
+  <nav>
+    <button onclick="showSection('panel')">📋 İş Paneli</button>
+    <button onclick="showSection('grafik')">📊 Grafikler</button>
+  </nav>
 
-  <div class="chart-container">
-    <h2>Sorumluya Göre Tamamlanmamış İş Sayısı</h2>
-    <canvas id="chartTamamlanmamis"></canvas>
-  </div>
+  <!-- PANEL SEKME -->
+  <section id="panel">
+    <div class="actions">
+      <button onclick="openModal()">+ Yeni İş Ekle</button>
+    </div>
+    <div class="filters">
+      <select id="sorumluFilter"><option value="">Tüm Sorumlular</option></select>
+      <select id="durumFilter">
+        <option value="">Tüm Durumlar</option>
+        <option value="Tamamlandı">Tamamlandı</option>
+        <option value="Devam Ediyor">Devam Ediyor</option>
+        <option value="Beklemede">Beklemede</option>
+      </select>
+      <select id="oncelikFilter">
+        <option value="">Tüm Öncelikler</option>
+        <option value="Yüksek">Yüksek</option>
+        <option value="Orta">Orta</option>
+        <option value="Düşük">Düşük</option>
+      </select>
+      <button onclick="applyFilters()">Filtrele</button>
+      <button onclick="clearFilters()">Temizle</button>
+    </div>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>İş Başlığı</th>
+          <th>İş Tanımı</th>
+          <th>Sorumlu</th>
+          <th>Başlangıç</th>
+          <th>Bitiş</th>
+          <th>Durum</th>
+          <th>Öncelik</th>
+          <th>Not</th>
+          <th>Hatırlatma (gün)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
 
-  <div class="chart-container">
+  <!-- GRAFİK SEKME -->
+  <section id="grafik" class="hidden">
+    <div class="charts">
+      <canvas id="chartBekleyen"></canvas>
+      <canvas id="chartTamamlanmamis"></canvas>
+    </div>
     <h2>Süresi Geçmiş İşler</h2>
     <table id="gecikmisTable">
       <thead>
@@ -41,6 +89,36 @@
       </thead>
       <tbody></tbody>
     </table>
+  </section>
+
+  <!-- MODAL -->
+  <div id="modal">
+    <div id="modalContent">
+      <h3>Yeni İş Ekle</h3>
+      <form action="https://docs.google.com/forms/d/e/1FAIpQLSd6m5Xf_zNjtcUdMLzItAKefJw8VWvG7aCJG5M9rZVnaFvQSA/formResponse" method="POST" target="_blank" onsubmit="closeModal()">
+        <input name="entry.1393658962" placeholder="İş Başlığı" required>
+        <textarea name="entry.1066526511" placeholder="İş Tanımı" required></textarea>
+        <input name="entry.1020445605" placeholder="Sorumlu" required>
+        <input name="entry.1868761740" type="date" placeholder="Başlangıç Tarihi" required>
+        <input name="entry.1035766112" type="date" placeholder="Bitiş Tarihi" required>
+        <select name="entry.1973101287" required>
+          <option value="">Durum Seç</option>
+          <option value="Tamamlandı">Tamamlandı</option>
+          <option value="Devam Ediyor">Devam Ediyor</option>
+          <option value="Beklemede">Beklemede</option>
+        </select>
+        <select name="entry.1612889266" required>
+          <option value="">Öncelik Seç</option>
+          <option value="Yüksek">Yüksek</option>
+          <option value="Orta">Orta</option>
+          <option value="Düşük">Düşük</option>
+        </select>
+        <textarea name="entry.1365925555" placeholder="Not"></textarea>
+        <input name="entry.729044839" type="number" placeholder="Hatırlatma Aralığı (gün)">
+        <button type="submit">Gönder</button>
+        <button type="button" onclick="closeModal()">İptal</button>
+      </form>
+    </div>
   </div>
 
   <script>
@@ -49,71 +127,105 @@
     const query = encodeURIComponent('SELECT *');
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
+    function showSection(id) {
+      document.getElementById('panel').classList.add('hidden');
+      document.getElementById('grafik').classList.add('hidden');
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function openModal() { document.getElementById('modal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; }
+
+    function applyFilters() {
+      const sorumlu = document.getElementById('sorumluFilter').value;
+      const durum = document.getElementById('durumFilter').value;
+      const oncelik = document.getElementById('oncelikFilter').value;
+      const rows = document.querySelectorAll('#dataTable tbody tr');
+
+      rows.forEach(row => {
+        const cells = row.getElementsByTagName('td');
+        const match = (!sorumlu || cells[2].innerText === sorumlu) &&
+                      (!durum || cells[5].innerText === durum) &&
+                      (!oncelik || cells[6].innerText === oncelik);
+        row.style.display = match ? '' : 'none';
+      });
+    }
+
+    function clearFilters() {
+      document.getElementById('sorumluFilter').value = '';
+      document.getElementById('durumFilter').value = '';
+      document.getElementById('oncelikFilter').value = '';
+      applyFilters();
+    }
+
     fetch(url)
       .then(res => res.text())
       .then(rep => {
         const data = JSON.parse(rep.substr(47).slice(0, -2));
+        const table = document.querySelector('#dataTable tbody');
+        const gecikmisBody = document.querySelector('#gecikmisTable tbody');
+        const sorumluSelect = document.getElementById('sorumluFilter');
         const today = new Date().toISOString().split('T')[0];
 
+        const sorumlular = new Set();
         const bekleyen = {}, tamamlanmamis = {}, gecikmis = [];
 
         data.table.rows.forEach(row => {
           const cells = row.c.map(cell => cell?.v || '');
+
+          const tr = document.createElement('tr');
+          for (let i = 1; i <= 9; i++) {
+            const td = document.createElement('td');
+            td.innerText = cells[i];
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+
           const baslik = cells[1];
           const sorumlu = cells[3];
-          const bitis = cells[5] || '';
+          const bitis = cells[5];
           const durum = cells[6];
 
-          // Bekleyen: Devam Ediyor veya Beklemede
+          sorumlular.add(sorumlu);
+
           if (durum === 'Devam Ediyor' || durum === 'Beklemede') {
             bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
           }
-
-          // Tamamlanmamış: Tamamlandı dışındaki her şey
           if (durum !== 'Tamamlandı') {
             tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
           }
-
-          // Süresi geçmiş işler
           if (bitis && bitis < today && durum !== 'Tamamlandı') {
             gecikmis.push({ baslik, sorumlu, bitis, durum });
           }
         });
 
-        // Chart: Bekleyen İşler
+        [...sorumlular].sort().forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.text = name;
+          sorumluSelect.appendChild(opt);
+        });
+
         new Chart(document.getElementById('chartBekleyen'), {
           type: 'bar',
           data: {
             labels: Object.keys(bekleyen),
-            datasets: [{
-              label: 'Bekleyen İş Sayısı',
-              data: Object.values(bekleyen),
-              backgroundColor: 'orange'
-            }]
-          },
-          options: { responsive: true }
+            datasets: [{ label: 'Bekleyen İş', data: Object.values(bekleyen), backgroundColor: 'orange' }]
+          }
         });
 
-        // Chart: Tamamlanmamış İşler
         new Chart(document.getElementById('chartTamamlanmamis'), {
           type: 'bar',
           data: {
             labels: Object.keys(tamamlanmamis),
-            datasets: [{
-              label: 'Tamamlanmamış İş Sayısı',
-              data: Object.values(tamamlanmamis),
-              backgroundColor: 'crimson'
-            }]
-          },
-          options: { responsive: true }
+            datasets: [{ label: 'Tamamlanmamış İş', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }]
+          }
         });
 
-        // Tablo: Süresi Geçmiş İşler
-        const tbody = document.querySelector('#gecikmisTable tbody');
         gecikmis.forEach(item => {
           const tr = document.createElement('tr');
           tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
-          tbody.appendChild(tr);
+          gecikmisBody.appendChild(tr);
         });
       });
   </script>
