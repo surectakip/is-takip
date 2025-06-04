@@ -49,7 +49,19 @@
   </section>
 
   <section id="analiz" class="hidden">
-    <canvas id="chartBekleyen"></canvas>
+    
+  <h2>Durum Dağılımı (Pasta)</h2>
+  <canvas id="chartDurum"></canvas>
+
+  <h2>Sorumluya Göre Toplam İşler</h2>
+  <canvas id="chartToplam"></canvas>
+
+  <h2>Sorumluya Göre Bekleyen İşler</h2>
+  <canvas id="chartBekleyen"></canvas>
+
+  <h2>Sorumluya Göre Tamamlanmamış İşler</h2>
+  <canvas id="chartTamamlanmamis"></canvas>
+  
     <canvas id="chartTamamlanmamis"></canvas>
   </section>
 
@@ -111,7 +123,45 @@
             }
           });
 
+          
+          // Chart: Durum Dağılımı
+          const durumSayilari = {};
+          data.table.rows.forEach(row => {
+            const d = row.c[6]?.v || '';
+            durumSayilari[d] = (durumSayilari[d] || 0) + 1;
+          });
+          new Chart(document.getElementById('chartDurum'), {
+            type: 'pie',
+            data: {
+              labels: Object.keys(durumSayilari),
+              datasets: [{
+                label: 'Durum Dağılımı',
+                data: Object.values(durumSayilari),
+                backgroundColor: ['green', 'orange', 'red', 'gray']
+              }]
+            }
+          });
+
+          // Chart: Toplam iş sayısı sorumlulara göre
+          const toplam = {};
+          data.table.rows.forEach(row => {
+            const sor = row.c[3]?.v || '';
+            toplam[sor] = (toplam[sor] || 0) + 1;
+          });
+          new Chart(document.getElementById('chartToplam'), {
+            type: 'bar',
+            data: {
+              labels: Object.keys(toplam),
+              datasets: [{
+                label: 'Toplam İş',
+                data: Object.values(toplam),
+                backgroundColor: 'steelblue'
+              }]
+            }
+          });
+
           // Chart: Bekleyen
+  
           new Chart(document.getElementById('chartBekleyen'), {
             type: 'bar',
             data: {
