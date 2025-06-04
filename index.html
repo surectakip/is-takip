@@ -17,7 +17,16 @@
     th { background-color: #eee; }
   </style>
 </head>
-<body>
+
+<body onload="checkAccess()">
+<div id="loginScreen">
+  <h2>🔐 Giriş Yap</h2>
+  <input type="password" id="loginPassword" placeholder="Şifre" style="padding:10px; font-size:16px;">
+  <button onclick="login()" style="padding:10px 20px; font-size:16px;">Giriş</button>
+  <p id="loginError" style="color:red;"></p>
+</div>
+<div id="appContent" style="display:none;">
+
   <h1>İş Takip Sistemi - Filtreleme ve Export</h1>
 
   <div>
@@ -156,5 +165,29 @@
       doc.save("is_takip.pdf");
     }
   </script>
+
+</div>
+<script>
+function login() {
+  const pass = document.getElementById("loginPassword").value;
+  if (pass === "1234") {
+    localStorage.setItem("loginSuccess", "true");
+    location.reload();
+  } else {
+    document.getElementById("loginError").textContent = "Hatalı şifre!";
+  }
+}
+function checkAccess() {
+  const ok = localStorage.getItem("loginSuccess");
+  if (ok === "true") {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("appContent").style.display = "block";
+  } else {
+    document.getElementById("loginScreen").style.display = "block";
+    document.getElementById("appContent").style.display = "none";
+  }
+}
+</script>
 </body>
+
 </html>
