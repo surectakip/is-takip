@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>İş Takip Sistemi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f8f8f8; }
+    nav button { margin-right: 10px; padding: 10px 15px; font-size: 16px; cursor: pointer; }
+    .hidden { display: none; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    th { background-color: #eee; }
+    canvas { background: white; padding: 10px; border-radius: 8px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h1>İş Takip Sistemi</h1>
+  <nav>
+    <button onclick="showTab('panel')">İş Paneli</button>
+    <button onclick="showTab('grafikler')">Grafikler</button>
+  </nav>
+
+  <section id="panel">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>İş Başlığı</th>
+          <th>İş Tanımı</th>
+          <th>Sorumlu</th>
+          <th>Başlangıç</th>
+          <th>Bitiş</th>
+          <th>Durum</th>
+          <th>Öncelik</th>
+          <th>Not</th>
+          <th>Hatırlatma</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="grafikler" class="hidden">
+    <canvas id="chartBekleyen"></canvas>
+    <canvas id="chartTamamlanmamis"></canvas>
+    <h2>Süresi Geçmiş İşler</h2>
+    <table id="gecikmisTable">
+      <thead>
+        <tr><th>İş Başlığı</th><th>Sorumlu</th><th>Bitiş Tarihi</th><th>Durum</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <script>
+    const sheetID = '1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY';
+    const sheetName = 'Form_Responses1';
+    const query = encodeURIComponent('SELECT *');
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+
+    function showTab(id) {
+      document.getElementById('panel').classList.add('hidden');
+      document.getElementById('grafikler').classList.add('hidden');
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    fetch(url)
+      .then(res => res.text())
+      .then(rep => {
+        const data = JSON.parse(rep.substr(47).slice(0, -2));
+        const tbody = document.querySelector("#dataTable tbody");
+        const gecikmisBody = document.querySelector("#gecikmisTable tbody");
+
+        const today = new Date().toISOString().split('T')[0];
+        const bekleyen = {}, tamamlanmamis = {}, gecikmis = [];
+
+        data.table.rows.forEach(row => {
+          const cells = row.c.map(cell => cell?.v || '');
+          const [ , baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat ] = cells;
+
+          // Tabloya yaz
+          const tr = document.createElement("tr");
+          [baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
+            const td = document.createElement("td");
+            td.textContent = text;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+
+          // Analiz
+          if (durum === "Beklemede" || durum === "Devam Ediyor") {
+            bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
+          }
+          if (durum !== "Tamamlandı") {
+            tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
+          }
+          if (bitis && bitis < today && durum !== "Tamamlandı") {
+            gecikmis.push({ baslik, sorumlu, bitis, durum });
+          }
+        });
+
+        new Chart(document.getElementById('chartBekleyen'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(bekleyen),
+            datasets: [{ label: 'Bekleyen İşler', data: Object.values(bekleyen), backgroundColor: 'orange' }]
+          }
+        });
+
+        new Chart(document.getElementById('chartTamamlanmamis'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(tamamlanmamis),
+            datasets: [{ label: 'Tamamlanmamış İşler', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }]
+          }
+        });
+
+        gecikmis.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
+          gecikmisBody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>
