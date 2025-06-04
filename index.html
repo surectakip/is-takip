@@ -70,4 +70,61 @@
       .then(rep => {
         const data = JSON.parse(rep.substr(47).slice(0, -2));
         const tbody = document.querySelector("#dataTable tbody");
-        const gecikmisBody = document.querySelector("#gecikmisT
+        const gecikmisBody = document.querySelector("#gecikmisTable tbody");
+
+        const bekleyen = {}, tamamlanmamis = {}, gecikmis = [];
+
+        data.table.rows.forEach(row => {
+          const cells = row.c.map(cell => cell?.v || '');
+          const [ , baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat ] = cells;
+
+          // Tabloya yaz
+          const tr = document.createElement("tr");
+          [baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
+            const td = document.createElement("td");
+            td.textContent = text;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+
+          // Analiz
+          if (durum === "Beklemede" || durum === "Devam Ediyor") {
+            bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
+          }
+          if (durum !== "Tamamlandı") {
+            tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
+          }
+
+          // 🔧 Tarih karşılaştırmasını Date objesi ile yap
+          const parsedDate = new Date(bitis);
+          const now = new Date();
+          if (bitis && !isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı") {
+            gecikmis.push({ baslik, sorumlu, bitis, durum });
+          }
+        });
+
+        new Chart(document.getElementById('chartBekleyen'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(bekleyen),
+            datasets: [{ label: 'Bekleyen İşler', data: Object.values(bekleyen), backgroundColor: 'orange' }]
+          }
+        });
+
+        new Chart(document.getElementById('chartTamamlanmamis'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(tamamlanmamis),
+            datasets: [{ label: 'Tamamlanmamış İşler', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }]
+          }
+        });
+
+        gecikmis.forEach(item => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
+          gecikmisBody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>
