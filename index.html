@@ -166,6 +166,21 @@ function resetFilters() {
               tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
             }
           });
+const sorumluSet = new Set();
+data.table.rows.forEach(row => {
+  const sorumlu = row.c[3]?.v;
+  if (sorumlu) sorumluSet.add(sorumlu);
+});
+const filterSorumlu = document.getElementById("filterSorumlu");
+if (filterSorumlu) {
+  filterSorumlu.innerHTML = '<option value="">Hepsi</option>';
+  [...sorumluSet].sort().forEach(name => {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    filterSorumlu.appendChild(opt);
+  });
+}
 
           new Chart(document.getElementById('chartBekleyen'), {
             type: 'bar',
