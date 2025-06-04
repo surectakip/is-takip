@@ -5,7 +5,17 @@
   <meta charset="UTF-8" />
   <title>İş Takip Sistemi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">
+function formatDate(raw) {
+  if (typeof raw === "string" && raw.startsWith("Date(")) {
+    const parts = raw.match(/\d+/g).map(Number);
+    const d = new Date(parts[0], parts[1], parts[2], parts[3] || 0, parts[4] || 0);
+    return d.toLocaleString("tr-TR");
+  }
+  return raw;
+}
+</script>
+
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background: #f4f4f4; }
     nav button { margin: 5px; padding: 10px 15px; font-size: 16px; }
@@ -32,6 +42,7 @@
   <h1>📋 İş Takip Sistemi</h1>
 
   <nav>
+    <button onclick="showTab('gecikmis')">⏰ Gecikmiş İşler</button>
     <button onclick="showTab('tablo')">📋 Ana Tablo</button>
     <button onclick="showTab('grafik')">📊 Analiz</button>
     <button onclick="showTab('form')">📝 Veri Girişi</button>
@@ -48,6 +59,12 @@
   </section>
 
   <!-- Sekme: Grafik -->
+<section id="gecikmis" class="hidden">
+  <h2>⏰ Süresi Geçmiş İşler</h2>
+  <table id="lateTable"><thead><tr><th>İş Başlığı</th><th>Sorumlu</th><th>Bitiş Tarihi</th><th>Durum</th></tr></thead><tbody></tbody></table>
+</section>
+
+<!-- Sekme: Grafik -->
   <section id="grafik" class="hidden">
     <canvas id="chartBekleyen"></canvas>
     <canvas id="chartTamamlanmamis"></canvas>
@@ -94,16 +111,17 @@ fetch(url)
     const data = JSON.parse(rep.substr(47).slice(0, -2));
     const tbody = document.querySelector("#dataTable tbody");
     const lateBody = document.querySelector("#lateTable tbody");
+lateBody.innerHTML = "";
     const now = new Date();
 
-    const bekleyen = {}, tamamlanmamis = {};
+    const bekleyen = {}, tamamlanmamis = {}, gecikmis = [];
 
     data.table.rows.forEach(row => {
       const cells = row.c.map(cell => cell?.v || '');
       const tr = document.createElement("tr");
       cells.forEach(text => {
         const td = document.createElement("td");
-        td.textContent = text;
+        td.textContent = formatDate(text);
         tr.appendChild(td);
       });
       tbody.appendChild(tr);
@@ -112,7 +130,7 @@ fetch(url)
       const tarih = new Date(bitis);
       if (durum !== "Tamamlandı") {
         tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
-        if (!isNaN(tarih) && tarih < now) {
+        if (!isNaN(tarih) && tarih < now && durum !== "Tamamlandı") {
           const ltr = document.createElement("tr");
           ltr.innerHTML = `<td>${baslik}</td><td>${sorumlu}</td><td>${bitis}</td><td>${durum}</td>`;
           lateBody.appendChild(ltr);
@@ -139,6 +157,16 @@ fetch(url)
       }
     });
   });
+
+function formatDate(raw) {
+  if (typeof raw === "string" && raw.startsWith("Date(")) {
+    const parts = raw.match(/\d+/g).map(Number);
+    const d = new Date(parts[0], parts[1], parts[2], parts[3] || 0, parts[4] || 0);
+    return d.toLocaleString("tr-TR");
+  }
+  return raw;
+}
 </script>
+
 </body>
 </html>
