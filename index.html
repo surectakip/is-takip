@@ -40,7 +40,17 @@
 
   <section id="gecikmis" class="hidden">
     <h2>Süresi Geçmiş İşler</h2>
-    <table id="gecikmisTable">
+    
+  <table id="gecikmisTable">
+    <thead>
+      <tr>
+        <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
+        <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  
       <thead>
         <tr><th>İş Başlığı</th><th>Sorumlu</th><th>Bitiş Tarihi</th><th>Durum</th></tr>
       </thead>
@@ -49,19 +59,7 @@
   </section>
 
   <section id="analiz" class="hidden">
-    
-  <h2>Durum Dağılımı (Pasta)</h2>
-  <canvas id="chartDurum"></canvas>
-
-  <h2>Sorumluya Göre Toplam İşler</h2>
-  <canvas id="chartToplam"></canvas>
-
-  <h2>Sorumluya Göre Bekleyen İşler</h2>
-  <canvas id="chartBekleyen"></canvas>
-
-  <h2>Sorumluya Göre Tamamlanmamış İşler</h2>
-  <canvas id="chartTamamlanmamis"></canvas>
-  
+    <canvas id="chartBekleyen"></canvas>
     <canvas id="chartTamamlanmamis"></canvas>
   </section>
 
@@ -118,50 +116,12 @@
               const [gun, ay, yil] = bitis.split(".");
               parsedDate = new Date(`${yil}-${ay}-${gun}`);
             }
-            if (!isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı") {
-              gecikmis.push({ baslik, sorumlu, bitis, durum });
-            }
-          });
-
-          
-          // Chart: Durum Dağılımı
-          const durumSayilari = {};
-          data.table.rows.forEach(row => {
-            const d = row.c[6]?.v || '';
-            durumSayilari[d] = (durumSayilari[d] || 0) + 1;
-          });
-          new Chart(document.getElementById('chartDurum'), {
-            type: 'pie',
-            data: {
-              labels: Object.keys(durumSayilari),
-              datasets: [{
-                label: 'Durum Dağılımı',
-                data: Object.values(durumSayilari),
-                backgroundColor: ['green', 'orange', 'red', 'gray']
-              }]
-            }
-          });
-
-          // Chart: Toplam iş sayısı sorumlulara göre
-          const toplam = {};
-          data.table.rows.forEach(row => {
-            const sor = row.c[3]?.v || '';
-            toplam[sor] = (toplam[sor] || 0) + 1;
-          });
-          new Chart(document.getElementById('chartToplam'), {
-            type: 'bar',
-            data: {
-              labels: Object.keys(toplam),
-              datasets: [{
-                label: 'Toplam İş',
-                data: Object.values(toplam),
-                backgroundColor: 'steelblue'
-              }]
+            if (!isNaN(parsedDate) && parsedDate < now && durum.trim().toLowerCase() !== "tamamlandı") {
+              gecikmis.push({ timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat });
             }
           });
 
           // Chart: Bekleyen
-  
           new Chart(document.getElementById('chartBekleyen'), {
             type: 'bar',
             data: {
@@ -182,7 +142,15 @@
           // Gecikmiş tabloyu doldur
           gecikmis.forEach(item => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
+            
+  const row = document.createElement("tr");
+  [item.timestamp, item.baslik, item.tanim, item.sorumlu, item.baslangic, item.bitis, item.durum, item.oncelik, item.notlar, item.hatirlat].forEach(text => {
+    const td = document.createElement("td");
+    td.textContent = text;
+    row.appendChild(td);
+  });
+  gecikmisBody.appendChild(row);
+  
             gecikmisBody.appendChild(tr);
           });
         });
