@@ -1,131 +1,157 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>İş Takip Paneli</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-    }
-    header {
-      background: #004080;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      font-size: 1.5rem;
-    }
-    nav {
-      display: flex;
-      background: #cce0ff;
-      justify-content: center;
-      gap: 1rem;
-      padding: 0.5rem;
-    }
-    nav button {
-      padding: 0.5rem 1rem;
-      border: none;
-      background: #0066cc;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    nav button.active {
-      background: #004080;
-    }
-    section {
-      display: none;
-      padding: 1rem;
-    }
-    section.active {
-      display: block;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    tr.complete {
-      background-color: #e6ffe6;
-    }
-    tr.late {
-      background-color: #ffe6e6;
-    }
-    #charts canvas {
-      max-width: 100%;
-      margin: 1rem auto;
-    }
-    .filter-section select, .filter-section button {
-      margin-right: 1rem;
-      padding: 0.5rem;
-      border-radius: 5px;
-    }
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #e0e0e0; }
+    .filters, .actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+    select, button, input { padding: 8px; font-size: 14px; }
+    .highlight { background-color: #fff3cd; }
+    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+    #modalContent { background: white; padding: 20px; border-radius: 8px; width: 100%; max-width: 500px; }
+    #modalContent input, #modalContent textarea, #modalContent select { width: 100%; margin-bottom: 10px; }
   </style>
 </head>
 <body>
-  <header>İş ve Süreç Takip Paneli</header>
-  <nav>
-    <button onclick="showTab('home')" class="active">Ana Sayfa</button>
-    <button onclick="showTab('summary')">Sorumlu Özeti</button>
-    <button onclick="showTab('charts')">Grafikler</button>
-    <button onclick="showTab('form')">Veri Girişi</button>
-    <button onclick="showTab('filtered')">Filtreli Liste</button>
-  </nav>
+  <h2>İş Takip Paneli</h2>
+  <div class="actions">
+    <button onclick="openModal()">+ Yeni İş Ekle</button>
+  </div>
+  <div class="filters">
+    <select id="sorumluFilter">
+      <option value="">Tüm Sorumlular</option>
+    </select>
+    <select id="durumFilter">
+      <option value="">Tüm Durumlar</option>
+      <option value="Tamamlandı">Tamamlandı</option>
+      <option value="Devam Ediyor">Devam Ediyor</option>
+      <option value="Beklemede">Beklemede</option>
+    </select>
+    <select id="oncelikFilter">
+      <option value="">Tüm Öncelikler</option>
+      <option value="Yüksek">Yüksek</option>
+      <option value="Orta">Orta</option>
+      <option value="Düşük">Düşük</option>
+    </select>
+    <button onclick="applyFilters()">Filtrele</button>
+    <button onclick="clearFilters()">Temizle</button>
+  </div>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>İş Başlığı</th>
+        <th>İş Tanımı</th>
+        <th>Sorumlu</th>
+        <th>Başlangıç</th>
+        <th>Bitiş</th>
+        <th>Durum</th>
+        <th>Öncelik</th>
+        <th>Not</th>
+        <th>Hatırlatma (gün)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <section id="home" class="active">
-    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vRjS4ZbVtxhxOQ9xMaef57rdOjQev7mNhSn14hN9Gx4M0SkMmM0QvSw0aMPwsA2hzHhWvCvm-S-AQvD/pubhtml?widget=true&amp;headers=false" width="100%" height="600"></iframe>
-  </section>
-
-  <section id="summary">
-    <table id="summaryTable">
-      <thead>
-        <tr><th>Sorumlu</th><th>Toplam</th><th>Tamamlandı</th><th>Bekliyor</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
-
-  <section id="charts">
-    <canvas id="statusChart"></canvas>
-    <canvas id="priorityChart"></canvas>
-  </section>
-
-  <section id="form">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLScJcS29cdGxv4yYkGUFfDZ9prp6A7TUtlHQO9PZmlfGyaL_cw/viewform?embedded=true" width="100%" height="800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
-  </section>
-
-  <section id="filtered">
-    <div class="filter-section">
-      <select id="filterTitle"><option value="">İş Başlığı</option></select>
-      <select id="filterResponsible"><option value="">Sorumlu</option></select>
-      <select id="filterStatus"><option value="">Durum</option></select>
-      <button onclick="applyFilters()">Filtrele</button>
-      <button onclick="clearFilters()">Temizle</button>
+  <!-- Modal -->
+  <div id="modal">
+    <div id="modalContent">
+      <h3>Yeni İş Ekle</h3>
+      <form action="https://docs.google.com/forms/d/e/1FAIpQLSd6m5Xf_zNjtcUdMLzItAKefJw8VWvG7aCJG5M9rZVnaFvQSA/formResponse" method="POST" target="_blank" onsubmit="closeModal()">
+        <input name="entry.1393658962" placeholder="İş Başlığı" required>
+        <textarea name="entry.1066526511" placeholder="İş Tanımı" required></textarea>
+        <input name="entry.1020445605" placeholder="Sorumlu" required>
+        <input name="entry.1868761740" type="date" placeholder="Başlangıç Tarihi" required>
+        <input name="entry.1035766112" type="date" placeholder="Bitiş Tarihi" required>
+        <select name="entry.1973101287" required>
+          <option value="">Durum Seç</option>
+          <option value="Tamamlandı">Tamamlandı</option>
+          <option value="Devam Ediyor">Devam Ediyor</option>
+          <option value="Beklemede">Beklemede</option>
+        </select>
+        <select name="entry.1612889266" required>
+          <option value="">Öncelik Seç</option>
+          <option value="Yüksek">Yüksek</option>
+          <option value="Orta">Orta</option>
+          <option value="Düşük">Düşük</option>
+        </select>
+        <textarea name="entry.1365925555" placeholder="Not"></textarea>
+        <input name="entry.729044839" type="number" placeholder="Hatırlatma Aralığı (gün)">
+        <button type="submit">Gönder</button>
+        <button type="button" onclick="closeModal()">İptal</button>
+      </form>
     </div>
-    <table id="filteredTable">
-      <thead>
-        <tr>
-          <th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th><th>Başlangıç T</th><th>Bitiş Tarihi</th><th>Durum</th><th>Öncelik</th><th>Not</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+  </div>
 
   <script>
-    function showTab(tabId) {
-      document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
-      document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
-      document.getElementById(tabId).classList.add("active");
-      document.querySelector(`nav button[onclick="showTab('${tabId}')"]`).classList.add("active");
+    const sheetID = '1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY';
+    const sheetName = 'Form_Responses1';
+    const query = encodeURIComponent('SELECT *');
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+
+    fetch(url)
+      .then(res => res.text())
+      .then(rep => {
+        const data = JSON.parse(rep.substr(47).slice(0, -2));
+        const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+        const sorumlular = new Set();
+
+        data.table.rows.forEach(row => {
+          const cells = row.c.map(cell => cell?.v || '');
+
+          const tr = document.createElement('tr');
+          for (let i = 1; i <= 9; i++) {
+            const td = document.createElement('td');
+            td.innerText = cells[i];
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+
+          sorumlular.add(cells[3]);
+        });
+
+        const sorumluSelect = document.getElementById('sorumluFilter');
+        [...sorumlular].sort().forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.text = name;
+          sorumluSelect.appendChild(opt);
+        });
+      });
+
+    function applyFilters() {
+      const sorumlu = document.getElementById('sorumluFilter').value;
+      const durum = document.getElementById('durumFilter').value;
+      const oncelik = document.getElementById('oncelikFilter').value;
+      const rows = document.querySelectorAll('#dataTable tbody tr');
+
+      rows.forEach(row => {
+        const cells = row.getElementsByTagName('td');
+        const match = (!sorumlu || cells[2].innerText === sorumlu) &&
+                      (!durum || cells[5].innerText === durum) &&
+                      (!oncelik || cells[6].innerText === oncelik);
+        row.style.display = match ? '' : 'none';
+      });
+    }
+
+    function clearFilters() {
+      document.getElementById('sorumluFilter').value = '';
+      document.getElementById('durumFilter').value = '';
+      document.getElementById('oncelikFilter').value = '';
+      applyFilters();
+    }
+
+    function openModal() {
+      document.getElementById('modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
     }
   </script>
 </body>
