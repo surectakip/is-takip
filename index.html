@@ -116,7 +116,17 @@
               const [gun, ay, yil] = bitis.split(".");
               parsedDate = new Date(`${yil}-${ay}-${gun}`);
             }
-            if (!isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı") {
+            
+  if (!isNaN(parsedDate) && parsedDate < now && durum.trim().toLowerCase() !== "tamamlandı") {
+    const gecikmisRow = [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat];
+    const gtr = document.createElement("tr");
+    gecikmisRow.forEach(val => {
+      const td = document.createElement("td");
+      td.textContent = val;
+      gtr.appendChild(td);
+    });
+    document.querySelector("#gecikmisTable tbody").appendChild(gtr);
+  }
               gecikmis.push({ baslik, sorumlu, bitis, durum });
             }
           });
