@@ -83,6 +83,31 @@
       });
       document.getElementById(id).classList.remove('hidden');
     }
+function applyFilters() {
+  const sorumlu = document.getElementById("filterSorumlu").value;
+  const durum = document.getElementById("filterDurum").value;
+  const oncelik = document.getElementById("filterOncelik").value;
+  const rows = document.querySelectorAll("#dataTable tbody tr");
+
+  rows.forEach(row => {
+    const tds = row.querySelectorAll("td");
+    const rSorumlu = tds[3]?.textContent || "";
+    const rDurum = tds[6]?.textContent || "";
+    const rOncelik = tds[7]?.textContent || "";
+
+    const show = (!sorumlu || rSorumlu === sorumlu) &&
+                 (!durum || rDurum === durum) &&
+                 (!oncelik || rOncelik === oncelik);
+    row.style.display = show ? "" : "none";
+  });
+}
+
+function resetFilters() {
+  document.getElementById("filterSorumlu").value = "";
+  document.getElementById("filterDurum").value = "";
+  document.getElementById("filterOncelik").value = "";
+  applyFilters();
+}
 
     function parseDate(str) {
       if (typeof str === "string" && str.includes(".")) {
