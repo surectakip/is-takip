@@ -116,8 +116,8 @@
               const [gun, ay, yil] = bitis.split(".");
               parsedDate = new Date(`${yil}-${ay}-${gun}`);
             }
-            if (!isNaN(parsedDate) && parsedDate < now && durum.trim().toLowerCase() !== "tamamlandı") {
-              gecikmis.push({ timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat });
+            if (!isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı") {
+              gecikmis.push({ baslik, sorumlu, bitis, durum });
             }
           });
 
@@ -142,20 +142,7 @@
           // Gecikmiş tabloyu doldur
           gecikmis.forEach(item => {
             const tr = document.createElement("tr");
-            
-  const row = document.createElement("tr");
-  [item.timestamp, item.baslik, item.tanim, item.sorumlu, item.baslangic, item.bitis, item.durum, item.oncelik, item.notlar, item.hatirlat].forEach(text => {
-    const td = document.createElement("td");
-    td.textContent = text;
-    row.appendChild(td);
-  });
-  [item.timestamp, item.baslik, item.tanim, item.sorumlu, item.baslangic, item.bitis, item.durum, item.oncelik, item.notlar, item.hatirlat].forEach(text => {
-    const td = document.createElement("td");
-    td.textContent = text;
-    row.appendChild(td);
-  });
-  gecikmisBody.appendChild(row);
-  
+            tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
             gecikmisBody.appendChild(tr);
           });
         });
