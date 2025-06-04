@@ -149,6 +149,11 @@
     td.textContent = text;
     row.appendChild(td);
   });
+  [item.timestamp, item.baslik, item.tanim, item.sorumlu, item.baslangic, item.bitis, item.durum, item.oncelik, item.notlar, item.hatirlat].forEach(text => {
+    const td = document.createElement("td");
+    td.textContent = text;
+    row.appendChild(td);
+  });
   gecikmisBody.appendChild(row);
   
             gecikmisBody.appendChild(tr);
