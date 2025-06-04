@@ -13,7 +13,6 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #eee; }
     canvas { background: white; padding: 10px; border-radius: 8px; margin-top: 20px; }
-    .gecikmis { background-color: #ffd6d6 !important; border-left: 5px solid red; }
   </style>
 </head>
 <body>
@@ -24,38 +23,39 @@
     <button onclick="showTab('form')">📝 Veri Girişi</button>
     <button onclick="fetchData()">🔄 Yenile</button>
   </nav>
-<div style="margin-top: 10px;">
-  <label>Sorumlu: 
-    <select id="filterSorumlu">
-      <option value="">Hepsi</option>
-    </select>
-  </label>
-  <label>Durum: 
-    <select id="filterDurum">
-      <option value="">Hepsi</option>
-      <option value="Tamamlandı">Tamamlandı</option>
-      <option value="Devam Ediyor">Devam Ediyor</option>
-      <option value="Beklemede">Beklemede</option>
-    </select>
-  </label>
-  <label>Öncelik: 
-    <select id="filterOncelik">
-      <option value="">Hepsi</option>
-      <option value="Yüksek">Yüksek</option>
-      <option value="Orta">Orta</option>
-      <option value="Düşük">Düşük</option>
-    </select>
-  </label>
-  <button onclick="applyFilters()">Filtrele</button>
-  <button onclick="resetFilters()">Temizle</button>
-</div>
+
+  <div style="margin-top: 10px;">
+    <label>Sorumlu: 
+      <select id="filterSorumlu">
+        <option value="">Hepsi</option>
+      </select>
+    </label>
+    <label>Durum: 
+      <select id="filterDurum">
+        <option value="">Hepsi</option>
+        <option value="Tamamlandı">Tamamlandı</option>
+        <option value="Devam Ediyor">Devam Ediyor</option>
+        <option value="Beklemede">Beklemede</option>
+      </select>
+    </label>
+    <label>Öncelik: 
+      <select id="filterOncelik">
+        <option value="">Hepsi</option>
+        <option value="Yüksek">Yüksek</option>
+        <option value="Orta">Orta</option>
+        <option value="Düşük">Düşük</option>
+      </select>
+    </label>
+    <button onclick="applyFilters()">Filtrele</button>
+    <button onclick="resetFilters()">Temizle</button>
+  </div>
 
   <section id="panel">
     <table id="dataTable">
       <thead>
         <tr>
           <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
-          <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th><th>İşlem</th>
+          <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -68,7 +68,7 @@
   </section>
 
   <section id="form" class="hidden">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="1800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="1800" frameborder="0">Yükleniyor...</iframe>
   </section>
 
   <script>
@@ -83,39 +83,6 @@
       });
       document.getElementById(id).classList.remove('hidden');
     }
-function applyFilters() {
-  const sorumlu = document.getElementById("filterSorumlu").value;
-  const durum = document.getElementById("filterDurum").value;
-  const oncelik = document.getElementById("filterOncelik").value;
-  const rows = document.querySelectorAll("#dataTable tbody tr");
-
-  rows.forEach(row => {
-    const tds = row.querySelectorAll("td");
-    const rSorumlu = tds[3]?.textContent || "";
-    const rDurum = tds[6]?.textContent || "";
-    const rOncelik = tds[7]?.textContent || "";
-
-    const show = (!sorumlu || rSorumlu === sorumlu) &&
-                 (!durum || rDurum === durum) &&
-                 (!oncelik || rOncelik === oncelik);
-    row.style.display = show ? "" : "none";
-  });
-}
-
-function resetFilters() {
-  document.getElementById("filterSorumlu").value = "";
-  document.getElementById("filterDurum").value = "";
-  document.getElementById("filterOncelik").value = "";
-  applyFilters();
-}
-
-    function parseDate(str) {
-      if (typeof str === "string" && str.includes(".")) {
-        const [gun, ay, yil] = str.split(".");
-        return new Date(`${yil}-${ay}-${gun}`);
-      }
-      return new Date(str);
-    }
 
     function fetchData() {
       fetch(url)
@@ -125,12 +92,12 @@ function resetFilters() {
           const tbody = document.querySelector("#dataTable tbody");
           tbody.innerHTML = "";
 
-          const bekleyen = {}, tamamlanmamis = {};
-          const now = new Date();
+          const bekleyen = {}, tamamlanmamis = {}, sorumluSet = new Set();
 
           data.table.rows.forEach(row => {
             const cells = row.c.map(cell => cell?.v || '');
             const [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat] = cells;
+            sorumluSet.add(sorumlu);
 
             const tr = document.createElement("tr");
             [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
@@ -139,24 +106,14 @@ function resetFilters() {
               tr.appendChild(td);
             });
 
-            // Gecikmiş iş kontrolü
+            // Tarih renklendirme
+            const today = new Date();
             const parsedBitis = parseDate(bitis);
-            const parsedHatirlat = parseInt(hatirlat);
-            let gecikmisMi = false;
-
-            if ((parsedBitis < now && durum !== "Tamamlandı") ||
-                (!isNaN(parsedHatirlat) && parsedBitis instanceof Date)) {
-              const farkGun = Math.floor((now - parsedBitis) / (1000 * 60 * 60 * 24));
-              if (farkGun >= parsedHatirlat) gecikmisMi = true;
+            const parsedHatirlat = parseDate(hatirlat);
+            if ((parsedBitis && parsedBitis < today) || (parsedHatirlat && parsedHatirlat < today)) {
+              tr.style.backgroundColor = "#ffd6d6"; // kırmızımsı arka plan
             }
-            if (gecikmisMi) tr.classList.add("gecikmis");
 
-            const editBtn = document.createElement("button");
-            editBtn.textContent = "🖊";
-            editBtn.onclick = () => openEditModal(timestamp);
-            const tdEdit = document.createElement("td");
-            tdEdit.appendChild(editBtn);
-            tr.appendChild(tdEdit);
             tbody.appendChild(tr);
 
             if (durum === "Beklemede" || durum === "Devam Ediyor") {
@@ -166,38 +123,62 @@ function resetFilters() {
               tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
             }
           });
-const sorumluSet = new Set();
-data.table.rows.forEach(row => {
-  const sorumlu = row.c[3]?.v;
-  if (sorumlu) sorumluSet.add(sorumlu);
-});
-const filterSorumlu = document.getElementById("filterSorumlu");
-if (filterSorumlu) {
-  filterSorumlu.innerHTML = '<option value="">Hepsi</option>';
-  [...sorumluSet].sort().forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    filterSorumlu.appendChild(opt);
-  });
-}
+
+          // Dropdownları güncelle
+          const filterSorumlu = document.getElementById("filterSorumlu");
+          filterSorumlu.innerHTML = '<option value="">Hepsi</option>';
+          [...sorumluSet].sort().forEach(name => {
+            const opt = document.createElement("option");
+            opt.value = name;
+            opt.textContent = name;
+            filterSorumlu.appendChild(opt);
+          });
 
           new Chart(document.getElementById('chartBekleyen'), {
             type: 'bar',
-            data: {
-              labels: Object.keys(bekleyen),
-              datasets: [{ label: 'Bekleyen İşler', data: Object.values(bekleyen), backgroundColor: 'orange' }]
-            }
+            data: { labels: Object.keys(bekleyen), datasets: [{ label: 'Bekleyen', data: Object.values(bekleyen), backgroundColor: 'orange' }] }
           });
 
           new Chart(document.getElementById('chartTamamlanmamis'), {
             type: 'bar',
-            data: {
-              labels: Object.keys(tamamlanmamis),
-              datasets: [{ label: 'Tamamlanmamış İşler', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }]
-            }
+            data: { labels: Object.keys(tamamlanmamis), datasets: [{ label: 'Tamamlanmamış', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }] }
           });
         });
+    }
+
+    function parseDate(str) {
+      if (typeof str === "string" && str.includes(".")) {
+        const [gun, ay, yil] = str.split(".");
+        return new Date(`${yil}-${ay}-${gun}`);
+      }
+      const d = new Date(str);
+      return isNaN(d) ? null : d;
+    }
+
+    function applyFilters() {
+      const sorumlu = document.getElementById("filterSorumlu").value;
+      const durum = document.getElementById("filterDurum").value;
+      const oncelik = document.getElementById("filterOncelik").value;
+      const rows = document.querySelectorAll("#dataTable tbody tr");
+
+      rows.forEach(row => {
+        const tds = row.querySelectorAll("td");
+        const rSorumlu = tds[3]?.textContent || "";
+        const rDurum = tds[6]?.textContent || "";
+        const rOncelik = tds[7]?.textContent || "";
+
+        const show = (!sorumlu || rSorumlu === sorumlu) &&
+                     (!durum || rDurum === durum) &&
+                     (!oncelik || rOncelik === oncelik);
+        row.style.display = show ? "" : "none";
+      });
+    }
+
+    function resetFilters() {
+      document.getElementById("filterSorumlu").value = "";
+      document.getElementById("filterDurum").value = "";
+      document.getElementById("filterOncelik").value = "";
+      applyFilters();
     }
 
     fetchData();
