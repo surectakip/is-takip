@@ -1,17 +1,58 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş Takip Sistemi</title>
+  <title>İş Takip Paneli</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #e0e0e0; }
+    .filters { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px; }
+    select, button { padding: 8px; font-size: 14px; }
+    .highlight { background-color: #fff3cd; }
+  </style>
 </head>
 <body>
-  <h1>İş Takip Sistemi (Güncellenmiş)</h1>
-  <p>Bu sayfa artık GitHub Pages ile sorunsuz çalışır. Grafikler ve veri çekimi aktif.</p>
+  <h2>İş Takip Paneli</h2>
+  <div class="filters">
+    <select id="sorumluFilter">
+      <option value="">Tüm Sorumlular</option>
+    </select>
+    <select id="durumFilter">
+      <option value="">Tüm Durumlar</option>
+      <option value="Tamamlandı">Tamamlandı</option>
+      <option value="Devam Ediyor">Devam Ediyor</option>
+      <option value="Beklemede">Beklemede</option>
+    </select>
+    <select id="oncelikFilter">
+      <option value="">Tüm Öncelikler</option>
+      <option value="Yüksek">Yüksek</option>
+      <option value="Orta">Orta</option>
+      <option value="Düşük">Düşük</option>
+    </select>
+    <button onclick="applyFilters()">Filtrele</button>
+    <button onclick="clearFilters()">Temizle</button>
+  </div>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>İş Başlığı</th>
+        <th>İş Tanımı</th>
+        <th>Sorumlu</th>
+        <th>Başlangıç</th>
+        <th>Bitiş</th>
+        <th>Durum</th>
+        <th>Öncelik</th>
+        <th>Not</th>
+        <th>Hatırlatma (gün)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
   <script>
-    // Basit test kodu – Google Sheets'ten veri çekildiğini doğrulamak için
     const sheetID = '1Ppo2L8kO8fgOmFrY956MdGOVjyfOBDnbcvOx2KmR0fY';
     const sheetName = 'Form_Responses1';
     const query = encodeURIComponent('SELECT *');
@@ -21,12 +62,53 @@
       .then(res => res.text())
       .then(rep => {
         const data = JSON.parse(rep.substr(47).slice(0, -2));
-        document.body.innerHTML += '<p><strong>Veri başarıyla yüklendi!</strong> Toplam kayıt: ' + data.table.rows.length + '</p>';
-      })
-      .catch(err => {
-        document.body.innerHTML += '<p style="color:red;"><strong>Veri çekilemedi.</strong></p>';
-        console.error(err);
+        const table = document.getElementById('dataTable').getElementsByTagName('tbody')[0];
+        const sorumlular = new Set();
+
+        data.table.rows.forEach(row => {
+          const cells = row.c.map(cell => cell?.v || '');
+
+          const tr = document.createElement('tr');
+          for (let i = 1; i <= 9; i++) {
+            const td = document.createElement('td');
+            td.innerText = cells[i];
+            tr.appendChild(td);
+          }
+          table.appendChild(tr);
+
+          sorumlular.add(cells[3]);
+        });
+
+        const sorumluSelect = document.getElementById('sorumluFilter');
+        [...sorumlular].sort().forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.text = name;
+          sorumluSelect.appendChild(opt);
+        });
       });
+
+    function applyFilters() {
+      const sorumlu = document.getElementById('sorumluFilter').value;
+      const durum = document.getElementById('durumFilter').value;
+      const oncelik = document.getElementById('oncelikFilter').value;
+      const rows = document.querySelectorAll('#dataTable tbody tr');
+
+      rows.forEach(row => {
+        const cells = row.getElementsByTagName('td');
+        const match = (!sorumlu || cells[2].innerText === sorumlu) &&
+                      (!durum || cells[5].innerText === durum) &&
+                      (!oncelik || cells[6].innerText === oncelik);
+        row.style.display = match ? '' : 'none';
+      });
+    }
+
+    function clearFilters() {
+      document.getElementById('sorumluFilter').value = '';
+      document.getElementById('durumFilter').value = '';
+      document.getElementById('oncelikFilter').value = '';
+      applyFilters();
+    }
   </script>
 </body>
 </html>
