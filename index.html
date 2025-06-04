@@ -24,6 +24,31 @@
     <button onclick="showTab('form')">📝 Veri Girişi</button>
     <button onclick="fetchData()">🔄 Yenile</button>
   </nav>
+<div style="margin-top: 10px;">
+  <label>Sorumlu: 
+    <select id="filterSorumlu">
+      <option value="">Hepsi</option>
+    </select>
+  </label>
+  <label>Durum: 
+    <select id="filterDurum">
+      <option value="">Hepsi</option>
+      <option value="Tamamlandı">Tamamlandı</option>
+      <option value="Devam Ediyor">Devam Ediyor</option>
+      <option value="Beklemede">Beklemede</option>
+    </select>
+  </label>
+  <label>Öncelik: 
+    <select id="filterOncelik">
+      <option value="">Hepsi</option>
+      <option value="Yüksek">Yüksek</option>
+      <option value="Orta">Orta</option>
+      <option value="Düşük">Düşük</option>
+    </select>
+  </label>
+  <button onclick="applyFilters()">Filtrele</button>
+  <button onclick="resetFilters()">Temizle</button>
+</div>
 
   <section id="panel">
     <table id="dataTable">
