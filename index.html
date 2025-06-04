@@ -6,51 +6,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-    nav button { margin: 8px; padding: 10px 14px; font-size: 15px; cursor: pointer; }
+    body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 20px; }
+    nav button { margin: 8px; padding: 10px; font-size: 15px; cursor: pointer; }
     .hidden { display: none; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #eee; }
-    canvas { background: white; padding: 10px; border-radius: 8px; margin-top: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
+    th, td { border: 1px solid #ccc; padding: 6px; text-align: left; }
+    th { background: #eee; }
+    canvas { margin-top: 20px; background: white; padding: 10px; border-radius: 8px; }
+    .danger { background-color: #ffe5e5 !important; }
+    .filters { margin-top: 10px; }
+    .filters select, .filters button { margin-right: 10px; padding: 5px; }
   </style>
 </head>
 <body>
-  <h1>İş Takip Sistemi</h1>
+  <h1>📋 İş Takip Sistemi</h1>
   <nav>
-    <button onclick="showTab('panel')">📋 Ana Tablo</button>
-    <button onclick="showTab('analiz')">📊 Analiz</button>
-    <button onclick="showTab('form')">📝 Veri Girişi</button>
+    <button onclick="showTab('panel')">Ana Tablo</button>
+    <button onclick="showTab('analiz')">Analiz</button>
+    <button onclick="showTab('form')">Veri Girişi</button>
     <button onclick="fetchData()">🔄 Yenile</button>
   </nav>
 
-  <div style="margin-top: 10px;">
-    <label>Sorumlu: 
-      <select id="filterSorumlu">
-        <option value="">Hepsi</option>
-      </select>
-    </label>
-    <label>Durum: 
-      <select id="filterDurum">
-        <option value="">Hepsi</option>
-        <option value="Tamamlandı">Tamamlandı</option>
-        <option value="Devam Ediyor">Devam Ediyor</option>
-        <option value="Beklemede">Beklemede</option>
-      </select>
-    </label>
-    <label>Öncelik: 
-      <select id="filterOncelik">
-        <option value="">Hepsi</option>
-        <option value="Yüksek">Yüksek</option>
-        <option value="Orta">Orta</option>
-        <option value="Düşük">Düşük</option>
-      </select>
-    </label>
-    <button onclick="applyFilters()">Filtrele</button>
-    <button onclick="resetFilters()">Temizle</button>
-  </div>
-
   <section id="panel">
+    <div class="filters">
+      <label>Sorumlu:</label>
+      <select id="filterSorumlu"><option value="">Tümü</option></select>
+
+      <label>Durum:</label>
+      <select id="filterDurum"><option value="">Tümü</option></select>
+
+      <label>Öncelik:</label>
+      <select id="filterOncelik"><option value="">Tümü</option></select>
+
+      <button onclick="applyFilters()">Filtrele</button>
+      <button onclick="clearFilters()">Temizle</button>
+    </div>
+
     <table id="dataTable">
       <thead>
         <tr>
@@ -63,19 +54,20 @@
   </section>
 
   <section id="analiz" class="hidden">
-    <canvas id="chartBekleyen"></canvas>
-    <canvas id="chartTamamlanmamis"></canvas>
+    <canvas id="chart1"></canvas>
+    <canvas id="chart2"></canvas>
   </section>
 
   <section id="form" class="hidden">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="1800" frameborder="0">Yükleniyor...</iframe>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="1800" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
   </section>
 
   <script>
     const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
     const sheetName = 'Form Yanıtları 1';
-    const query = encodeURIComponent('SELECT *');
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=SELECT *`;
+
+    let fullData = [];
 
     function showTab(id) {
       ['panel','analiz','form'].forEach(sec => {
@@ -88,97 +80,127 @@
       fetch(url)
         .then(res => res.text())
         .then(rep => {
-          const data = JSON.parse(rep.substr(47).slice(0, -2));
-          const tbody = document.querySelector("#dataTable tbody");
-          tbody.innerHTML = "";
+          const json = JSON.parse(rep.substr(47).slice(0, -2));
+          const rows = json.table.rows;
+          fullData = rows.map(row => row.c.map(cell => cell?.v || ''));
 
-          const bekleyen = {}, tamamlanmamis = {}, sorumluSet = new Set();
-
-          data.table.rows.forEach(row => {
-            const cells = row.c.map(cell => cell?.v || '');
-            const [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat] = cells;
-            sorumluSet.add(sorumlu);
-
-            const tr = document.createElement("tr");
-            [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
-              const td = document.createElement("td");
-              td.textContent = text;
-              tr.appendChild(td);
-            });
-
-            // Tarih renklendirme
-            const today = new Date();
-            const parsedBitis = parseDate(bitis);
-            const parsedHatirlat = parseDate(hatirlat);
-            if ((parsedBitis && parsedBitis < today) || (parsedHatirlat && parsedHatirlat < today)) {
-              tr.style.backgroundColor = "#ffd6d6"; // kırmızımsı arka plan
-            }
-
-            tbody.appendChild(tr);
-
-            if (durum === "Beklemede" || durum === "Devam Ediyor") {
-              bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
-            }
-            if (durum !== "Tamamlandı") {
-              tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
-            }
-          });
-
-          // Dropdownları güncelle
-          const filterSorumlu = document.getElementById("filterSorumlu");
-          filterSorumlu.innerHTML = '<option value="">Hepsi</option>';
-          [...sorumluSet].sort().forEach(name => {
-            const opt = document.createElement("option");
-            opt.value = name;
-            opt.textContent = name;
-            filterSorumlu.appendChild(opt);
-          });
-
-          new Chart(document.getElementById('chartBekleyen'), {
-            type: 'bar',
-            data: { labels: Object.keys(bekleyen), datasets: [{ label: 'Bekleyen', data: Object.values(bekleyen), backgroundColor: 'orange' }] }
-          });
-
-          new Chart(document.getElementById('chartTamamlanmamis'), {
-            type: 'bar',
-            data: { labels: Object.keys(tamamlanmamis), datasets: [{ label: 'Tamamlanmamış', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }] }
-          });
+          renderTable(fullData);
+          renderFilters(fullData);
+          renderCharts(fullData);
         });
     }
 
-    function parseDate(str) {
-      if (typeof str === "string" && str.includes(".")) {
-        const [gun, ay, yil] = str.split(".");
-        return new Date(`${yil}-${ay}-${gun}`);
-      }
-      const d = new Date(str);
-      return isNaN(d) ? null : d;
-    }
+    function renderTable(data) {
+      const tbody = document.querySelector("#dataTable tbody");
+      tbody.innerHTML = "";
+      const now = new Date();
 
-    function applyFilters() {
-      const sorumlu = document.getElementById("filterSorumlu").value;
-      const durum = document.getElementById("filterDurum").value;
-      const oncelik = document.getElementById("filterOncelik").value;
-      const rows = document.querySelectorAll("#dataTable tbody tr");
+      data.forEach(row => {
+        const [zaman, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, not, hatirlatma] = row;
+        const tr = document.createElement("tr");
 
-      rows.forEach(row => {
-        const tds = row.querySelectorAll("td");
-        const rSorumlu = tds[3]?.textContent || "";
-        const rDurum = tds[6]?.textContent || "";
-        const rOncelik = tds[7]?.textContent || "";
+        // Gecikmiş renk kontrolü
+        const bitisDate = parseDate(bitis);
+        const hatirlatmaDate = parseDate(hatirlatma);
+        const gecikmis = (bitisDate && bitisDate < now) || (hatirlatmaDate && hatirlatmaDate < now);
 
-        const show = (!sorumlu || rSorumlu === sorumlu) &&
-                     (!durum || rDurum === durum) &&
-                     (!oncelik || rOncelik === oncelik);
-        row.style.display = show ? "" : "none";
+        if (gecikmis && durum !== "Tamamlandı") tr.classList.add("danger");
+
+        [zaman, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, not, hatirlatma].forEach(text => {
+          const td = document.createElement("td");
+          td.textContent = text;
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
       });
     }
 
-    function resetFilters() {
-      document.getElementById("filterSorumlu").value = "";
-      document.getElementById("filterDurum").value = "";
-      document.getElementById("filterOncelik").value = "";
-      applyFilters();
+    function parseDate(input) {
+      if (typeof input === 'string' && input.includes('.')) {
+        const [d, m, y] = input.split('.');
+        return new Date(`${y}-${m}-${d}`);
+      }
+      const dt = new Date(input);
+      return isNaN(dt) ? null : dt;
+    }
+
+    function renderFilters(data) {
+      const sorumluSet = new Set(), durumSet = new Set(), oncelikSet = new Set();
+      data.forEach(([,, , sorumlu,, , durum, oncelik]) => {
+        sorumlu && sorumluSet.add(sorumlu);
+        durum && durumSet.add(durum);
+        oncelik && oncelikSet.add(oncelik);
+      });
+
+      populateSelect('filterSorumlu', sorumluSet);
+      populateSelect('filterDurum', durumSet);
+      populateSelect('filterOncelik', oncelikSet);
+    }
+
+    function populateSelect(id, set) {
+      const select = document.getElementById(id);
+      select.innerHTML = '<option value="">Tümü</option>';
+      [...set].sort().forEach(val => {
+        const opt = document.createElement("option");
+        opt.value = opt.textContent = val;
+        select.appendChild(opt);
+      });
+    }
+
+    function applyFilters() {
+      const fs = document.getElementById('filterSorumlu').value;
+      const fd = document.getElementById('filterDurum').value;
+      const fo = document.getElementById('filterOncelik').value;
+
+      const filtered = fullData.filter(([,, , sorumlu,, , durum, oncelik]) => {
+        return (!fs || fs === sorumlu) &&
+               (!fd || fd === durum) &&
+               (!fo || fo === oncelik);
+      });
+
+      renderTable(filtered);
+    }
+
+    function clearFilters() {
+      document.getElementById('filterSorumlu').value = '';
+      document.getElementById('filterDurum').value = '';
+      document.getElementById('filterOncelik').value = '';
+      renderTable(fullData);
+    }
+
+    function renderCharts(data) {
+      const sorumluMap = {}, durumMap = {};
+      data.forEach(([, , , sorumlu, , , durum]) => {
+        if (!sorumluMap[sorumlu]) sorumluMap[sorumlu] = 0;
+        sorumluMap[sorumlu]++;
+        if (!durumMap[durum]) durumMap[durum] = 0;
+        durumMap[durum]++;
+      });
+
+      new Chart(document.getElementById("chart1"), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(sorumluMap),
+          datasets: [{
+            label: 'Sorumluya Göre İş Sayısı',
+            data: Object.values(sorumluMap),
+            backgroundColor: 'steelblue'
+          }]
+        }
+      });
+
+      new Chart(document.getElementById("chart2"), {
+        type: 'pie',
+        data: {
+          labels: Object.keys(durumMap),
+          datasets: [{
+            label: 'Durum Dağılımı',
+            data: Object.values(durumMap),
+            backgroundColor: ['#ff9999','#66b3ff','#99ff99','#ffcc99']
+          }]
+        }
+      });
     }
 
     fetchData();
