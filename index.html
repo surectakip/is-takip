@@ -37,11 +37,11 @@
       
   <tbody></tbody>
   </table>
-  <div id="editModal" style="display:none; position:fixed; top:20%; left:35%; background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2);">
-    <h3>Durum Güncelle</h3>
+  <div id="editModal" style="display:none; position:fixed; top:25%; left:35%; background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:1000;">
+    <h3>Durumu Güncelle</h3>
     <form id="editForm">
       <input type="hidden" id="editTimestamp" name="timestamp">
-      <label for="editDurum">Durum:</label>
+      <label>Yeni Durum:</label>
       <select id="editDurum" name="durum" required>
         <option value="">Seçiniz</option>
         <option value="Tamamlandı">Tamamlandı</option>
@@ -66,11 +66,11 @@
       
   <tbody></tbody>
   </table>
-  <div id="editModal" style="display:none; position:fixed; top:20%; left:35%; background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2);">
-    <h3>Durum Güncelle</h3>
+  <div id="editModal" style="display:none; position:fixed; top:25%; left:35%; background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:1000;">
+    <h3>Durumu Güncelle</h3>
     <form id="editForm">
       <input type="hidden" id="editTimestamp" name="timestamp">
-      <label for="editDurum">Durum:</label>
+      <label>Yeni Durum:</label>
       <select id="editDurum" name="durum" required>
         <option value="">Seçiniz</option>
         <option value="Tamamlandı">Tamamlandı</option>
@@ -130,7 +130,7 @@
               tr.appendChild(td);
             });
             const editBtn = document.createElement("button");
-  editBtn.textContent = "🖊 Güncelle";
+  editBtn.textContent = "🖊";
   editBtn.onclick = () => openEditModal(timestamp);
   const tdEdit = document.createElement("td");
   tdEdit.appendChild(editBtn);
@@ -183,25 +183,33 @@
     }
 
     
-    // Edit form gönderildiğinde Google Script'e post et
+    // Form gönderimi ile Script'e veri gönder
     document.getElementById("editForm").addEventListener("submit", function(e) {
       e.preventDefault();
       const ts = document.getElementById("editTimestamp").value;
       const durum = document.getElementById("editDurum").value;
+
       fetch("https://script.google.com/macros/s/AKfycbzAzuQiXv7lQTYjdNoINLdbeOMzWkRUmQz3kCYbpV57yhvUoNvAiJSVlM7vbLYA3FwEMA/exec", {
         method: "POST",
-        body: new URLSearchParams({ timestamp: ts, durum: durum }),
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: "timestamp=" + encodeURIComponent(ts) + "&durum=" + encodeURIComponent(durum)
       })
-      .then(res => res.text())
-      .then(res => {
-        alert("Durum güncellendi!");
+      .then(response => response.text())
+      .then(result => {
+        alert("Sonuç: " + result);
         document.getElementById("editModal").style.display = "none";
-        fetchData();  // sayfayı güncelle
+        fetchData(); // yenile
+      })
+      .catch(error => {
+        alert("Hata oluştu: " + error);
       });
     });
 
     function openEditModal(ts) {
       document.getElementById("editTimestamp").value = ts;
+      document.getElementById("editDurum").value = "";
       document.getElementById("editModal").style.display = "block";
     }
 
