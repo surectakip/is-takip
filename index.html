@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -14,13 +13,13 @@
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background-color: #eee; }
     canvas { background: white; padding: 10px; border-radius: 8px; margin-top: 20px; }
+    .gecikmis { background-color: #ffdddd !important; }
   </style>
 </head>
 <body>
   <h1>İş Takip Sistemi</h1>
   <nav>
     <button onclick="showTab('panel')">📋 Ana Tablo</button>
-    <button onclick="showTab('gecikmis')">⏰ Gecikmiş İşler</button>
     <button onclick="showTab('analiz')">📊 Analiz</button>
     <button onclick="showTab('form')">📝 Veri Girişi</button>
     <button onclick="fetchData()">🔄 Yenile</button>
@@ -34,55 +33,7 @@
           <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th><th>İşlem</th>
         </tr>
       </thead>
-      
-  <tbody></tbody>
-  </table>
-  <div id="editModal" style="display:none; position:fixed; top:25%; left:35%; background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:1000;">
-    <h3>Durumu Güncelle</h3>
-    <form id="editForm">
-      <input type="hidden" id="editTimestamp" name="timestamp">
-      <label>Yeni Durum:</label>
-      <select id="editDurum" name="durum" required>
-        <option value="">Seçiniz</option>
-        <option value="Tamamlandı">Tamamlandı</option>
-        <option value="Devam Ediyor">Devam Ediyor</option>
-        <option value="Beklemede">Beklemede</option>
-      </select>
-      <br><br>
-      <button type="submit">Güncelle</button>
-      <button type="button" onclick="document.getElementById('editModal').style.display='none'">İptal</button>
-    </form>
-  </div>
-  
-    </table>
-  </section>
-
-  <section id="gecikmis" class="hidden">
-    <h2>Süresi Geçmiş İşler</h2>
-    <table id="gecikmisTable">
-      <thead>
-        <tr><th>İş Başlığı</th><th>Sorumlu</th><th>Bitiş Tarihi</th><th>Durum</th></tr>
-      </thead>
-      
-  <tbody></tbody>
-  </table>
-  <div id="editModal" style="display:none; position:fixed; top:25%; left:35%; background:white; padding:20px; border:1px solid #ccc; box-shadow:0 0 10px rgba(0,0,0,0.2); z-index:1000;">
-    <h3>Durumu Güncelle</h3>
-    <form id="editForm">
-      <input type="hidden" id="editTimestamp" name="timestamp">
-      <label>Yeni Durum:</label>
-      <select id="editDurum" name="durum" required>
-        <option value="">Seçiniz</option>
-        <option value="Tamamlandı">Tamamlandı</option>
-        <option value="Devam Ediyor">Devam Ediyor</option>
-        <option value="Beklemede">Beklemede</option>
-      </select>
-      <br><br>
-      <button type="submit">Güncelle</button>
-      <button type="button" onclick="document.getElementById('editModal').style.display='none'">İptal</button>
-    </form>
-  </div>
-  
+      <tbody></tbody>
     </table>
   </section>
 
@@ -102,7 +53,7 @@
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
     function showTab(id) {
-      ['panel','gecikmis','analiz','form'].forEach(sec => {
+      ['panel','analiz','form'].forEach(sec => {
         document.getElementById(sec).classList.add('hidden');
       });
       document.getElementById(id).classList.remove('hidden');
@@ -114,48 +65,52 @@
         .then(rep => {
           const data = JSON.parse(rep.substr(47).slice(0, -2));
           const tbody = document.querySelector("#dataTable tbody");
-          const gecikmisBody = document.querySelector("#gecikmisTable tbody");
           tbody.innerHTML = "";
-          gecikmisBody.innerHTML = "";
 
-          const bekleyen = {}, tamamlanmamis = {}, gecikmis = [];
+          const bekleyen = {}, tamamlanmamis = {};
+          const now = new Date();
+
           data.table.rows.forEach(row => {
             const cells = row.c.map(cell => cell?.v || '');
             const [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat] = cells;
 
             const tr = document.createElement("tr");
+
+            // Geçmiş iş tespiti
+            let parsedDate = new Date(bitis);
+            if (typeof bitis === "string" && bitis.includes(".")) {
+              const [gun, ay, yil] = bitis.split(".");
+              parsedDate = new Date(`${yil}-${ay}-${gun}`);
+            }
+            const isGecikmis = !isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı";
+            if (isGecikmis) tr.classList.add("gecikmis");
+
             [timestamp, baslik, tanim, sorumlu, baslangic, bitis, durum, oncelik, notlar, hatirlat].forEach(text => {
               const td = document.createElement("td");
               td.textContent = text;
               tr.appendChild(td);
             });
-            const editBtn = document.createElement("button");
-  editBtn.textContent = "🖊";
-  editBtn.onclick = () => openEditModal(timestamp);
-  const tdEdit = document.createElement("td");
-  tdEdit.appendChild(editBtn);
-  tr.appendChild(tdEdit);
-  tbody.appendChild(tr);
 
+            // Güncelle butonu
+            const tdEdit = document.createElement("td");
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "🖊";
+            editBtn.onclick = () => alert("Durum güncelleme özelliği yakında aktif olacak.");
+            tdEdit.appendChild(editBtn);
+            tr.appendChild(tdEdit);
+
+            tbody.appendChild(tr);
+
+            // Grafik verisi
             if (durum === "Beklemede" || durum === "Devam Ediyor") {
               bekleyen[sorumlu] = (bekleyen[sorumlu] || 0) + 1;
             }
             if (durum !== "Tamamlandı") {
               tamamlanmamis[sorumlu] = (tamamlanmamis[sorumlu] || 0) + 1;
             }
-
-            const now = new Date();
-            let parsedDate = new Date(bitis);
-            if (typeof bitis === "string" && bitis.includes(".")) {
-              const [gun, ay, yil] = bitis.split(".");
-              parsedDate = new Date(`${yil}-${ay}-${gun}`);
-            }
-            if (!isNaN(parsedDate) && parsedDate < now && durum !== "Tamamlandı") {
-              gecikmis.push({ baslik, sorumlu, bitis, durum });
-            }
           });
 
-          // Chart: Bekleyen
+          // Bekleyen işler grafiği
           new Chart(document.getElementById('chartBekleyen'), {
             type: 'bar',
             data: {
@@ -164,7 +119,7 @@
             }
           });
 
-          // Chart: Tamamlanmamış
+          // Tamamlanmamış işler grafiği
           new Chart(document.getElementById('chartTamamlanmamis'), {
             type: 'bar',
             data: {
@@ -172,49 +127,9 @@
               datasets: [{ label: 'Tamamlanmamış İşler', data: Object.values(tamamlanmamis), backgroundColor: 'crimson' }]
             }
           });
-
-          // Gecikmiş tabloyu doldur
-          gecikmis.forEach(item => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${item.baslik}</td><td>${item.sorumlu}</td><td>${item.bitis}</td><td>${item.durum}</td>`;
-            gecikmisBody.appendChild(tr);
-          });
         });
     }
 
-    
-    // Form gönderimi ile Script'e veri gönder
-    document.getElementById("editForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-      const ts = document.getElementById("editTimestamp").value;
-      const durum = document.getElementById("editDurum").value;
-
-      fetch("https://script.google.com/macros/s/AKfycbzAzuQlXv7iQTYjdNolNLdbeOMzWXRuMQz3kCYbpV57yhvUoNvAiJSvIM7vbLYA3FwEMA/exec", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: "timestamp=" + encodeURIComponent(ts) + "&durum=" + encodeURIComponent(durum)
-      })
-      .then(response => response.text())
-      .then(result => {
-        alert("Sonuç: " + result);
-        document.getElementById("editModal").style.display = "none";
-        fetchData(); // yenile
-      })
-      .catch(error => {
-        alert("Hata oluştu: " + error);
-      });
-    });
-
-    function openEditModal(ts) {
-      document.getElementById("editTimestamp").value = ts;
-      document.getElementById("editDurum").value = "";
-      document.getElementById("editModal").style.display = "block";
-    }
-
-    // İlk veri çekimi
-  
     fetchData();
   </script>
 </body>
