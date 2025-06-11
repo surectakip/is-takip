@@ -2,114 +2,228 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş Süreç Takip - Mobil Uyumlu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Carbon CSS (isteğe bağlı) -->
-  <link rel="stylesheet" href="https://unpkg.com/carbon-components/css/carbon-components.min.css">
+  <title>İş - Süreç Takip</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css">
   <style>
-    body { margin:0; font-family: Arial, sans-serif; padding:10px; }
-    header { background:#2c3e50; color:white; padding:15px; text-align:center; }
-    form, .filter-section { margin:10px 0; }
-    input, select, button { width:100%; padding:8px; margin:5px 0; box-sizing:border-box; }
-    table { width:100%; border-collapse:collapse; margin-top:10px; }
-    th, td { border:1px solid #ddd; padding:8px; }
-    th { background:#f4f4f4; }
-    @media (min-width:600px) { input, select, button { width:auto; display:inline-block; margin-right:5px; } }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+    }
+    header {
+      background: #2c3e50;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 1.8em;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      background: #ecf0f1;
+      padding: 10px 0;
+    }
+    nav button {
+      margin: 5px;
+      padding: 10px 16px;
+      border: none;
+      background-color: #3498db;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    nav button:hover {
+      background-color: #2980b9;
+    }
+    .tab {
+      display: none;
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+    .visible {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      background: white;
+    }
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #bdc3c7;
+    }
+    canvas {
+      margin-top: 20px;
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+    }
+    #ganttTab { margin-top: 40px; }
   </style>
 </head>
 <body>
-  <header><h1>İş Süreç Takip</h1></header>
+  <header>İş - Süreç Takip Sistemi</header>
+  <nav>
+    <button onclick="showTab('ana')">Ana Tablo</button>
+    <button onclick="showTab('analiz')">Analiz</button>
+    <button onclick="showTab('timeline')">Zaman Çizelgesi</button>
+    <button onclick="showTab('form')">Veri Girişi</button>
+    <button onclick="fetchData()">Yenile 🔄</button>
+  </nav>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <section id="ana" class="tab visible">
+    <h2>Ana Tablo</h2>
+    <input id="searchBox" oninput="filterTable()" placeholder="Filtrele..." /> <button onclick="clearFilter()">Temizle</button>
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
+          <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="analiz" class="tab">
+    <h2>Analizler</h2>
+    <canvas id="chart1"></canvas>
+    <canvas id="chart2"></canvas>
+  </section>
+
+  <section id="timeline" class="tab">
+    <h2>Zaman Çizelgesi</h2>
+    <div id="ganttTab"></div>
+  </section>
+
+  <section id="form" class="tab">
+    <h2>Yeni Kayıt</h2>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="2000" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
+  </section>
+
   <script>
-    // TODO: Replace with your Firebase project config
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-    const collection = db.collection('isTakip');
+    const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
+    const sheetName = 'Form Yanıtları 1';
+    const query = encodeURIComponent('SELECT *');
+    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
-    // Add record
-    async function addRecord(e) {
-      e.preventDefault();
-      const data = {
-        isAdi: document.getElementById('f-isAdi').value.trim(),
-        daire: document.getElementById('f-daire').value.trim(),
-        isTanim: document.getElementById('f-tanim').value.trim(),
-        baslangic: document.getElementById('f-baslangic').value,
-        bitis: document.getElementById('f-bitis').value,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      await collection.add(data);
-      document.getElementById('add-form').reset();
-      loadRecords();
+    let ganttTasks = [];
+
+    function showTab(id) {
+      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('visible'));
+      document.getElementById(id).classList.add('visible');
+      if (id === 'timeline') drawGantt();
     }
 
-    // Load and display records with optional filters
-    async function loadRecords() {
-      const isFilter = document.getElementById('filter-isAdi').value.trim().toLowerCase();
-      const daireFilter = document.getElementById('filter-daire').value.trim().toLowerCase();
+    function fetchData() {
+      fetch(url)
+        .then(res => res.text())
+        .then(rep => {
+          const data = JSON.parse(rep.substr(47).slice(0, -2));
+          const tbody = document.querySelector("#dataTable tbody");
+          tbody.innerHTML = "";
+          const durumlar = {}, sorumlular = {};
+          ganttTasks = [];
 
-      let query = collection.orderBy('timestamp', 'desc');
-      const snapshot = await query.get();
+          data.table.rows.forEach((row, index) => {
+            const c = row.c.map(x => x?.v || '');
+            if (c.length < 10) return;
+            const [zaman, baslik, tanim, sorumlu, basla, bitis, durum, oncelik, notlar, hatirlat] = c;
 
-      const tableBody = document.getElementById('records');
-      tableBody.innerHTML = '';
+            const tr = document.createElement("tr");
+            const now = new Date();
+            let bitisDate = new Date(bitis);
+            if (typeof bitis === 'string' && bitis.includes(".")) {
+              const [g, a, y] = bitis.split(".");
+              bitisDate = new Date(`${y}-${a}-${g}`);
+            }
+            if (bitisDate < now && durum !== 'Tamamlandı') {
+              tr.style.backgroundColor = '#ffcccc';
+            }
+            [zaman, baslik, tanim, sorumlu, basla, bitis, durum, oncelik, notlar, hatirlat].forEach(txt => {
+              const td = document.createElement("td");
+              td.textContent = txt;
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
 
-      snapshot.docs.forEach(doc => {
-        const r = doc.data();
-        if ((isFilter && !r.isAdi.toLowerCase().includes(isFilter)) ||
-            (daireFilter && !r.daire.toLowerCase().includes(daireFilter))) {
-          return;
-        }
-        const tr = document.createElement('tr');
-        ['isAdi','daire','isTanim','baslangic','bitis'].forEach(key => {
-          const td = document.createElement('td');
-          td.textContent = r[key] || '';
-          tr.appendChild(td);
+            durumlar[durum] = (durumlar[durum] || 0) + 1;
+            sorumlular[sorumlu] = (sorumlular[sorumlu] || 0) + 1;
+
+            if (basla && bitis) {
+              const start = new Date(basla);
+              const end = new Date(bitis);
+              if (!isNaN(start) && !isNaN(end)) {
+                ganttTasks.push({
+                  id: `g${index}`,
+                  name: baslik,
+                  start: start.toISOString().split('T')[0],
+                  end: end.toISOString().split('T')[0],
+                  progress: durum === 'Tamamlandı' ? 100 : 0
+                });
+              }
+            }
+          });
+
+          new Chart(document.getElementById("chart1"), {
+            type: 'pie',
+            data: {
+              labels: Object.keys(durumlar),
+              datasets: [{
+                data: Object.values(durumlar),
+                backgroundColor: ['#27ae60','#f39c12','#e74c3c']
+              }]
+            }
+          });
+
+          new Chart(document.getElementById("chart2"), {
+            type: 'bar',
+            data: {
+              labels: Object.keys(sorumlular),
+              datasets: [{
+                label: 'İş Sayısı',
+                data: Object.values(sorumlular),
+                backgroundColor: '#2980b9'
+              }]
+            }
+          });
         });
-        tableBody.appendChild(tr);
+    }
+
+    function drawGantt() {
+      document.getElementById("ganttTab").innerHTML = "";
+      if (ganttTasks.length) {
+        new Gantt("#ganttTab", ganttTasks);
+      } else {
+        document.getElementById("ganttTab").innerHTML = "<p>Gösterilecek görev yok.</p>";
+      }
+    }
+
+    function filterTable() {
+      const val = document.getElementById("searchBox").value.toLowerCase();
+      document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
+        const text = tr.textContent.toLowerCase();
+        tr.style.display = text.includes(val) ? "" : "none";
       });
     }
 
-    window.addEventListener('load', () => {
-      document.getElementById('add-form').addEventListener('submit', addRecord);
-      document.getElementById('apply-filter').addEventListener('click', loadRecords);
-      loadRecords();
-    });
+    function clearFilter() {
+      document.getElementById("searchBox").value = "";
+      filterTable();
+    }
+
+    fetchData();
   </script>
-
-  <!-- Ekleme Formu -->
-  <form id="add-form">
-    <input id="f-isAdi" placeholder="İş Adı" required />
-    <input id="f-daire" placeholder="Daire" required />
-    <input id="f-tanim" placeholder="İş Tanımı" />
-    <input type="date" id="f-baslangic" placeholder="Başlangıç Tarihi" />
-    <input type="date" id="f-bitis" placeholder="Bitiş Tarihi" />
-    <button type="submit">Kaydet</button>
-  </form>
-
-  <!-- Filtreleme -->
-  <div class="filter-section">
-    <input id="filter-isAdi" placeholder="İş Adına Göre Filtrele" />
-    <input id="filter-daire" placeholder="Daireye Göre Filtrele" />
-    <button id="apply-filter">Filtre Uygula</button>
-  </div>
-
-  <!-- Kayıtlar Tablosu -->
-  <table>
-    <thead>
-      <tr><th>İş Adı</th><th>Daire</th><th>İş Tanımı</th><th>Başlangıç</th><th>Bitiş</th></tr>
-    </thead>
-    <tbody id="records"></tbody>
-  </table>
 </body>
 </html>
