@@ -2,235 +2,54 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş - Süreç Takip</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css">
+  <title>İş Süreç Takip & Güncelleme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-    }
-    header {
-      background: #2c3e50;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 1.8em;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      background: #ecf0f1;
-      padding: 10px 0;
-    }
-    nav button {
-      margin: 5px;
-      padding: 10px 16px;
-      border: none;
-      background-color: #3498db;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    nav button:hover {
-      background-color: #2980b9;
-    }
-    .tab {
-      display: none;
-      padding: 20px;
-      max-width: 1200px;
-      margin: auto;
-    }
-    .visible {
-      display: block;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      background: white;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #bdc3c7;
-    }
-    canvas {
-      margin-top: 20px;
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-    }
-    #ganttTab { margin-top: 40px; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { background:#34495e; color:#fff; padding:1rem; text-align:center; }
+    main { display:flex; flex-wrap: wrap; }
+    section { flex:1 1 50%; box-sizing:border-box; padding:1rem; min-width:300px; }
+    section h2 { margin-top:0; }
+    iframe { width:100%; border:1px solid #ccc; border-radius:4px; }
+    #sheet-frame { height:600px; }
+    #form-frame  { height:800px; }
+    nav { text-align:center; margin:1rem 0; }
+    nav button { padding:.5rem 1rem; margin:0 .5rem; border:none; background:#2980b9; color:#fff; border-radius:4px; cursor:pointer; }
+    nav button:hover { background:#1c5980; }
   </style>
 </head>
 <body>
-  <header>İş - Süreç Takip Sistemi</header>
+
+  <header>
+    <h1>İş Süreç Takip & Güncelleme Paneli</h1>
+  </header>
+
   <nav>
-    <button onclick="showTab('ana')">Ana Tablo</button>
-    <button onclick="showTab('analiz')">Analiz</button>
-    <button onclick="showTab('timeline')">Zaman Çizelgesi</button>
-    <button onclick="showTab('form')">Veri Girişi</button>
-    <button onclick="fetchData()">Yenile 🔄</button>
+    <button onclick="document.getElementById('sheet-frame').contentWindow.location.reload()">Tabloyu Yenile 🔄</button>
+    <button onclick="document.getElementById('form-frame').scrollIntoView({behavior:'smooth'})">Formu Göster ✏️</button>
   </nav>
 
-  <section id="ana" class="tab visible">
-    <h2>Ana Tablo</h2>
-    <input id="searchBox" oninput="filterTable()" placeholder="Filtrele..." /> <button onclick="clearFilter()">Temizle</button>
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
-          <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+  <main>
+    <!-- 1) Google Sheets'i embed et -->
+    <section>
+      <h2>Ana Tablo</h2>
+      <iframe
+        id="sheet-frame"
+        src="https://docs.google.com/spreadsheets/d/1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU/htmlembed?widget=true&amp;headers=false"
+        frameborder="0"
+      ></iframe>
+    </section>
 
-  <section id="analiz" class="tab">
-    <h2>Analizler</h2>
-    <canvas id="chart1"></canvas>
-    <canvas id="chart2"></canvas>
-  </section>
+    <!-- 2) Google Form'u embed et -->
+    <section>
+      <h2>Yeni Kayıt Ekle</h2>
+      <iframe
+        id="form-frame"
+        src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true"
+        frameborder="0"
+      >Yükleniyor…</iframe>
+    </section>
+  </main>
 
-  <section id="timeline" class="tab">
-    <h2>Zaman Çizelgesi</h2>
-    <div id="ganttTab"></div>
-  </section>
-
-  <section id="form" class="tab">
-    <h2>Yeni Kayıt</h2>
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="2000" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
-  </section>
-
-  <script>
-    // ——— BURAYA EKLEDİĞİNİZ KADAR ———
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwa4CTOR7vmkySj5LNPwqOZHE61k1eXN6eEIvIoGDKsVzR57-WSWtAqgLlmFmDGBjXr/exec';
-    // Belirtmek gerekirse, şu anki fetchData() sadece okuma içindir.
-    // İleride POST ile veri ekleme/güncelleme için API_URL'i kullanabilirsiniz.
-    // ——————————————————————————
-
-    const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
-    const sheetName = 'Form Yanıtları 1';
-    const query = encodeURIComponent('SELECT *');
-    const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
-
-    let ganttTasks = [];
-
-    function showTab(id) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('visible'));
-      document.getElementById(id).classList.add('visible');
-      if (id === 'timeline') drawGantt();
-    }
-
-    function fetchData() {
-      fetch(url)
-        .then(res => res.text())
-        .then(rep => {
-          const data = JSON.parse(rep.substr(47).slice(0, -2));
-          const tbody = document.querySelector("#dataTable tbody");
-          tbody.innerHTML = "";
-          const durumlar = {}, sorumlular = {};
-          ganttTasks = [];
-
-          data.table.rows.forEach((row, index) => {
-            const c = row.c.map(x => x?.v || '');
-            if (c.length < 10) return;
-            const [zaman, baslik, tanim, sorumlu, basla, bitis, durum, oncelik, notlar, hatirlat] = c;
-
-            const tr = document.createElement("tr");
-            const now = new Date();
-            let bitisDate = new Date(bitis);
-            if (typeof bitis === 'string' && bitis.includes(".")) {
-              const [g, a, y] = bitis.split(".");
-              bitisDate = new Date(`${y}-${a}-${g}`);
-            }
-            if (bitisDate < now && durum !== 'Tamamlandı') {
-              tr.style.backgroundColor = '#ffcccc';
-            }
-            [zaman, baslik, tanim, sorumlu, basla, bitis, durum, oncelik, notlar, hatirlat].forEach(txt => {
-              const td = document.createElement("td");
-              td.textContent = txt;
-              tr.appendChild(td);
-            });
-            tbody.appendChild(tr);
-
-            durumlar[durum] = (durumlar[durum] || 0) + 1;
-            sorumlular[sorumlu] = (sorumlular[sorumlu] || 0) + 1;
-
-            if (basla && bitis) {
-              const start = new Date(basla);
-              const end = new Date(bitis);
-              if (!isNaN(start) && !isNaN(end)) {
-                ganttTasks.push({
-                  id: `g${index}`,
-                  name: baslik,
-                  start: start.toISOString().split('T')[0],
-                  end: end.toISOString().split('T')[0],
-                  progress: durum === 'Tamamlandı' ? 100 : 0
-                });
-              }
-            }
-          });
-
-          new Chart(document.getElementById("chart1"), {
-            type: 'pie',
-            data: {
-              labels: Object.keys(durumlar),
-              datasets: [{
-                data: Object.values(durumlar),
-                backgroundColor: ['#27ae60','#f39c12','#e74c3c']
-              }]
-            }
-          });
-
-          new Chart(document.getElementById("chart2"), {
-            type: 'bar',
-            data: {
-              labels: Object.keys(sorumlular),
-              datasets: [{
-                label: 'İş Sayısı',
-                data: Object.values(sorumlular),
-                backgroundColor: '#2980b9'
-              }]
-            }
-          });
-        });
-    }
-
-    function drawGantt() {
-      document.getElementById("ganttTab").innerHTML = "";
-      if (ganttTasks.length) {
-        new Gantt("#ganttTab", ganttTasks);
-      } else {
-        document.getElementById("ganttTab").innerHTML = "<p>Gösterilecek görev yok.</p>";
-      }
-    }
-
-    function filterTable() {
-      const val = document.getElementById("searchBox").value.toLowerCase();
-      document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
-        const text = tr.textContent.toLowerCase();
-        tr.style.display = text.includes(val) ? "" : "none";
-      });
-    }
-
-    function clearFilter() {
-      document.getElementById("searchBox").value = "";
-      filterTable();
-    }
-
-    // Sayfa yüklenince veri çek
-    fetchData();
-  </script>
 </body>
 </html>
