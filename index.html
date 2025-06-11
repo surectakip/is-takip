@@ -202,13 +202,46 @@
     }
 
     function drawGantt() {
-      document.getElementById("ganttTab").innerHTML = "";
-      if (ganttTasks.length) {
-        new Gantt("#ganttTab", ganttTasks);
-      } else {
-        document.getElementById("ganttTab").innerHTML = "<p>Gösterilecek görev yok.</p>";
-      }
-    }
+  const container = document.getElementById('ganttTab');
+  container.innerHTML = '';
+  if (!ganttTasks.length) {
+    container.innerHTML = '<p>Gösterilecek görev yok.</p>';
+    return;
+  }
+
+  new Gantt(container, ganttTasks, {
+    // Görünüm modu: Day | Week | Month | Year
+    view_mode: 'Week',
+    // Tarih üstbilgisinin formatı
+    date_format: 'DD-MM-YYYY',
+    // Milestones (tek günlük işler) için özel çubuk stili
+    custom_popup_html: task => {
+      return `
+        <div class="custom-popup">
+          <h5>${task.name}</h5>
+          <p><strong>Başlangıç:</strong> ${task._start.format('DD MMM YYYY')}</p>
+          <p><strong>Bitiş:</strong> ${task._end.format('DD MMM YYYY')}</p>
+          <p><strong>Durum:</strong> ${task.progress}% tamamlandı</p>
+        </div>
+      `;
+    },
+    on_click: task => {
+      console.log('Tıklanan görev:', task);
+      // Burada modal açabilir veya formla ilişkilendirebilirsiniz
+    },
+    on_date_change: (task, start, end) => {
+      console.log(`${task.name} yeni tarih: ${start} → ${end}`);
+      // Tarih değişikliğini sunucuya kaydedebilirsiniz
+    },
+    on_progress_change: (task, progress) => {
+      console.log(`${task.name} ilerleme: ${progress}`);
+      // İlerleme güncellemesini işlem yapabilirsiniz
+    },
+    // Haftanın hangi günü gösterimin başlangıcı olsun (0=Pazar,1=Pazartesi…)
+    bar_padding: 4,
+    arrow_curve: 5
+  });
+}
 
     function filterTable() {
       const val = document.getElementById("searchBox").value.toLowerCase();
