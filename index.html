@@ -2,54 +2,82 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş Süreç Takip & Güncelleme</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yanıtlar ve Form</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; margin:0; padding:0; }
     header { background:#34495e; color:#fff; padding:1rem; text-align:center; }
-    main { display:flex; flex-wrap: wrap; }
-    section { flex:1 1 50%; box-sizing:border-box; padding:1rem; min-width:300px; }
-    section h2 { margin-top:0; }
+    nav { display:flex; justify-content:center; background:#ecf0f1; }
+    nav button {
+      flex:1;
+      padding:.75rem;
+      border:none;
+      background:#bdc3c7;
+      cursor:pointer;
+      font-size:1rem;
+    }
+    nav button.active { background:#3498db; color:#fff; }
+    section { display:none; padding:1rem; }
+    section.active { display:block; }
     iframe { width:100%; border:1px solid #ccc; border-radius:4px; }
-    #sheet-frame { height:600px; }
-    #form-frame  { height:800px; }
-    nav { text-align:center; margin:1rem 0; }
-    nav button { padding:.5rem 1rem; margin:0 .5rem; border:none; background:#2980b9; color:#fff; border-radius:4px; cursor:pointer; }
-    nav button:hover { background:#1c5980; }
+    #table-frame { height:700px; }
+    #form-frame  { height:850px; }
   </style>
 </head>
 <body>
 
   <header>
-    <h1>İş Süreç Takip & Güncelleme Paneli</h1>
+    <h1>Form Yanıtları & Güncelleme</h1>
   </header>
 
   <nav>
-    <button onclick="document.getElementById('sheet-frame').contentWindow.location.reload()">Tabloyu Yenile 🔄</button>
-    <button onclick="document.getElementById('form-frame').scrollIntoView({behavior:'smooth'})">Formu Göster ✏️</button>
+    <button id="btn-table">Tablo</button>
+    <button id="btn-form">Form Yanıtları</button>
   </nav>
 
-  <main>
-    <!-- 1) Google Sheets'i embed et -->
-    <section>
-      <h2>Ana Tablo</h2>
-      <iframe
-        id="sheet-frame"
-        src="https://docs.google.com/spreadsheets/d/1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU/htmlembed?widget=true&amp;headers=false"
-        frameborder="0"
-      ></iframe>
-    </section>
+  <section id="tab-table">
+    <h2>Yanıt Tablosu</h2>
+    <iframe
+      id="table-frame"
+      src="https://docs.google.com/spreadsheets/d/1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU/htmlembed?widget=true&amp;headers=false&amp;range=A1:K1000"
+      frameborder="0"
+    ></iframe>
+  </section>
 
-    <!-- 2) Google Form'u embed et -->
-    <section>
-      <h2>Yeni Kayıt Ekle</h2>
-      <iframe
-        id="form-frame"
-        src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true"
-        frameborder="0"
-      >Yükleniyor…</iframe>
-    </section>
-  </main>
+  <section id="tab-form">
+    <h2>Form Yanıtları ve Yeni Kayıt</h2>
+    <iframe
+      id="form-frame"
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true"
+      frameborder="0"
+    >Yükleniyor…</iframe>
+  </section>
+
+  <script>
+    const btnTable = document.getElementById('btn-table');
+    const btnForm  = document.getElementById('btn-form');
+    const tabTable = document.getElementById('tab-table');
+    const tabForm  = document.getElementById('tab-form');
+
+    function showTable() {
+      btnTable.classList.add('active');
+      btnForm.classList.remove('active');
+      tabTable.classList.add('active');
+      tabForm.classList.remove('active');
+    }
+    function showForm() {
+      btnForm.classList.add('active');
+      btnTable.classList.remove('active');
+      tabForm.classList.add('active');
+      tabTable.classList.remove('active');
+    }
+
+    btnTable.addEventListener('click', showTable);
+    btnForm.addEventListener('click', showForm);
+
+    // İlk yüklendiğinde Tablo sekmesini göster
+    showTable();
+  </script>
 
 </body>
 </html>
