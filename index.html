@@ -27,6 +27,7 @@
   </header>
 
   <main class="bx--content">
+    <!-- Ana Tablo -->
     <section id="ana" class="tab bx--grid bx--grid--narrow">
       <div class="bx--row"><div class="bx--col">
         <h2 class="bx--type--headingLg">Ana Tablo</h2>
@@ -44,6 +45,7 @@
       </div></div>
     </section>
 
+    <!-- Analiz -->
     <section id="analiz" class="tab bx--grid bx--grid--narrow" style="display:none;">
       <div class="bx--row"><div class="bx--col-lg-8">
         <div class="bx--card"><div class="bx--card__content"><canvas id="chart1"></canvas></div></div>
@@ -52,6 +54,7 @@
       </div></div>
     </section>
 
+    <!-- Zaman Çizelgesi -->
     <section id="timeline" class="tab bx--grid bx--grid--narrow" style="display:none;">
       <div class="bx--row"><div class="bx--col">
         <h2 class="bx--type--headingLg">Zaman Çizelgesi</h2>
@@ -59,6 +62,7 @@
       </div></div>
     </section>
 
+    <!-- Veri Girişi -->
     <section id="form" class="tab bx--grid bx--grid--narrow" style="display:none;">
       <div class="bx--row"><div class="bx--col">
         <h2 class="bx--type--headingLg">Yeni Kayıt</h2>
@@ -74,49 +78,90 @@
     let ganttTasks = [], chart1, chart2;
 
     function showTab(id) {
-      document.querySelectorAll('.tab').forEach(s=>s.style.display='none');
-      document.getElementById(id).style.display='';
-      if(id==='timeline') drawGantt();
+      document.querySelectorAll('.tab').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = '';
+      if (id === 'timeline') drawGantt();
     }
 
-    // JSONP callback
+    // Convert GViz date object or ISO string to valid JS Date
+    function toValidDate(input) {
+      if (input && typeof input === 'object' && input.year != null) {
+        return new Date(input.year, input.month - 1, input.day, input.hours || 0, input.minutes || 0, input.seconds || 0);
+      }
+      const d = new Date(input);
+      return isNaN(d) ? null : d;
+    }
+
     function handleSheetResponse(json) {
-      const rows = json.table.rows;
-      const tbody = document.getElementById('dataTable'); tbody.innerHTML='';
-      const durum={}, sor={}, now=new Date(); ganttTasks=[];
-      rows.forEach((r,i)=>{
-        const c=r.c.map(x=>({raw:x.v,fmt:x.f||''})); if(c.length<10)return;
-        const zaman=c[0].fmt||c[0].raw, baslik=c[1].raw, tanim=c[2].raw, sorumlu=c[3].raw;
-        const basDate=new Date(c[4].raw), bitDate=new Date(c[5].raw);
-        const bas=c[4].fmt||(basDate?basDate.toLocaleDateString():''), bit=c[5].fmt||(bitDate?bitDate.toLocaleDateString():'');
-        const dur=c[6].raw, onl=c[7].raw, not=c[8].raw, hat=c[9].raw;
-        const tr=document.createElement('tr'); if(bitDate<now&&dur!=='Tamamlandı')tr.style.backgroundColor='#ffcccc';
-        [zaman,baslik,tanim,sorumlu,bas,bit,dur,onl,not,hat].forEach(t=>{let td=document.createElement('td');td.textContent=t;tr.appendChild(td)});
+      const rows = (json.table && json.table.rows) || [];
+      const tbody = document.getElementById('dataTable'); tbody.innerHTML = '';
+      const durumMap = {}, sorMap = {};
+      const now = new Date();
+      ganttTasks = [];
+
+      rows.forEach((r, i) => {
+        const c = []; for (let j = 0; j < 10; j++) {
+          const cell = r.c[j] || {};
+          c.push({ raw: cell.v, fmt: cell.f || '' });
+        }
+        const zaman = c[0].fmt || c[0].raw;
+        const baslik = c[1].raw || '';
+        const tanim = c[2].raw || '';
+        const sorumlu = c[3].raw || '';
+
+        const baslaDate = toValidDate(c[4].raw);
+        const bitisDate = toValidDate(c[5].raw);
+        const basla = c[4].fmt || (baslaDate ? baslaDate.toLocaleDateString() : '');
+        const bitis = c[5].fmt || (bitisDate ? bitisDate.toLocaleDateString() : '');
+
+        const durumVal = c[6].raw || '';
+        const oncelik = c[7].raw || '';
+        const notlar = c[8].raw || '';
+        const hatirlat = c[9].raw || '';
+
+        // Append row
+        const tr = document.createElement('tr');
+        if (bitisDate && bitisDate < now && durumVal !== 'Tamamlandı') tr.style.backgroundColor = '#ffcccc';
+        [zaman, baslik, tanim, sorumlu, basla, bitis, durumVal, oncelik, notlar, hatirlat]
+          .forEach(txt => { const td = document.createElement('td'); td.textContent = txt; tr.appendChild(td); });
         tbody.appendChild(tr);
-        durum[dur]=(durum[dur]||0)+1; sor[sorumlu]=(sor[sorumlu]||0)+1;
-        if(basDate&&bitDate) ganttTasks.push({id:'g'+i,name:baslik,start:basDate.toISOString().split('T')[0],end:bitDate.toISOString().split('T')[0],progress:dur==='Tamamlandı'?100:0});
+
+        // Chart data
+        durumMap[durumVal] = (durumMap[durumVal] || 0) + 1;
+        sorMap[sorumlu] = (sorMap[sorumlu] || 0) + 1;
+
+        // Gantt data
+        if (baslaDate && bitisDate) {
+          ganttTasks.push({ id: 'g' + i, name: baslik, start: baslaDate.toISOString().split('T')[0], end: bitisDate.toISOString().split('T')[0], progress: durumVal === 'Tamamlandı' ? 100 : 0 });
+        }
       });
-      if(chart1)chart1.destroy(); chart1=new Chart(document.getElementById('chart1'),{type:'pie',data:{labels:Object.keys(durum),datasets:[{data:Object.values(durum)}]}});
-      if(chart2)chart2.destroy(); chart2=new Chart(document.getElementById('chart2'),{type:'bar',data:{labels:Object.keys(sor),datasets:[{label:'İş Sayısı',data:Object.values(sor)}]}});
+
+      // Render charts
+      if (chart1) chart1.destroy();
+      chart1 = new Chart(document.getElementById('chart1'), { type: 'pie', data: { labels: Object.keys(durumMap), datasets: [{ data: Object.values(durumMap) }] } });
+      if (chart2) chart2.destroy();
+      chart2 = new Chart(document.getElementById('chart2'), { type: 'bar', data: { labels: Object.keys(sorMap), datasets: [{ label: 'İş Sayısı', data: Object.values(sorMap) }] } });
     }
 
-    // JSONP ile veri yükle
     function loadSheetData() {
       const script = document.createElement('script');
-      script.src = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tq=${encodeURIComponent('SELECT *')}&tqx=responseHandler:handleSheetResponse`;
+      script.src = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=responseHandler:handleSheetResponse`;
       document.body.appendChild(script);
     }
 
     function drawGantt() {
-      const c=document.getElementById('ganttTab'); c.innerHTML='';
-      if(!ganttTasks.length) return c.innerHTML='<p>Gösterilecek görev yok.</p>';
-      new Gantt(c,ganttTasks,{view_mode:'Week',date_format:'DD-MM-YYYY',bar_padding:4,arrow_curve:5});
+      const c = document.getElementById('ganttTab'); c.innerHTML = '';
+      if (!ganttTasks.length) { c.innerHTML = '<p>Gösterilecek görev yok.</p>'; return; }
+      new Gantt(c, ganttTasks, { view_mode: 'Week', date_format: 'DD-MM-YYYY', bar_padding: 4, arrow_curve: 5 });
     }
 
-    function filterTable(){const v=document.getElementById('searchBox').value.toLowerCase(); document.querySelectorAll('#dataTable tr').forEach(tr=>tr.style.display=tr.textContent.toLowerCase().includes(v)?'':'none');}
-    function clearFilter(){document.getElementById('searchBox').value='';filterTable();}
+    function filterTable() {
+      const v = document.getElementById('searchBox').value.toLowerCase();
+      document.querySelectorAll('#dataTable tr').forEach(tr => tr.style.display = tr.textContent.toLowerCase().includes(v) ? '' : 'none');
+    }
+    function clearFilter() { document.getElementById('searchBox').value = ''; filterTable(); }
 
-    // İlk yüklemede data çek
+    // Initial load
     loadSheetData();
   </script>
 </body>
