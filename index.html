@@ -2,110 +2,114 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş Süreç Takip - Excel Tabanlı</title>
+  <title>İş Süreç Takip - Mobil Uyumlu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Carbon CSS -->
+  <!-- Carbon CSS (isteğe bağlı) -->
   <link rel="stylesheet" href="https://unpkg.com/carbon-components/css/carbon-components.min.css">
-  <!-- SheetJS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #table-container { max-height: 400px; overflow: auto; margin-bottom: 20px; }
-    .bx--btn { margin-right: 10px; }
+    body { margin:0; font-family: Arial, sans-serif; padding:10px; }
+    header { background:#2c3e50; color:white; padding:15px; text-align:center; }
+    form, .filter-section { margin:10px 0; }
+    input, select, button { width:100%; padding:8px; margin:5px 0; box-sizing:border-box; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #ddd; padding:8px; }
+    th { background:#f4f4f4; }
+    @media (min-width:600px) { input, select, button { width:auto; display:inline-block; margin-right:5px; } }
   </style>
 </head>
 <body>
-  <h1>İş Süreç Takip Sistemi (Excel Tabanlı)</h1>
-  <div>
-    <input type="file" id="file-input" accept=".xls,.xlsx,.xlsm" />
-    <button class="bx--btn bx--btn--primary" onclick="loadFile()">Excel'i Yükle</button>
-  </div>
+  <header><h1>İş Süreç Takip</h1></header>
 
-  <div id="table-container"></div>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script>
+    // TODO: Replace with your Firebase project config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const collection = db.collection('isTakip');
 
-  <h2>Yeni Kayıt Ekle</h2>
+    // Add record
+    async function addRecord(e) {
+      e.preventDefault();
+      const data = {
+        isAdi: document.getElementById('f-isAdi').value.trim(),
+        daire: document.getElementById('f-daire').value.trim(),
+        isTanim: document.getElementById('f-tanim').value.trim(),
+        baslangic: document.getElementById('f-baslangic').value,
+        bitis: document.getElementById('f-bitis').value,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      await collection.add(data);
+      document.getElementById('add-form').reset();
+      loadRecords();
+    }
+
+    // Load and display records with optional filters
+    async function loadRecords() {
+      const isFilter = document.getElementById('filter-isAdi').value.trim().toLowerCase();
+      const daireFilter = document.getElementById('filter-daire').value.trim().toLowerCase();
+
+      let query = collection.orderBy('timestamp', 'desc');
+      const snapshot = await query.get();
+
+      const tableBody = document.getElementById('records');
+      tableBody.innerHTML = '';
+
+      snapshot.docs.forEach(doc => {
+        const r = doc.data();
+        if ((isFilter && !r.isAdi.toLowerCase().includes(isFilter)) ||
+            (daireFilter && !r.daire.toLowerCase().includes(daireFilter))) {
+          return;
+        }
+        const tr = document.createElement('tr');
+        ['isAdi','daire','isTanim','baslangic','bitis'].forEach(key => {
+          const td = document.createElement('td');
+          td.textContent = r[key] || '';
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    window.addEventListener('load', () => {
+      document.getElementById('add-form').addEventListener('submit', addRecord);
+      document.getElementById('apply-filter').addEventListener('click', loadRecords);
+      loadRecords();
+    });
+  </script>
+
+  <!-- Ekleme Formu -->
   <form id="add-form">
-    <label>ID: <input type="text" id="f-id" required /></label>
-    <label>İş Başlığı: <input type="text" id="f-baslik" required /></label>
-    <label>İş Tanımı: <input type="text" id="f-tanim" /></label>
-    <label>Sorumlu: <input type="text" id="f-sorumlu" /></label>
-    <label>Başlangıç Tarihi: <input type="date" id="f-baslangic" /></label>
-    <label>Bitiş Tarihi: <input type="date" id="f-bitis" /></label>
-    <label>Durum: <input type="text" id="f-durum" /></label>
-    <label>Öncelik: <input type="text" id="f-oncelik" /></label>
-    <label>Not: <input type="text" id="f-not" /></label>
-    <label>Hatırlatma (gün): <input type="number" id="f-hatirlatma" /></label>
-    <label>İş Tamamlandı mı? <select id="f-tamamlandi"><option>EVET</option><option>HAYIR</option></select></label>
-    <button type="submit" class="bx--btn bx--btn--secondary">Ekle</button>
+    <input id="f-isAdi" placeholder="İş Adı" required />
+    <input id="f-daire" placeholder="Daire" required />
+    <input id="f-tanim" placeholder="İş Tanımı" />
+    <input type="date" id="f-baslangic" placeholder="Başlangıç Tarihi" />
+    <input type="date" id="f-bitis" placeholder="Bitiş Tarihi" />
+    <button type="submit">Kaydet</button>
   </form>
 
-  <h2>Sorgula</h2>
-  <label>Filtre (Sorumlu): <input type="text" id="filter-sorumlu" /></label>
-  <button onclick="applyFilter()" class="bx--btn bx--btn--primary">Uygula</button>
+  <!-- Filtreleme -->
+  <div class="filter-section">
+    <input id="filter-isAdi" placeholder="İş Adına Göre Filtrele" />
+    <input id="filter-daire" placeholder="Daireye Göre Filtrele" />
+    <button id="apply-filter">Filtre Uygula</button>
+  </div>
 
-  <script>
-    let workbook, worksheet, data = [];
-    const container = document.getElementById('table-container');
-
-    function loadFile() {
-      const inp = document.getElementById('file-input');
-      if (!inp.files.length) return alert('Lütfen bir dosya seçin.');
-      const reader = new FileReader();
-      reader.onload = e => {
-        workbook = XLSX.read(e.target.result, { type: 'binary' });
-        worksheet = workbook.Sheets['TümVeriler'];
-        data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-        renderTable(data);
-      };
-      reader.readAsBinaryString(inp.files[0]);
-    }
-
-    function renderTable(arr) {
-      container.innerHTML = '';
-      if (!arr.length) return;
-      const tbl = document.createElement('table');
-      tbl.className = 'bx--data-table bx--data-table--zebra';
-      const header = document.createElement('thead');
-      const cols = Object.keys(arr[0]);
-      header.innerHTML = '<tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr>';
-      tbl.appendChild(header);
-      const body = document.createElement('tbody');
-      arr.forEach(row => {
-        const tr = document.createElement('tr');
-        cols.forEach(c => {
-          const td = document.createElement('td'); td.textContent = row[c]; tr.appendChild(td);
-        });
-        body.appendChild(tr);
-      });
-      tbl.appendChild(body);
-      container.appendChild(tbl);
-    }
-
-    document.getElementById('add-form').addEventListener('submit', e => {
-      e.preventDefault();
-      const newRow = {
-        'ID': document.getElementById('f-id').value,
-        'İş Başlığı': document.getElementById('f-baslik').value,
-        'İş Tanımı': document.getElementById('f-tanim').value,
-        'Sorumlu': document.getElementById('f-sorumlu').value,
-        'Başlangıç Tarihi': document.getElementById('f-baslangic').value,
-        'Bitiş Tarihi': document.getElementById('f-bitis').value,
-        'Durum': document.getElementById('f-durum').value,
-        'Öncelik': document.getElementById('f-oncelik').value,
-        'Not': document.getElementById('f-not').value,
-        'Hatırlatma Aralığı (gün)': document.getElementById('f-hatirlatma').value,
-        'İş Tamamlandı mı?': document.getElementById('f-tamamlandi').value
-      };
-      data.push(newRow);
-      renderTable(data);
-      e.target.reset();
-    });
-
-    function applyFilter() {
-      const key = document.getElementById('filter-sorumlu').value.toLowerCase();
-      const filtered = data.filter(row => row['Sorumlu'].toLowerCase().includes(key));
-      renderTable(filtered);
-    }
-  </script>
+  <!-- Kayıtlar Tablosu -->
+  <table>
+    <thead>
+      <tr><th>İş Adı</th><th>Daire</th><th>İş Tanımı</th><th>Başlangıç</th><th>Bitiş</th></tr>
+    </thead>
+    <tbody id="records"></tbody>
+  </table>
 </body>
 </html>
