@@ -2,83 +2,111 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Form Yanıtları & Canlı Tablo</title>
+  <title>İş Süreç Takip & Düzenleme</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
-    body { font-family: Arial, sans-serif; margin:0; padding:0; }
-    header { background:#34495e; color:#fff; padding:1rem; text-align:center; }
-    nav { display:flex; justify-content:center; background:#ecf0f1; }
-    nav button {
-      flex:1;
-      padding:.75rem;
-      border:none;
-      background:#bdc3c7;
-      cursor:pointer;
-      font-size:1rem;
-    }
-    nav button.active { background:#3498db; color:#fff; }
-    section { display:none; padding:1rem; }
-    section.active { display:block; }
-    iframe { width:100%; border:1px solid #ccc; border-radius:4px; }
-    #table-frame { height:700px; }
-    #form-frame  { height:850px; }
+    body { font-family: Arial, sans-serif; margin:0; padding:1rem; }
+    table { width:100%; border-collapse: collapse; margin-bottom:1rem; }
+    th, td { padding:.5rem; border:1px solid #ddd; text-align:left; }
+    th { background:#f0f0f0; }
+    button { padding:.25rem .5rem; margin:0 .25rem; }
+    select { margin-right:.5rem; }
   </style>
 </head>
 <body>
 
-  <header>
-    <h1>Form Yanıtları & Canlı Tablo</h1>
-  </header>
-
-  <nav>
-    <button id="btn-table">Canlı Tablo</button>
-    <button id="btn-form">Form Göster</button>
-  </nav>
-
-  <section id="tab-table">
-    <h2>Form Yanıtları Tablosu</h2>
-    <iframe
-      id="table-frame"
-      src="https://docs.google.com/spreadsheets/d/1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU/pubhtml?gid=1581534024&single=true"
-      frameborder="0"
-    ></iframe>
-  </section>
-
-  <section id="tab-form">
-    <h2>Yeni Kayıt Ekle</h2>
-    <iframe
-      id="form-frame"
-      src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true"
-      frameborder="0"
-    >Yükleniyor…</iframe>
-  </section>
+  <h1>Canlı Tablo & Düzenleme</h1>
+  <button onclick="loadAndRender()">Yenile 🔄</button>
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Sil</th>
+        <th>ID</th><th>Başlık</th><th>Tanım</th><th>Sorumlu</th>
+        <th>Başlangıç</th><th>Bitiş</th><th>Durum</th>
+        <th>Güncelle</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
   <script>
-    const btnTable = document.getElementById('btn-table');
-    const btnForm  = document.getElementById('btn-form');
-    const tabTable = document.getElementById('tab-table');
-    const tabForm  = document.getElementById('tab-form');
+    const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
+    const sheetName = 'Form Yanıtları 1';
+    const query = encodeURIComponent('SELECT A,B,C,D,E,F,G,H');
+    const JSON_URL = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
+    const API_URL  = 'https://script.google.com/macros/s/AKfycbwa4CTOR7vmkySj5LNPwqOZHE61k1eXN6eEIvIoGDKsVzR57-WSWtAqgLlmFmDGBjXr/exec';
 
-    function showTable() {
-      btnTable.classList.add('active');
-      btnForm.classList.remove('active');
-      tabTable.classList.add('active');
-      tabForm.classList.remove('active');
-      // iframe’i de yenileyelim ki en güncel veriyi getirsin
-      document.getElementById('table-frame').contentWindow.location.reload();
+    async function loadAndRender() {
+      const res = await fetch(JSON_URL);
+      const txt = await res.text();
+      const data = JSON.parse(txt.substr(47).slice(0,-2)).table.rows;
+      const tbody = document.querySelector('#dataTable tbody');
+      tbody.innerHTML = '';
+
+      data.forEach((row,i) => {
+        const vals = row.c.map(c=> c? c.v : '');
+        // [ID, Başlık, Tanım, Sorumlu, Baş, Bit, Durum, Öncelik]
+        const [ID, title, desc, owner, start, end, status] = vals;
+        const tr = document.createElement('tr');
+
+        // Sil butonu
+        const tdDel = document.createElement('td');
+        tdDel.innerHTML = `<button onclick="deleteRow(${i+2},'${ID}')">Sil</button>`;
+        tr.appendChild(tdDel);
+
+        // Veri hücreleri
+        [ID, title, desc, owner, start, end, status].forEach((v,idx) => {
+          const td = document.createElement('td');
+          td.textContent = v;
+          tr.appendChild(td);
+        });
+
+        // Durum dropdown + Güncelle
+        const tdUpd = document.createElement('td');
+        tdUpd.innerHTML = `
+          <select id="status-${i}">
+            <option${status==='Devam'?' selected':''}>Devam</option>
+            <option${status==='Tamamlandı'?' selected':''}>Tamamlandı</option>
+          </select>
+          <button onclick="updateStatus(${i+2}, '${ID}')">Güncelle</button>
+        `;
+        tr.appendChild(tdUpd);
+
+        tbody.appendChild(tr);
+      });
     }
-    function showForm() {
-      btnForm.classList.add('active');
-      btnTable.classList.remove('active');
-      tabForm.classList.add('active');
-      tabTable.classList.remove('active');
+
+    // Satır numarası (sheet'teki index) ve ID ile sil
+    async function deleteRow(rowNum, ID) {
+      if(!confirm(ID+' silinsin mi?')) return;
+      const payload = { action:'delete', row: rowNum };
+      const res = await fetch(API_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const j = await res.json();
+      alert(j.status==='ok' ? 'Silindi' : 'Hata: '+j.message);
+      loadAndRender();
     }
 
-    btnTable.addEventListener('click', showTable);
-    btnForm.addEventListener('click', showForm);
+    // Satır numarası ve ID ile sadece Durum hücresini güncelle
+    async function updateStatus(rowNum, ID) {
+      const sel = document.getElementById(`status-${rowNum-2}`);
+      const newStatus = sel.value;
+      const payload = { action:'update', row: rowNum, col: 7, value: newStatus };
+      const res = await fetch(API_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const j = await res.json();
+      alert(j.status==='ok' ? 'Güncellendi' : 'Hata: '+j.message);
+      loadAndRender();
+    }
 
-    // Sayfa yüklendiğinde canlı tabloyu göster
-    showTable();
+    // Başlangıçta tabloyu yükle
+    loadAndRender();
   </script>
 
 </body>
