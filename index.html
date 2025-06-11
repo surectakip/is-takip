@@ -2,122 +2,94 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş - Süreç Takip</title>
+  <title>İş - Süreç Takip Sistemi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Carbon CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/carbon-components/css/carbon-components.min.css">
+  <!-- Chart.js & Gantt -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-    }
-    header {
-      background: #2c3e50;
-      color: white;
-      padding: 15px;
-      text-align: center;
-      font-size: 1.8em;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      background: #ecf0f1;
-      padding: 10px 0;
-    }
-    nav button {
-      margin: 5px;
-      padding: 10px 16px;
-      border: none;
-      background-color: #3498db;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    nav button:hover {
-      background-color: #2980b9;
-    }
-    .tab {
-      display: none;
-      padding: 20px;
-      max-width: 1200px;
-      margin: auto;
-    }
-    .visible {
-      display: block;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-      background: white;
-    }
-    th, td {
-      padding: 10px;
-      border: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #bdc3c7;
-    }
-    canvas {
-      margin-top: 20px;
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-    }
-    #ganttTab { margin-top: 40px; }
-    /* Popup için ekstra stil */
-    .custom-popup {
-      background: #fffbea;
-      padding: 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-  </style>
 </head>
-<body>
-  <header>İş - Süreç Takip Sistemi</header>
-  <nav>
-    <button onclick="showTab('ana')">Ana Tablo</button>
-    <button onclick="showTab('analiz')">Analiz</button>
-    <button onclick="showTab('timeline')">Zaman Çizelgesi</button>
-    <button onclick="showTab('form')">Veri Girişi</button>
-    <button onclick="fetchData()">Yenile 🔄</button>
-  </nav>
+<body class="bx--body">
+  <!-- Header -->
+  <header class="bx--header bx--header--dark">
+    <div class="bx--header__name">İş - Süreç Takip Sistemi</div>
+    <div class="bx--header__nav">
+      <ul class="bx--header__menu-bar">
+        <li><a href="#" class="bx--header__menu-item" onclick="showTab('ana')">Ana Tablo</a></li>
+        <li><a href="#" class="bx--header__menu-item" onclick="showTab('analiz')">Analiz</a></li>
+        <li><a href="#" class="bx--header__menu-item" onclick="showTab('timeline')">Zaman Çizelgesi</a></li>
+        <li><a href="#" class="bx--header__menu-item" onclick="showTab('form')">Veri Girişi</a></li>
+        <li><button class="bx--btn bx--btn--primary" onclick="fetchData()">Yenile</button></li>
+      </ul>
+    </div>
+  </header>
 
-  <section id="ana" class="tab visible">
-    <h2>Ana Tablo</h2>
-    <input id="searchBox" oninput="filterTable()" placeholder="Filtrele..." /> <button onclick="clearFilter()">Temizle</button>
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
-          <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+  <main class="bx--content">
 
-  <section id="analiz" class="tab">
-    <h2>Analizler</h2>
-    <canvas id="chart1"></canvas>
-    <canvas id="chart2"></canvas>
-  </section>
+    <section id="ana" class="tab bx--grid bx--grid--narrow">
+      <div class="bx--row">
+        <div class="bx--col">
+          <h2 class="bx--type--headingLg">Ana Tablo</h2>
+          <div class="bx--form-item bx--form-item--fluid">
+            <input id="searchBox" class="bx--text-input" placeholder="Filtrele..." oninput="filterTable()" />
+            <button class="bx--btn bx--btn--secondary" onclick="clearFilter()">Temizle</button>
+          </div>
+          <table class="bx--data-table bx--data-table--zebra">
+            <thead>
+              <tr class="bx--data-table-header-row">
+                <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
+                <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
+              </tr>
+            </thead>
+            <tbody id="dataTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-  <section id="timeline" class="tab">
-    <h2>Zaman Çizelgesi</h2>
-    <div id="ganttTab"></div>
-  </section>
+    <section id="analiz" class="tab bx--grid bx--grid--narrow" style="display:none;">
+      <div class="bx--row">
+        <div class="bx--col-lg-8">
+          <div class="bx--card">
+            <div class="bx--card__content">
+              <canvas id="chart1"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="bx--col-lg-4">
+          <div class="bx--card">
+            <div class="bx--card__content">
+              <canvas id="chart2"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-  <section id="form" class="tab">
-    <h2>Yeni Kayıt</h2>
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true" width="100%" height="2000" frameborder="0" marginheight="0" marginwidth="0">Yükleniyor…</iframe>
-  </section>
+    <section id="timeline" class="tab bx--grid bx--grid--narrow" style="display:none;">
+      <div class="bx--row">
+        <div class="bx--col">
+          <h2 class="bx--type--headingLg">Zaman Çizelgesi</h2>
+          <div class="bx--card">
+            <div class="bx--card__content" id="ganttTab" style="height:400px;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="form" class="tab bx--grid bx--grid--narrow" style="display:none;">
+      <div class="bx--row">
+        <div class="bx--col">
+          <h2 class="bx--type--headingLg">Yeni Kayıt</h2>
+          <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true"
+                  width="100%" height="800" frameborder="0"></iframe>
+        </div>
+      </div>
+    </section>
+
+  </main>
 
   <script>
     const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
@@ -126,118 +98,87 @@
     const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${sheetName}&tq=${query}`;
 
     let ganttTasks = [];
+    let chart1, chart2;
 
     function showTab(id) {
-      document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('visible'));
-      document.getElementById(id).classList.add('visible');
-      if (id === 'timeline') drawGantt();
+      document.querySelectorAll('.tab').forEach(s => s.style.display = 'none');
+      document.getElementById(id).style.display = '';
     }
 
-    function fetchData() {
-      fetch(url)
-        .then(res => res.text())
-        .then(rep => {
-          const data = JSON.parse(rep.substr(47).slice(0, -2));
-          const tbody = document.querySelector("#dataTable tbody");
-          tbody.innerHTML = "";
-          const durumlar = {}, sorumlular = {};
-          ganttTasks = [];
+    function gvizDateToJSDate(d) {
+      return d && d.year != null
+        ? new Date(d.year, d.month - 1, d.day, d.hours || 0, d.minutes || 0, d.seconds || 0)
+        : null;
+    }
 
-          data.table.rows.forEach((row, index) => {
-            const c = row.c.map(x => x?.v || '');
-            if (c.length < 10) return;
-            const [zaman, baslik, tanim, sorumlu, basla, bitis, durum, oncelik, notlar, hatirlat] = c;
+    async function fetchData() {
+      try {
+        const res = await fetch(url);
+        const txt = await res.text();
+        const match = txt.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/);
+        if (!match) throw new Error('Beklenmeyen yanıt formatı');
+        const json = JSON.parse(match[1]);
+        const rows = json.table.rows;
 
-            const tr = document.createElement("tr");
-            const now = new Date();
-            let bitisDate = new Date(bitis);
-            if (typeof bitis === 'string' && bitis.includes(".")) {
-              const [g, a, y] = bitis.split(".");
-              bitisDate = new Date(`${y}-${a}-${g}`);
-            }
-            if (bitisDate < now && durum !== 'Tamamlandı') {
-              tr.style.backgroundColor = '#ffcccc';
-            }
-            [zaman, baslik, tanim, sorumlu, basla, bitis, durum, oncelik, notlar, hatirlat].forEach(txt => {
-              const td = document.createElement("td");
-              td.textContent = txt;
-              tr.appendChild(td);
+        const tbody = document.getElementById('dataTable');
+        tbody.innerHTML = '';
+        const durumlar = {}, sorumlular = {};
+        ganttTasks = [];
+
+        rows.forEach((r, i) => {
+          const c = r.c.map(x => ({ raw: x.v, fmt: x.f || '' }));
+          if (c.length < 10) return;
+          const zaman = c[0].fmt || c[0].raw;
+          const baslik = c[1].raw, tanim = c[2].raw, sorumlu = c[3].raw;
+          const baslaDate = gvizDateToJSDate(c[4].raw);
+          const bitisDate = gvizDateToJSDate(c[5].raw);
+          const basla = c[4].fmt || (baslaDate ? baslaDate.toLocaleDateString() : '');
+          const bitis = c[5].fmt || (bitisDate ? bitisDate.toLocaleDateString() : '');
+          const durum = c[6].raw, oncelik = c[7].raw, notlar = c[8].raw, hatirlat = c[9].raw;
+
+          const tr = document.createElement('tr');
+          if (bitisDate && bitisDate < new Date() && durum !== 'Tamamlandı') tr.style.backgroundColor = '#ffcccc';
+          [zaman, baslik, tanim, sorumlu, basla, bitis, durum, oncelik, notlar, hatirlat]
+            .forEach(txt => { const td = document.createElement('td'); td.textContent = txt; tr.appendChild(td); });
+          tbody.appendChild(tr);
+
+          durumlar[durum] = (durumlar[durum] || 0) + 1;
+          sorumlular[sorumlu] = (sorumlular[sorumlu] || 0) + 1;
+
+          if (baslaDate && bitisDate) {
+            ganttTasks.push({
+              id: `g${i}`,
+              name: baslik,
+              start: baslaDate.toISOString().split('T')[0],
+              end: bitisDate.toISOString().split('T')[0],
+              progress: durum === 'Tamamlandı' ? 100 : 0
             });
-            tbody.appendChild(tr);
-
-            durumlar[durum] = (durumlar[durum] || 0) + 1;
-            sorumlular[sorumlu] = (sorumlular[sorumlu] || 0) + 1;
-
-            if (basla && bitis) {
-              const start = new Date(basla), end = new Date(bitis);
-              if (!isNaN(start) && !isNaN(end)) {
-                ganttTasks.push({
-                  id: `g${index}`,
-                  name: baslik,
-                  start: start.toISOString().split('T')[0],
-                  end: end.toISOString().split('T')[0],
-                  progress: durum === 'Tamamlandı' ? 100 : 0
-                });
-              }
-            }
-          });
-
-          new Chart(document.getElementById("chart1"), {
-            type: 'pie',
-            data: {
-              labels: Object.keys(durumlar),
-              datasets: [{ data: Object.values(durumlar), backgroundColor: ['#27ae60','#f39c12','#e74c3c'] }]
-            }
-          });
-
-          new Chart(document.getElementById("chart2"), {
-            type: 'bar',
-            data: {
-              labels: Object.keys(sorumlular),
-              datasets: [{ label: 'İş Sayısı', data: Object.values(sorumlular), backgroundColor: '#2980b9' }]
-            }
-          });
+          }
         });
+
+        if (chart1) chart1.destroy();
+        chart1 = new Chart(document.getElementById('chart1'), { type: 'pie', data: { labels: Object.keys(durumlar), datasets: [{ data: Object.values(durumlar) }] } });
+        if (chart2) chart2.destroy();
+        chart2 = new Chart(document.getElementById('chart2'), { type: 'bar', data: { labels: Object.keys(sorumlular), datasets: [{ label: 'İş Sayısı', data: Object.values(sorumlular) }] } });
+
+      } catch (err) {
+        console.error('Veri çekme hatası:', err);
+        alert('Veri çekme sırasında hata oluştu: ' + err.message);
+      }
     }
 
-    // Sadece bu fonksiyonu değiştirdik:
     function drawGantt() {
-      const container = document.getElementById("ganttTab");
-      container.innerHTML = "";
-      if (!ganttTasks.length) {
-        container.innerHTML = "<p>Gösterilecek görev yok.</p>";
-        return;
-      }
-      new Gantt(container, ganttTasks, {
-        view_mode: 'Week',
-        date_format: 'DD-MM-YYYY',
-        custom_popup_html: task => `
-          <div class="custom-popup">
-            <h5>${task.name}</h5>
-            <p><strong>Başlangıç:</strong> ${task._start.format('DD MMM YYYY')}</p>
-            <p><strong>Bitiş:</strong> ${task._end.format('DD MMM YYYY')}</p>
-            <p><strong>Durum:</strong> ${task.progress}% tamamlandı</p>
-          </div>
-        `,
-        on_click: task => console.log('Tıklanan görev:', task),
-        on_date_change: (task, start, end) => console.log(`${task.name} yeni tarih: ${start} → ${end}`),
-        on_progress_change: (task, progress) => console.log(`${task.name} ilerleme: ${progress}`),
-        bar_padding: 4,
-        arrow_curve: 5
-      });
+      const container = document.getElementById('ganttTab');
+      container.innerHTML = '';
+      if (!ganttTasks.length) { container.innerHTML = '<p>Gösterilecek görev yok.</p>'; return; }
+      new Gantt(container, ganttTasks, { view_mode: 'Week', date_format: 'DD-MM-YYYY', bar_padding: 4, arrow_curve: 5 });
     }
 
     function filterTable() {
-      const val = document.getElementById("searchBox").value.toLowerCase();
-      document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
-        tr.style.display = tr.textContent.toLowerCase().includes(val) ? "" : "none";
-      });
+      const val = document.getElementById('searchBox').value.toLowerCase();
+      document.querySelectorAll('#dataTable tr').forEach(tr => tr.style.display = tr.textContent.toLowerCase().includes(val) ? '' : 'none');
     }
-
-    function clearFilter() {
-      document.getElementById("searchBox").value = "";
-      filterTable();
-    }
+    function clearFilter() { document.getElementById('searchBox').value = ''; filterTable(); }
 
     fetchData();
   </script>
