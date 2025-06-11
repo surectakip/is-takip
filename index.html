@@ -2,167 +2,110 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>İş - Süreç Takip Sistemi</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>İş Süreç Takip - Excel Tabanlı</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <!-- Carbon CSS -->
   <link rel="stylesheet" href="https://unpkg.com/carbon-components/css/carbon-components.min.css">
-  <!-- Chart.js & Gantt -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt/dist/frappe-gantt.css">
+  <!-- SheetJS -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #table-container { max-height: 400px; overflow: auto; margin-bottom: 20px; }
+    .bx--btn { margin-right: 10px; }
+  </style>
 </head>
-<body class="bx--body">
-  <!-- Header -->
-  <header class="bx--header bx--header--dark">
-    <div class="bx--header__name">İş - Süreç Takip Sistemi</div>
-    <div class="bx--header__nav">
-      <ul class="bx--header__menu-bar">
-        <li><a href="#" class="bx--header__menu-item" onclick="showTab('ana')">Ana Tablo</a></li>
-        <li><a href="#" class="bx--header__menu-item" onclick="showTab('analiz')">Analiz</a></li>
-        <li><a href="#" class="bx--header__menu-item" onclick="showTab('timeline')">Zaman Çizelgesi</a></li>
-        <li><a href="#" class="bx--header__menu-item" onclick="showTab('form')">Veri Girişi</a></li>
-        <li><button class="bx--btn bx--btn--primary" onclick="loadSheetData()">Yenile</button></li>
-      </ul>
-    </div>
-  </header>
+<body>
+  <h1>İş Süreç Takip Sistemi (Excel Tabanlı)</h1>
+  <div>
+    <input type="file" id="file-input" accept=".xls,.xlsx,.xlsm" />
+    <button class="bx--btn bx--btn--primary" onclick="loadFile()">Excel'i Yükle</button>
+  </div>
 
-  <main class="bx--content">
-    <!-- Ana Tablo -->
-    <section id="ana" class="tab bx--grid bx--grid--narrow">
-      <div class="bx--row"><div class="bx--col">
-        <h2 class="bx--type--headingLg">Ana Tablo</h2>
-        <div class="bx--form-item bx--form-item--fluid">
-          <input id="searchBox" class="bx--text-input" placeholder="Filtrele..." oninput="filterTable()" />
-          <button class="bx--btn bx--btn--secondary" onclick="clearFilter()">Temizle</button>
-        </div>
-        <table class="bx--data-table bx--data-table--zebra">
-          <thead><tr class="bx--data-table-header-row">
-            <th>Zaman</th><th>İş Başlığı</th><th>İş Tanımı</th><th>Sorumlu</th>
-            <th>Başlangıç</th><th>Bitiş</th><th>Durum</th><th>Öncelik</th><th>Not</th><th>Hatırlatma</th>
-          </tr></thead>
-          <tbody id="dataTable"></tbody>
-        </table>
-      </div></div>
-    </section>
+  <div id="table-container"></div>
 
-    <!-- Analiz -->
-    <section id="analiz" class="tab bx--grid bx--grid--narrow" style="display:none;">
-      <div class="bx--row"><div class="bx--col-lg-8">
-        <div class="bx--card"><div class="bx--card__content"><canvas id="chart1"></canvas></div></div>
-      </div><div class="bx--col-lg-4">
-        <div class="bx--card"><div class="bx--card__content"><canvas id="chart2"></canvas></div></div>
-      </div></div>
-    </section>
+  <h2>Yeni Kayıt Ekle</h2>
+  <form id="add-form">
+    <label>ID: <input type="text" id="f-id" required /></label>
+    <label>İş Başlığı: <input type="text" id="f-baslik" required /></label>
+    <label>İş Tanımı: <input type="text" id="f-tanim" /></label>
+    <label>Sorumlu: <input type="text" id="f-sorumlu" /></label>
+    <label>Başlangıç Tarihi: <input type="date" id="f-baslangic" /></label>
+    <label>Bitiş Tarihi: <input type="date" id="f-bitis" /></label>
+    <label>Durum: <input type="text" id="f-durum" /></label>
+    <label>Öncelik: <input type="text" id="f-oncelik" /></label>
+    <label>Not: <input type="text" id="f-not" /></label>
+    <label>Hatırlatma (gün): <input type="number" id="f-hatirlatma" /></label>
+    <label>İş Tamamlandı mı? <select id="f-tamamlandi"><option>EVET</option><option>HAYIR</option></select></label>
+    <button type="submit" class="bx--btn bx--btn--secondary">Ekle</button>
+  </form>
 
-    <!-- Zaman Çizelgesi -->
-    <section id="timeline" class="tab bx--grid bx--grid--narrow" style="display:none;">
-      <div class="bx--row"><div class="bx--col">
-        <h2 class="bx--type--headingLg">Zaman Çizelgesi</h2>
-        <div class="bx--card"><div class="bx--card__content" id="ganttTab" style="height:400px;"></div></div>
-      </div></div>
-    </section>
-
-    <!-- Veri Girişi -->
-    <section id="form" class="tab bx--grid bx--grid--narrow" style="display:none;">
-      <div class="bx--row"><div class="bx--col">
-        <h2 class="bx--type--headingLg">Yeni Kayıt</h2>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true"
-                width="100%" height="800" frameborder="0"></iframe>
-      </div></div>
-    </section>
-  </main>
+  <h2>Sorgula</h2>
+  <label>Filtre (Sorumlu): <input type="text" id="filter-sorumlu" /></label>
+  <button onclick="applyFilter()" class="bx--btn bx--btn--primary">Uygula</button>
 
   <script>
-    const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
-    const sheetName = 'Form Yanıtları 1';
-    let ganttTasks = [], chart1, chart2;
+    let workbook, worksheet, data = [];
+    const container = document.getElementById('table-container');
 
-    function showTab(id) {
-      document.querySelectorAll('.tab').forEach(s => s.style.display = 'none');
-      document.getElementById(id).style.display = '';
-      if (id === 'timeline') drawGantt();
+    function loadFile() {
+      const inp = document.getElementById('file-input');
+      if (!inp.files.length) return alert('Lütfen bir dosya seçin.');
+      const reader = new FileReader();
+      reader.onload = e => {
+        workbook = XLSX.read(e.target.result, { type: 'binary' });
+        worksheet = workbook.Sheets['TümVeriler'];
+        data = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        renderTable(data);
+      };
+      reader.readAsBinaryString(inp.files[0]);
     }
 
-    // Convert GViz date object or ISO string to valid JS Date
-    function toValidDate(input) {
-      if (input && typeof input === 'object' && input.year != null) {
-        return new Date(input.year, input.month - 1, input.day, input.hours || 0, input.minutes || 0, input.seconds || 0);
-      }
-      const d = new Date(input);
-      return isNaN(d) ? null : d;
-    }
-
-    function handleSheetResponse(json) {
-      const rows = (json.table && json.table.rows) || [];
-      const tbody = document.getElementById('dataTable'); tbody.innerHTML = '';
-      const durumMap = {}, sorMap = {};
-      const now = new Date();
-      ganttTasks = [];
-
-      rows.forEach((r, i) => {
-        const c = []; for (let j = 0; j < 10; j++) {
-          const cell = r.c[j] || {};
-          c.push({ raw: cell.v, fmt: cell.f || '' });
-        }
-        const zaman = c[0].fmt || c[0].raw;
-        const baslik = c[1].raw || '';
-        const tanim = c[2].raw || '';
-        const sorumlu = c[3].raw || '';
-
-        const baslaDate = toValidDate(c[4].raw);
-        const bitisDate = toValidDate(c[5].raw);
-        const basla = c[4].fmt || (baslaDate ? baslaDate.toLocaleDateString() : '');
-        const bitis = c[5].fmt || (bitisDate ? bitisDate.toLocaleDateString() : '');
-
-        const durumVal = c[6].raw || '';
-        const oncelik = c[7].raw || '';
-        const notlar = c[8].raw || '';
-        const hatirlat = c[9].raw || '';
-
-        // Append row
+    function renderTable(arr) {
+      container.innerHTML = '';
+      if (!arr.length) return;
+      const tbl = document.createElement('table');
+      tbl.className = 'bx--data-table bx--data-table--zebra';
+      const header = document.createElement('thead');
+      const cols = Object.keys(arr[0]);
+      header.innerHTML = '<tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr>';
+      tbl.appendChild(header);
+      const body = document.createElement('tbody');
+      arr.forEach(row => {
         const tr = document.createElement('tr');
-        if (bitisDate && bitisDate < now && durumVal !== 'Tamamlandı') tr.style.backgroundColor = '#ffcccc';
-        [zaman, baslik, tanim, sorumlu, basla, bitis, durumVal, oncelik, notlar, hatirlat]
-          .forEach(txt => { const td = document.createElement('td'); td.textContent = txt; tr.appendChild(td); });
-        tbody.appendChild(tr);
-
-        // Chart data
-        durumMap[durumVal] = (durumMap[durumVal] || 0) + 1;
-        sorMap[sorumlu] = (sorMap[sorumlu] || 0) + 1;
-
-        // Gantt data
-        if (baslaDate && bitisDate) {
-          ganttTasks.push({ id: 'g' + i, name: baslik, start: baslaDate.toISOString().split('T')[0], end: bitisDate.toISOString().split('T')[0], progress: durumVal === 'Tamamlandı' ? 100 : 0 });
-        }
+        cols.forEach(c => {
+          const td = document.createElement('td'); td.textContent = row[c]; tr.appendChild(td);
+        });
+        body.appendChild(tr);
       });
-
-      // Render charts
-      if (chart1) chart1.destroy();
-      chart1 = new Chart(document.getElementById('chart1'), { type: 'pie', data: { labels: Object.keys(durumMap), datasets: [{ data: Object.values(durumMap) }] } });
-      if (chart2) chart2.destroy();
-      chart2 = new Chart(document.getElementById('chart2'), { type: 'bar', data: { labels: Object.keys(sorMap), datasets: [{ label: 'İş Sayısı', data: Object.values(sorMap) }] } });
+      tbl.appendChild(body);
+      container.appendChild(tbl);
     }
 
-    function loadSheetData() {
-      const script = document.createElement('script');
-      script.src = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=${encodeURIComponent(sheetName)}&tqx=responseHandler:handleSheetResponse`;
-      document.body.appendChild(script);
-    }
+    document.getElementById('add-form').addEventListener('submit', e => {
+      e.preventDefault();
+      const newRow = {
+        'ID': document.getElementById('f-id').value,
+        'İş Başlığı': document.getElementById('f-baslik').value,
+        'İş Tanımı': document.getElementById('f-tanim').value,
+        'Sorumlu': document.getElementById('f-sorumlu').value,
+        'Başlangıç Tarihi': document.getElementById('f-baslangic').value,
+        'Bitiş Tarihi': document.getElementById('f-bitis').value,
+        'Durum': document.getElementById('f-durum').value,
+        'Öncelik': document.getElementById('f-oncelik').value,
+        'Not': document.getElementById('f-not').value,
+        'Hatırlatma Aralığı (gün)': document.getElementById('f-hatirlatma').value,
+        'İş Tamamlandı mı?': document.getElementById('f-tamamlandi').value
+      };
+      data.push(newRow);
+      renderTable(data);
+      e.target.reset();
+    });
 
-    function drawGantt() {
-      const c = document.getElementById('ganttTab'); c.innerHTML = '';
-      if (!ganttTasks.length) { c.innerHTML = '<p>Gösterilecek görev yok.</p>'; return; }
-      new Gantt(c, ganttTasks, { view_mode: 'Week', date_format: 'DD-MM-YYYY', bar_padding: 4, arrow_curve: 5 });
+    function applyFilter() {
+      const key = document.getElementById('filter-sorumlu').value.toLowerCase();
+      const filtered = data.filter(row => row['Sorumlu'].toLowerCase().includes(key));
+      renderTable(filtered);
     }
-
-    function filterTable() {
-      const v = document.getElementById('searchBox').value.toLowerCase();
-      document.querySelectorAll('#dataTable tr').forEach(tr => tr.style.display = tr.textContent.toLowerCase().includes(v) ? '' : 'none');
-    }
-    function clearFilter() { document.getElementById('searchBox').value = ''; filterTable(); }
-
-    // Initial load
-    loadSheetData();
   </script>
 </body>
 </html>
