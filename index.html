@@ -113,6 +113,12 @@
   </section>
 
   <script>
+    // ——— BURAYA EKLEDİĞİNİZ KADAR ———
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwa4CTOR7vmkySj5LNPwqOZHE61k1eXN6eEIvIoGDKsVzR57-WSWtAqgLlmFmDGBjXr/exec';
+    // Belirtmek gerekirse, şu anki fetchData() sadece okuma içindir.
+    // İleride POST ile veri ekleme/güncelleme için API_URL'i kullanabilirsiniz.
+    // ——————————————————————————
+
     const sheetID = '1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU';
     const sheetName = 'Form Yanıtları 1';
     const query = encodeURIComponent('SELECT *');
@@ -223,6 +229,7 @@
       filterTable();
     }
 
+    // Sayfa yüklenince veri çek
     fetchData();
   </script>
 </body>
