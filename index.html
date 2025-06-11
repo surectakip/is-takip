@@ -70,6 +70,13 @@
       padding: 15px;
     }
     #ganttTab { margin-top: 40px; }
+    /* Popup için ekstra stil */
+    .custom-popup {
+      background: #fffbea;
+      padding: 12px;
+      border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
   </style>
 </head>
 <body>
@@ -162,8 +169,7 @@
             sorumlular[sorumlu] = (sorumlular[sorumlu] || 0) + 1;
 
             if (basla && bitis) {
-              const start = new Date(basla);
-              const end = new Date(bitis);
+              const start = new Date(basla), end = new Date(bitis);
               if (!isNaN(start) && !isNaN(end)) {
                 ganttTasks.push({
                   id: `g${index}`,
@@ -180,10 +186,7 @@
             type: 'pie',
             data: {
               labels: Object.keys(durumlar),
-              datasets: [{
-                data: Object.values(durumlar),
-                backgroundColor: ['#27ae60','#f39c12','#e74c3c']
-              }]
+              datasets: [{ data: Object.values(durumlar), backgroundColor: ['#27ae60','#f39c12','#e74c3c'] }]
             }
           });
 
@@ -191,63 +194,43 @@
             type: 'bar',
             data: {
               labels: Object.keys(sorumlular),
-              datasets: [{
-                label: 'İş Sayısı',
-                data: Object.values(sorumlular),
-                backgroundColor: '#2980b9'
-              }]
+              datasets: [{ label: 'İş Sayısı', data: Object.values(sorumlular), backgroundColor: '#2980b9' }]
             }
           });
         });
     }
 
+    // Sadece bu fonksiyonu değiştirdik:
     function drawGantt() {
-  const container = document.getElementById('ganttTab');
-  container.innerHTML = '';
-  if (!ganttTasks.length) {
-    container.innerHTML = '<p>Gösterilecek görev yok.</p>';
-    return;
-  }
-
-  new Gantt(container, ganttTasks, {
-    // Görünüm modu: Day | Week | Month | Year
-    view_mode: 'Week',
-    // Tarih üstbilgisinin formatı
-    date_format: 'DD-MM-YYYY',
-    // Milestones (tek günlük işler) için özel çubuk stili
-    custom_popup_html: task => {
-      return `
-        <div class="custom-popup">
-          <h5>${task.name}</h5>
-          <p><strong>Başlangıç:</strong> ${task._start.format('DD MMM YYYY')}</p>
-          <p><strong>Bitiş:</strong> ${task._end.format('DD MMM YYYY')}</p>
-          <p><strong>Durum:</strong> ${task.progress}% tamamlandı</p>
-        </div>
-      `;
-    },
-    on_click: task => {
-      console.log('Tıklanan görev:', task);
-      // Burada modal açabilir veya formla ilişkilendirebilirsiniz
-    },
-    on_date_change: (task, start, end) => {
-      console.log(`${task.name} yeni tarih: ${start} → ${end}`);
-      // Tarih değişikliğini sunucuya kaydedebilirsiniz
-    },
-    on_progress_change: (task, progress) => {
-      console.log(`${task.name} ilerleme: ${progress}`);
-      // İlerleme güncellemesini işlem yapabilirsiniz
-    },
-    // Haftanın hangi günü gösterimin başlangıcı olsun (0=Pazar,1=Pazartesi…)
-    bar_padding: 4,
-    arrow_curve: 5
-  });
-}
+      const container = document.getElementById("ganttTab");
+      container.innerHTML = "";
+      if (!ganttTasks.length) {
+        container.innerHTML = "<p>Gösterilecek görev yok.</p>";
+        return;
+      }
+      new Gantt(container, ganttTasks, {
+        view_mode: 'Week',
+        date_format: 'DD-MM-YYYY',
+        custom_popup_html: task => `
+          <div class="custom-popup">
+            <h5>${task.name}</h5>
+            <p><strong>Başlangıç:</strong> ${task._start.format('DD MMM YYYY')}</p>
+            <p><strong>Bitiş:</strong> ${task._end.format('DD MMM YYYY')}</p>
+            <p><strong>Durum:</strong> ${task.progress}% tamamlandı</p>
+          </div>
+        `,
+        on_click: task => console.log('Tıklanan görev:', task),
+        on_date_change: (task, start, end) => console.log(`${task.name} yeni tarih: ${start} → ${end}`),
+        on_progress_change: (task, progress) => console.log(`${task.name} ilerleme: ${progress}`),
+        bar_padding: 4,
+        arrow_curve: 5
+      });
+    }
 
     function filterTable() {
       const val = document.getElementById("searchBox").value.toLowerCase();
       document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
-        const text = tr.textContent.toLowerCase();
-        tr.style.display = text.includes(val) ? "" : "none";
+        tr.style.display = tr.textContent.toLowerCase().includes(val) ? "" : "none";
       });
     }
 
