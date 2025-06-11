@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8">
-  <title>Yanıtlar ve Form</title>
+  <title>Form Yanıtları & Canlı Tablo</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     body { font-family: Arial, sans-serif; margin:0; padding:0; }
@@ -27,25 +27,25 @@
 <body>
 
   <header>
-    <h1>Form Yanıtları & Güncelleme</h1>
+    <h1>Form Yanıtları & Canlı Tablo</h1>
   </header>
 
   <nav>
-    <button id="btn-table">Tablo</button>
-    <button id="btn-form">Form Yanıtları</button>
+    <button id="btn-table">Canlı Tablo</button>
+    <button id="btn-form">Form Göster</button>
   </nav>
 
   <section id="tab-table">
-    <h2>Yanıt Tablosu</h2>
+    <h2>Form Yanıtları Tablosu</h2>
     <iframe
       id="table-frame"
-      src="https://docs.google.com/spreadsheets/d/1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU/htmlembed?widget=true&amp;headers=false&amp;range=A1:K1000"
+      src="https://docs.google.com/spreadsheets/d/1lhW-0Gn38DH-GYPOHZkvZvfL8hsaNYj6vyA_Rnli7EU/pubhtml?gid=1581534024&single=true"
       frameborder="0"
     ></iframe>
   </section>
 
   <section id="tab-form">
-    <h2>Form Yanıtları ve Yeni Kayıt</h2>
+    <h2>Yeni Kayıt Ekle</h2>
     <iframe
       id="form-frame"
       src="https://docs.google.com/forms/d/e/1FAIpQLSeO5gyy2PE4zRvj_OUhTE00M63M_xezHDMtjsdU4FcOWqc9lw/viewform?embedded=true"
@@ -64,6 +64,8 @@
       btnForm.classList.remove('active');
       tabTable.classList.add('active');
       tabForm.classList.remove('active');
+      // iframe’i de yenileyelim ki en güncel veriyi getirsin
+      document.getElementById('table-frame').contentWindow.location.reload();
     }
     function showForm() {
       btnForm.classList.add('active');
@@ -75,7 +77,7 @@
     btnTable.addEventListener('click', showTable);
     btnForm.addEventListener('click', showForm);
 
-    // İlk yüklendiğinde Tablo sekmesini göster
+    // Sayfa yüklendiğinde canlı tabloyu göster
     showTable();
   </script>
 
