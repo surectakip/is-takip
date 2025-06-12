@@ -15,7 +15,6 @@
     h1 { margin-top: 0; }
     button { padding: .4rem .8rem; margin: .5rem .5rem .5rem 0; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
     #refresh-btn { background: #007acc; }
-    .status-select { padding: .3rem; }
     #loading { color: #555; margin-top: .5rem; }
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
@@ -23,6 +22,7 @@
     .filters { display: flex; flex-wrap: wrap; align-items: flex-end; margin-bottom: 1rem; }
     .filters label { margin-right: .25rem; }
     .filters input, .filters select { margin-right: .5rem; padding: .4rem; }
+    .link-bottom { text-align: right; margin-bottom: .5rem; }
   </style>
 </head>
 <body>
@@ -36,18 +36,28 @@
 
   <!-- 1: Form Girişi -->
   <div id="tab-entry" class="tab active">
-    <iframe 
+    <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
-      title="Form Girişi">
-    </iframe>
+      title="Form Girişi"></iframe>
+    <p class="link-bottom">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
+         target="_blank" rel="noopener" style="color:#007acc;">
+        ➤ Yeni Pencerede Aç
+      </a>
+    </p>
   </div>
 
   <!-- 2: Form Analiz -->
   <div id="tab-results" class="tab">
+    <p class="link-bottom">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
+         target="_blank" rel="noopener" style="color:#007acc;">
+        ➤ Form Sonuçlarını Yeni Pencerede Aç
+      </a>
+    </p>
     <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"
-      title="Form Analiz">
-    </iframe>
+      title="Form Analiz"></iframe>
   </div>
 
   <!-- 3: İş-Süreç Takip -->
@@ -96,7 +106,6 @@
       const tabs = ['entry','results','data','query','edit'];
       let allRows = [], headers = [];
 
-      // Element refs
       const loadingEl  = document.getElementById('loading');
       const tableEl    = document.getElementById('responses-table');
       const theadEl    = document.getElementById('table-head');
@@ -113,7 +122,6 @@
       const qHead      = document.getElementById('query-head');
       const qBody      = document.getElementById('query-body');
 
-      // Tab switching
       tabs.forEach(tab => {
         document.getElementById('btn-'+tab).onclick = () => {
           tabs.forEach(t => {
@@ -124,7 +132,6 @@
         };
       });
 
-      // Load and render CSV data
       async function loadData() {
         tableEl.style.display = 'none';
         loadingEl.style.display = '';
@@ -141,18 +148,12 @@
         headers = rows.shift();
         allRows = rows;
 
-        // Render main table
-        theadEl.innerHTML = '<tr>' +
-          headers.map(h => `<th>${h}</th>`).join('') +
-          '</tr>';
-        tbodyEl.innerHTML = allRows.map(r =>
-          '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>'
-        ).join('');
+        theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+        tbodyEl.innerHTML = allRows.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
 
         tableEl.style.display = '';
         loadingEl.style.display = 'none';
 
-        // Populate filters
         populate(selResp, allRows.map(r => r[3]));
         populate(selStat, allRows.map(r => r[6]));
         populate(selPrio, allRows.map(r => r[7]));
@@ -169,16 +170,16 @@
 
       function applyFilter() {
         let f = allRows.slice();
-        if (selResp.value) f = f.filter(r=>r[3]===selResp.value);
-        if (selStat.value) f = f.filter(r=>r[6]===selStat.value);
-        if (selPrio.value) f = f.filter(r=>r[7]===selPrio.value);
-        if (dateFrom.value) f = f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
-        if (dateTo.value)   f = f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
-        if (txtFilter.value){
+        if (selResp.value) f = f.filter(r => r[3] === selResp.value);
+        if (selStat.value) f = f.filter(r => r[6] === selStat.value);
+        if (selPrio.value) f = f.filter(r => r[7] === selPrio.value);
+        if (dateFrom.value) f = f.filter(r => new Date(r[4]) >= new Date(dateFrom.value));
+        if (dateTo.value)   f = f.filter(r => new Date(r[4]) <= new Date(dateTo.value));
+        if (txtFilter.value) {
           const term = txtFilter.value.toLowerCase();
-          f = f.filter(r=>r.some(c=>c.toLowerCase().includes(term)));
+          f = f.filter(r => r.some(c => c.toLowerCase().includes(term)));
         }
-        qBody.innerHTML = f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+        qBody.innerHTML = f.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
       }
 
       function resetFilter() {
