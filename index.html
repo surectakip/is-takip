@@ -34,25 +34,29 @@
     <button id="btn-query">Sorgu</button>
   </nav>
 
-  <!-- 1. Sekme: Form Giriş -->
+  <!-- 1. Form Girişi -->
   <div id="tab-entry" class="tab active">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"></iframe>
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
+      title="Form Girişi"></iframe>
     <p style="text-align:right; margin-top:.5rem;">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
          target="_blank" rel="noopener" style="color:#007acc;">➤ Yeni pencerede aç</a>
     </p>
   </div>
 
-  <!-- 2. Sekme: Form Sonuçları -->
+  <!-- 2. Form Analiz -->
   <div id="tab-results" class="tab">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"></iframe>
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"
+      title="Form Analiz"></iframe>
     <p style="text-align:right; margin-top:.5rem;">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
          target="_blank" rel="noopener" style="color:#007acc;">➤ Yeni pencerede aç</a>
     </p>
   </div>
 
-  <!-- 3. Sekme: İş-Süreç Takip -->
+  <!-- 3. İş-Süreç Takip -->
   <div id="tab-data" class="tab">
     <h1>İş-Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
@@ -63,7 +67,7 @@
     </table>
   </div>
 
-  <!-- 4. Sekme: Sorgu -->
+  <!-- 4. Sorgu -->
   <div id="tab-query" class="tab">
     <h1>Ana Tablo Sorgu</h1>
     <div class="filters">
@@ -82,127 +86,122 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Yeni exec URL'in
-      const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxQm8W4Fg95i0OzXS-kZjo2pR9w8fKNxSNkM05DJ27RWbLuWY5S0okGo2REN-QryR5r3A/exec';
-      const sheetUrl   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
-      const tabs       = ['entry','results','data','query'];
-      let headers = [], allRows = [];
+  document.addEventListener('DOMContentLoaded', () => {
+    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbz28WS0dgajT664yapYHjl-kid7U8BeXSh-KHIn_tiX0NgdC1NXQw6drPUIyn5UYHelZw/exec';
+    const sheetUrl   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+    const tabs       = ['entry','results','data','query'];
+    let headers = [], allRows = [];
 
-      // Element refs
-      const loadingEl  = document.getElementById('loading');
-      const tableEl    = document.getElementById('responses-table');
-      const theadEl    = document.getElementById('table-head');
-      const tbodyEl    = document.getElementById('table-body');
-      const refreshBtn = document.getElementById('refresh-btn');
-      const selResp    = document.getElementById('filter-responsible');
-      const selStat    = document.getElementById('filter-status');
-      const selPrio    = document.getElementById('filter-priority');
-      const dateFrom   = document.getElementById('filter-start-from');
-      const dateTo     = document.getElementById('filter-start-to');
-      const txtFilter  = document.getElementById('filter-text');
-      const applyBtn   = document.getElementById('apply-btn');
-      const resetBtn   = document.getElementById('reset-btn');
-      const qHead      = document.getElementById('query-head');
-      const qBody      = document.getElementById('query-body');
+    // Element refs
+    const loadingEl  = document.getElementById('loading');
+    const tableEl    = document.getElementById('responses-table');
+    const theadEl    = document.getElementById('table-head');
+    const tbodyEl    = document.getElementById('table-body');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const selResp    = document.getElementById('filter-responsible');
+    const selStat    = document.getElementById('filter-status');
+    const selPrio    = document.getElementById('filter-priority');
+    const dateFrom   = document.getElementById('filter-start-from');
+    const dateTo     = document.getElementById('filter-start-to');
+    const txtFilter  = document.getElementById('filter-text');
+    const applyBtn   = document.getElementById('apply-btn');
+    const resetBtn   = document.getElementById('reset-btn');
+    const qHead      = document.getElementById('query-head');
+    const qBody      = document.getElementById('query-body');
 
-      // Tab switching
-      tabs.forEach(tab => {
-        document.getElementById('btn-'+tab).onclick = () => {
-          tabs.forEach(t => {
-            document.getElementById('btn-'+t).classList.toggle('active', t===tab);
-            document.getElementById('tab-'+t).classList.toggle('active', t===tab);
-          });
-          if (tab==='query' && allRows.length===0) loadData();
+    // Tab switching
+    tabs.forEach(tab => {
+      document.getElementById('btn-'+tab).onclick = () => {
+        tabs.forEach(t => {
+          document.getElementById('btn-'+t).classList.toggle('active', t===tab);
+          document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+        });
+        if (tab==='query' && allRows.length===0) loadData();
+      };
+    });
+
+    // Load and render CSV
+    async function loadData() {
+      tableEl.style.display='none'; loadingEl.style.display='';
+      theadEl.innerHTML=''; tbodyEl.innerHTML=''; allRows=[];
+      [selResp,selStat,selPrio].forEach(sel=>sel.options.length=1);
+      qBody.innerHTML='';
+
+      const res = await fetch(sheetUrl);
+      if (!res.ok) { alert('CSV çekilemedi: '+res.status); return; }
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(r=>r.split(','));
+      headers = rows.shift();
+      allRows = rows;
+
+      // Header
+      theadEl.innerHTML = '<tr>' +
+        headers.map(h=>`<th>${h}</th>`).join('') +
+        '<th>İşlem</th></tr>';
+      // Rows
+      tbodyEl.innerHTML = allRows.map(r=>
+        '<tr data-id="'+r[0]+'">' +
+          r.map((c,i)=>
+            i===6
+              ? '<td><select class="status-select"><option value="Devam Ediyor">Devam Ediyor</option><option value="Tamamlandı">Tamamlandı</option></select></td>'
+              : `<td>${c}</td>`
+          ).join('') +
+        '<td><button class="save-btn">Kaydet</button></td></tr>'
+      ).join('');
+      tableEl.style.display=''; loadingEl.style.display='none';
+
+      // Save via GET
+      document.querySelectorAll('.save-btn').forEach(btn=>{
+        btn.onclick = () => {
+          const tr = btn.closest('tr');
+          const id = tr.dataset.id;
+          const newStatus = tr.querySelector('.status-select').value;
+          const url = `${WEBAPP_URL}?id=${encodeURIComponent(id)}&Durum=${encodeURIComponent(newStatus)}`;
+          fetch(url, { mode:'no-cors' });
+          alert('Güncelleme isteği gönderildi. Lütfen Yenile tuşuna basın.');
         };
       });
 
-      // Load and render CSV
-      async function loadData() {
-        tableEl.style.display='none';
-        loadingEl.style.display='';
-        theadEl.innerHTML='';
-        tbodyEl.innerHTML='';
-        allRows=[];
-        [selResp, selStat, selPrio].forEach(sel=>sel.options.length=1);
-        qBody.innerHTML='';
+      // Populate filters
+      populate(selResp, allRows.map(r=>r[3]));
+      populate(selStat, allRows.map(r=>r[6]));
+      populate(selPrio, allRows.map(r=>r[7]));
+      qHead.innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+    }
 
-        const res  = await fetch(sheetUrl);
-        if (!res.ok) { alert('CSV çekilemedi: '+res.status); return; }
-        const text = await res.text();
-        const rows = text.trim().split('\n').map(r=>r.split(','));
-        headers = rows.shift();
-        allRows = rows;
+    function populate(sel, arr) {
+      Array.from(new Set(arr)).sort().forEach(v=>{
+        const o=document.createElement('option');
+        o.value=o.textContent=v;
+        sel.appendChild(o);
+      });
+    }
 
-        // Header
-        theadEl.innerHTML = '<tr>'
-          + headers.map(h=>`<th>${h}</th>`).join('')
-          + '<th>İşlem</th></tr>';
-        // Rows
-        tbodyEl.innerHTML = allRows.map(r=>
-          '<tr data-id="'+r[0]+'">'
-            + r.map((c,i)=>
-                i===6
-                  ? '<td><select class="status-select"><option value="Devam Ediyor">Devam Ediyor</option><option value="Tamamlandı">Tamamlandı</option></select></td>'
-                  : `<td>${c}</td>`
-              ).join('')
-            + '<td><button class="save-btn">Kaydet</button></td>'
-          + '</tr>'
-        ).join('');
-        tableEl.style.display=''; loadingEl.style.display='none';
-
-        // Save via GET
-        document.querySelectorAll('.save-btn').forEach(btn=>{
-          btn.onclick = () => {
-            const tr = btn.closest('tr');
-            const id = tr.dataset.id;
-            const newStatus = tr.querySelector('.status-select').value;
-            const url = `${WEBAPP_URL}?id=${encodeURIComponent(id)}&Durum=${encodeURIComponent(newStatus)}`;
-            fetch(url, { mode:'no-cors' });
-            alert('Güncelleme isteği gönderildi. Lütfen Yenile tuşuna basın.');
-          };
-        });
-
-        // Populate filters
-        populate(selResp, allRows.map(r=>r[3]));
-        populate(selStat, allRows.map(r=>r[6]));
-        populate(selPrio, allRows.map(r=>r[7]));
-        qHead.innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+    function applyFilter() {
+      let f = allRows.slice();
+      if (selResp.value) f = f.filter(r=>r[3]===selResp.value);
+      if (selStat.value) f = f.filter(r=>r[6]===selStat.value);
+      if (selPrio.value) f = f.filter(r=>r[7]===selPrio.value);
+      if (dateFrom.value) f = f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
+      if (dateTo.value)   f = f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
+      if (txtFilter.value){
+        const term = txtFilter.value.toLowerCase();
+        f = f.filter(r=>r.some(c=>c.toLowerCase().includes(term)));
       }
+      qBody.innerHTML = f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+    }
 
-      function populate(sel, arr) {
-        Array.from(new Set(arr)).sort().forEach(v=>{
-          const o=document.createElement('option');
-          o.value=o.textContent=v;
-          sel.appendChild(o);
-        });
-      }
+    function resetFilter() {
+      selResp.value=selStat.value=selPrio.value='';
+      dateFrom.value=dateTo.value=txtFilter.value='';
+      qBody.innerHTML='';
+    }
 
-      function applyFilter() {
-        let f = allRows.slice();
-        if (selResp.value) f = f.filter(r=>r[3]===selResp.value);
-        if (selStat.value) f = f.filter(r=>r[6]===selStat.value);
-        if (selPrio.value) f = f.filter(r=>r[7]===selPrio.value);
-        if (dateFrom.value) f = f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
-        if (dateTo.value)   f = f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
-        if (txtFilter.value) {
-          const term = txtFilter.value.toLowerCase();
-          f = f.filter(r=>r.some(c=>c.toLowerCase().includes(term)));
-        }
-        qBody.innerHTML = f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
-      }
-
-      function resetFilter() {
-        selResp.value=selStat.value=selPrio.value='';
-        dateFrom.value=dateTo.value=txtFilter.value='';
-        qBody.innerHTML='';
-      }
-
-      refreshBtn.onclick = loadData;
-      applyBtn.onclick   = applyFilter;
-      resetBtn.onclick   = resetFilter;
-      loadData();
-    });
+    refreshBtn.onclick = loadData;
+    applyBtn.onclick   = applyFilter;
+    resetBtn.onclick   = resetFilter;
+    loadData();
+  });
   </script>
 </body>
 </html>
