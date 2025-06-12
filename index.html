@@ -4,66 +4,47 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>İş - Süreç Takip</title>
-  <!-- Favicon 404 önleme -->
-  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">  <!-- Favicon hataları önler -->
   <style>
-    body { margin:0; font-family:Arial, sans-serif; background:#fafafa; }
+    /* (Önceki stilin aynısı) */
+    body { margin:0; font-family:Arial,sans-serif; background:#fafafa; }
     nav { display:flex; background:#007acc; }
-    nav button {
-      flex:1;
-      padding:0.75rem;
-      border:none;
-      background:#005fa3;
-      color:#fff;
-      font-weight:bold;
-      cursor:pointer;
-    }
+    nav button { flex:1; padding:.75rem; border:none; background:#005fa3; color:#fff; cursor:pointer; }
     nav button.active { background:#003f7f; }
     .tab { display:none; padding:1rem; }
     .tab.active { display:block; }
     iframe { width:100%; height:80vh; border:1px solid #ccc; border-radius:4px; }
-    h1 { margin-top:0; }
-    #refresh-btn {
-      margin:0.5rem 0;
-      padding:0.5rem 1rem;
-      background:#007acc;
-      color:#fff;
-      border:none;
-      border-radius:4px;
-      cursor:pointer;
-      font-size:1rem;
-    }
-    #loading { color:#555; margin-top:0.5rem; }
+    #refresh-btn { margin:.5rem 0; padding:.5rem 1rem; background:#007acc; color:#fff; border:none; border-radius:4px; cursor:pointer; }
+    #loading { color:#555; margin-top:.5rem; }
     table { width:100%; border-collapse:collapse; margin-top:1rem; background:#fff; }
-    th, td { border:1px solid #ddd; padding:0.5rem; text-align:left; }
+    th,td { border:1px solid #ddd; padding:.5rem; text-align:left; }
     th { background:#f0f0f0; }
   </style>
 </head>
 <body>
-
   <nav>
     <button id="btn-entry" class="active">İş-Görev Giriş</button>
     <button id="btn-results">Form Sonuçları</button>
     <button id="btn-data">İş - Süreç Takip</button>
   </nav>
 
-  <!-- Sekme 1: Form Girişi -->
+  <!-- 1) Form Giriş sekmesi -->
   <div id="tab-entry" class="tab active">
     <iframe
-      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
+      src="https://docs.google.com/forms/d/e/【FORM_ID】/viewform?embedded=true"
       title="İş-Görev Giriş Formu">
     </iframe>
   </div>
 
-  <!-- Sekme 2: Form Sonuçları (embed pubhtml) -->
+  <!-- 2) Özet Grafikleri sekmesi -->
   <div id="tab-results" class="tab">
     <iframe
-      src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubhtml?widget=true&headers=true"
-      title="Form Sonuçları Tablosu">
+      src="https://docs.google.com/forms/d/e/【FORM_ID】/viewanalytics?embedded=true"
+      title="Form Yanıtlar Özet">
     </iframe>
   </div>
 
-  <!-- Sekme 3: CSV’den çekilen tablo + Yenile -->
+  <!-- 3) CSV’den çekilen canlı tablo sekmesi -->
   <div id="tab-data" class="tab">
     <h1>İş - Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
@@ -75,19 +56,18 @@
   </div>
 
   <script>
-    // Tab geçişleri
-    const tabs = ['entry','results','data'];
-    tabs.forEach(name => {
-      document.getElementById('btn-'+name).addEventListener('click', () => {
-        tabs.forEach(n => {
+    // Tab butonları ve içerikleri arasında active sınıf geçişi
+    ['entry','results','data'].forEach(name => {
+      document.getElementById('btn-'+name).onclick = () => {
+        ['entry','results','data'].forEach(n => {
           document.getElementById('btn-'+n).classList.toggle('active', n===name);
           document.getElementById('tab-'+n).classList.toggle('active', n===name);
         });
-      });
+      };
     });
 
-    // CSV linki (pub?output=csv)
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+    // CSV linki: Dosya → Web'de yayınla → pub?output=csv
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/【SHEET_ID】/pub?output=csv';
 
     const loadingEl  = document.getElementById('loading');
     const tableEl    = document.getElementById('responses-table');
@@ -96,7 +76,6 @@
     const refreshBtn = document.getElementById('refresh-btn');
 
     async function fetchData() {
-      // UI reset
       tableEl.style.display   = 'none';
       loadingEl.style.display = '';
       theadEl.innerHTML = '';
@@ -111,19 +90,15 @@
         if (rows.length < 2) {
           tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
         } else {
-          // Başlıklar
-          const headers = rows[0];
-          theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-          // Satırlar
+          theadEl.innerHTML = '<tr>' + rows[0].map(h => `<th>${h}</th>`).join('') + '</tr>';
           tbodyEl.innerHTML = rows.slice(1)
-            .map(cells =>
-              '<tr>' + headers.map((_,i) => `<td>${cells[i]||''}</td>`).join('') + '</tr>'
-            ).join('');
+            .map(r => '<tr>'+rows[0].map((_,i)=>`<td>${r[i]||''}</td>`).join('')+'</tr>')
+            .join('');
         }
         loadingEl.style.display = 'none';
         tableEl.style.display   = '';
       } catch (err) {
-        loadingEl.textContent = 'Veri yüklenirken hata oluştu: ' + err.message;
+        loadingEl.textContent = 'Veri yüklenirken hata: '+err.message;
       }
     }
 
