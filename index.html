@@ -24,7 +24,8 @@
     #refresh-btn { background:#007acc; }
     #apply-btn   { background:#28a745; }
     #reset-btn   { background:#dc3545; }
-    .edit-btn    { background:#ffc107; color:#000; }
+    .save-btn    { background:#28a745; }
+    .status-select { padding:.3rem; }
     #loading { color:#555; margin-top:.5rem; }
   </style>
 </head>
@@ -43,8 +44,9 @@
       title="Form Girişi"></iframe>
     <p style="text-align:right; margin-top:0.5rem;">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
-         target="_blank" rel="noopener"
-         style="color:#007acc; font-size:.9rem;">➤ Yeni pencerede aç</a>
+         target="_blank" rel="noopener" style="color:#007acc; font-size:.9rem;">
+        ➤ Yeni pencerede aç
+      </a>
     </p>
   </div>
 
@@ -55,8 +57,9 @@
       title="Özet Grafikleri"></iframe>
     <p style="text-align:right; margin-top:0.5rem;">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
-         target="_blank" rel="noopener"
-         style="color:#007acc; font-size:.9rem;">➤ Yeni pencerede aç</a>
+         target="_blank" rel="noopener" style="color:#007acc; font-size:.9rem;">
+        ➤ Yeni pencerede aç
+      </a>
     </p>
   </div>
 
@@ -91,10 +94,9 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Web App endpoint
       const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzTA_EoXhpjUOt1ArCF8bQurIhC05pvb6qruhxMYZeuvkx4Avyy81032aAt-jvlEGVHHw/exec';
-
       const tabs = ['entry','results','data','query'];
+
       tabs.forEach(name => {
         document.getElementById('btn-'+name).addEventListener('click', () => {
           tabs.forEach(n => {
@@ -141,42 +143,40 @@
         headers = rows[0];
         allRows = rows.slice(1);
 
-        // Ana tablo render
-        theadEl.innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+        // Render ana tablo ve edit kontrol
+        theadEl.innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '<th>İşlem</th></tr>';
         tbodyEl.innerHTML = allRows.map(r=>
-          '<tr data-id="'+r[0]+'">' +
-            r.map(c=>`<td>${c}</td>`).join('') +
-            '<td><button class="edit-btn">Düzenle</button></td>' +
+          '<tr data-id="'+r[0]+'">'+
+            r.map((c,i)=> i===6
+              ? '<td><select class="status-select"><option value="Devam Ediyor">Devam Ediyor</option><option value="Tamamlandı">Tamamlandı</option></select></td>'
+              : `<td>${c}</td>`
+            ).join('') +
+            '<td><button class="save-btn">Kaydet</button></td>' +
           '</tr>'
         ).join('');
         tableEl.style.display = '';
         loadingEl.style.display = 'none';
 
-        // Düzenle butonları
-        document.querySelectorAll('.edit-btn').forEach(btn=>{
-          btn.onclick = () => {
+        document.querySelectorAll('.save-btn').forEach(btn=>{
+          btn.onclick = async () => {
             const tr = btn.closest('tr');
             const id = tr.dataset.id;
-            const newStatus = prompt('Yeni Durum?', tr.children[6].textContent);
-            if (newStatus===null) return;
-            fetch(WEBAPP_URL, {
+            const newStatus = tr.querySelector('.status-select').value;
+            const resp = await fetch(WEBAPP_URL, {
               method:'POST', mode:'cors',
               headers:{'Content-Type':'application/json'},
               body: JSON.stringify({ id, updates:{ 'Durum': newStatus } })
-            })
-            .then(r=>r.json())
-            .then(res=>{
-              if(res.status==='ok') {
-                tr.children[6].textContent = newStatus;
-                alert('Güncellendi');
-              } else {
-                alert('Hata: '+res.message);
-              }
             });
+            const resJson = await resp.json();
+            if (resJson.status==='ok') {
+              alert('Güncellendi');
+            } else {
+              alert('Hata: '+resJson.message);
+            }
           };
         });
 
-        // Sorgu dropdownları
+        // Filtre dropdownları
         populate(selResp, allRows.map(r=>r[3]));
         populate(selStat, allRows.map(r=>r[6]));
         populate(selPrio, allRows.map(r=>r[7]));
@@ -185,22 +185,22 @@
 
       function populate(sel, arr) {
         Array.from(new Set(arr)).sort().forEach(v=>{
-          const o=document.createElement('option');
-          o.value=o.textContent=v;
+          const o = document.createElement('option');
+          o.value = o.textContent = v;
           sel.appendChild(o);
         });
       }
 
       function applyFilter() {
         let f = allRows.slice();
-        if(selResp.value) f=f.filter(r=>r[3]===selResp.value);
-        if(selStat.value) f=f.filter(r=>r[6]===selStat.value);
-        if(selPrio.value) f=f.filter(r=>r[7]===selPrio.value);
-        if(dateFrom.value) f=f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
-        if(dateTo.value)   f=f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
-        if(txtFilter.value) {
-          const term=txtFilter.value.toLowerCase();
-          f=f.filter(r=>r.some(c=>c.toLowerCase().includes(term)));
+        if (selResp.value) f = f.filter(r=>r[3]===selResp.value);
+        if (selStat.value) f = f.filter(r=>r[6]===selStat.value);
+        if (selPrio.value) f = f.filter(r=>r[7]===selPrio.value);
+        if (dateFrom.value) f = f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
+        if (dateTo.value)   f = f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
+        if (txtFilter.value) {
+          const term = txtFilter.value.toLowerCase();
+          f = f.filter(r=>r.some(c=>c.toLowerCase().includes(term)));
         }
         qBody.innerHTML = f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
       }
@@ -211,11 +211,10 @@
         qBody.innerHTML='';
       }
 
-      refreshBtn.addEventListener('click', fetchData);
-      applyBtn.addEventListener('click', applyFilter);
-      resetBtn.addEventListener('click', resetFilter);
+      refreshBtn.addEventListener('click',fetchData);
+      applyBtn.addEventListener('click',applyFilter);
+      resetBtn.addEventListener('click',resetFilter);
 
-      // İlk yükleme
       fetchData();
     });
   </script>
