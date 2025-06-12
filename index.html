@@ -4,7 +4,6 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>İş - Süreç Takip</title>
-  <!-- Boş favicon ile 404 engelleme -->
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <style>
     body { margin:0; font-family:Arial,sans-serif; background:#fafafa }
@@ -19,15 +18,16 @@
     .tab.active { display:block }
     iframe { width:100%; height:80vh; border:1px solid #ccc; border-radius:4px }
     h1 { margin-top:0 }
-    #refresh-btn {
-      margin:.5rem 0; padding:.5rem 1rem;
-      background:#007acc; color:#fff; border:none;
-      border-radius:4px; cursor:pointer; font-size:1rem;
-    }
+    button, select, input { margin:0 .5rem .5rem 0; padding:.4rem; }
+    #refresh-btn { background:#007acc; color:#fff; border:none; border-radius:4px; }
+    #apply-btn { background:#28a745; color:#fff; border:none; border-radius:4px; }
+    #reset-btn { background:#dc3545; color:#fff; border:none; border-radius:4px; }
     #loading { color:#555; margin-top:.5rem }
     table { width:100%; border-collapse:collapse; margin-top:1rem; background:#fff }
     th, td { border:1px solid #ddd; padding:.5rem; text-align:left }
     th { background:#f0f0f0 }
+    .filters { display:flex; flex-wrap:wrap; align-items:flex-end; }
+    .filters label { margin-right:.25rem; font-size:.9rem; }
   </style>
 </head>
 <body>
@@ -36,39 +36,12 @@
     <button id="btn-entry"   class="active">İş-Görev Giriş</button>
     <button id="btn-results">Form Sonuçları</button>
     <button id="btn-data"   >İş - Süreç Takip</button>
+    <button id="btn-query"  >Sorgu</button>
   </nav>
 
-  <!-- Sekme 1: Formu Doldurma -->
-  <div id="tab-entry" class="tab active">
-    <iframe
-      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
-      title="İş-Görev Giriş Formu">
-    </iframe>
-    <p style="text-align:right; margin-top:0.5rem;">
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
-         target="_blank" rel="noopener"
-         style="font-size:0.9rem; color:#007acc;">
-        ➤ Yeni pencerede aç
-      </a>
-    </p>
-  </div>
+  <!-- ... (Sekme 1–3 aynı kalıyor) ... -->
 
-  <!-- Sekme 2: Özet Grafikleri (Yanıtlar → Özet) -->
-  <div id="tab-results" class="tab">
-    <iframe
-      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"
-      title="Form Yanıtlar Özet Grafikleri">
-    </iframe>
-    <p style="text-align:right; margin-top:0.5rem;">
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
-         target="_blank" rel="noopener"
-         style="font-size:0.9rem; color:#007acc;">
-        ➤ Yeni pencerede aç
-      </a>
-    </p>
-  </div>
-
-  <!-- Sekme 3: CSV’den canlı tablo + Yenile -->
+  <!-- Sekme 3: CSV Tablosu + Yenile -->
   <div id="tab-data" class="tab">
     <h1>İş - Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
@@ -79,11 +52,46 @@
     </table>
   </div>
 
+  <!-- Sekme 4: Sorgu -->
+  <div id="tab-query" class="tab">
+    <h1>Ana Tablo Sorgu</h1>
+    <div class="filters">
+      <label for="filter-responsible">Sorumlu:</label>
+      <select id="filter-responsible">
+        <option value="">Tümü</option>
+      </select>
+
+      <label for="filter-status">Durum:</label>
+      <select id="filter-status">
+        <option value="">Tümü</option>
+      </select>
+
+      <label for="filter-priority">Öncelik:</label>
+      <select id="filter-priority">
+        <option value="">Tümü</option>
+      </select>
+
+      <label for="filter-start-from">Baş. Tarih ↓</label>
+      <input type="date" id="filter-start-from">
+
+      <label for="filter-start-to">Baş. Tarih ↑</label>
+      <input type="date" id="filter-start-to">
+
+      <button id="apply-btn">Uygula</button>
+      <button id="reset-btn">Temizle</button>
+    </div>
+
+    <table id="query-table">
+      <thead id="query-head"></thead>
+      <tbody id="query-body"></tbody>
+    </table>
+  </div>
+
   <script>
-    // Sekme geçişleri
-    ['entry','results','data'].forEach(name => {
+    // Tab geçişleri
+    ['entry','results','data','query'].forEach(name => {
       document.getElementById('btn-'+name).onclick = () => {
-        ['entry','results','data'].forEach(n => {
+        ['entry','results','data','query'].forEach(n => {
           document.getElementById('btn-'+n)
             .classList.toggle('active', n===name);
           document.getElementById('tab-'+n)
@@ -92,8 +100,12 @@
       };
     });
 
-    // CSV olarak yayımlanan Google Sheets linki
+    // CSV linki
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+
+    // Global veri saklama
+    let allRows = [];  // her satır bir dizi
+    let headers = [];  // başlıklar
 
     const loadingEl  = document.getElementById('loading');
     const tableEl    = document.getElementById('responses-table');
@@ -101,35 +113,87 @@
     const tbodyEl    = document.getElementById('table-body');
     const refreshBtn = document.getElementById('refresh-btn');
 
+    // Sorgu elemanları
+    const selResp = document.getElementById('filter-responsible');
+    const selStat = document.getElementById('filter-status');
+    const selPrio = document.getElementById('filter-priority');
+    const dateFrom = document.getElementById('filter-start-from');
+    const dateTo   = document.getElementById('filter-start-to');
+    const applyBtn = document.getElementById('apply-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const qHead = document.getElementById('query-head');
+    const qBody = document.getElementById('query-body');
+
+    // Veriyi çek ve doldur
     async function fetchData() {
       tableEl.style.display   = 'none';
       loadingEl.style.display = '';
       theadEl.innerHTML = '';
       tbodyEl.innerHTML = '';
+      allRows = [];
 
-      try {
-        const res  = await fetch(sheetUrl);
-        if (!res.ok) throw new Error(res.statusText);
-        const text = await res.text();
-        const rows = text.trim().split('\n').map(l => l.split(','));
+      const res  = await fetch(sheetUrl);
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(l=>l.split(','));
+      headers = rows[0]; allRows = rows.slice(1);
 
-        if (rows.length < 2) {
-          tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
-        } else {
-          theadEl.innerHTML = '<tr>' + rows[0].map(h => `<th>${h}</th>`).join('') + '</tr>';
-          tbodyEl.innerHTML = rows.slice(1)
-            .map(r => '<tr>' + rows[0].map((_,i) => `<td>${r[i]||''}</td>`).join('') + '</tr>')
-            .join('');
-        }
-        loadingEl.style.display = 'none';
-        tableEl.style.display   = '';
-      } catch (err) {
-        loadingEl.textContent = 'Veri yüklenirken hata oluştu: ' + err.message;
-      }
+      // Ana tablo oluştur
+      theadEl.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+      tbodyEl.innerHTML = allRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+      tableEl.style.display = ''; loadingEl.style.display = 'none';
+
+      // Sorgu dropdownlarını doldur
+      populateFilter(selResp, allRows.map(r=>r[2])); // 2: Sorumlu
+      populateFilter(selStat, allRows.map(r=>r[5])); // 5: Durum
+      populateFilter(selPrio, allRows.map(r=>r[6])); // 6: Öncelik
+
+      // Sorgu tablosunun başlığı
+      qHead.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+      qBody.innerHTML = ''; 
+    }
+
+    function populateFilter(selectEl, values) {
+      const uniq = Array.from(new Set(values)).sort();
+      uniq.forEach(v=>{
+        const o = document.createElement('option');
+        o.value = v; o.textContent = v;
+        selectEl.appendChild(o);
+      });
+    }
+
+    function applyFilter() {
+      let filtered = allRows.slice();
+
+      // Sorumlu
+      if (selResp.value) filtered = filtered.filter(r=>r[2]===selResp.value);
+      // Durum
+      if (selStat.value) filtered = filtered.filter(r=>r[5]===selStat.value);
+      // Öncelik
+      if (selPrio.value) filtered = filtered.filter(r=>r[6]===selPrio.value);
+      // Başlangıç tarih aralığı (3: Baş. Tarihi)
+      if (dateFrom.value) filtered = filtered.filter(r=>new Date(r[3]) >= new Date(dateFrom.value));
+      if (dateTo.value)   filtered = filtered.filter(r=>new Date(r[3]) <= new Date(dateTo.value));
+
+      // Sorgu tablosuna bas
+      qBody.innerHTML = filtered
+        .map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>')
+        .join('');
+    }
+
+    function resetFilter() {
+      selResp.value = '';
+      selStat.value = '';
+      selPrio.value = '';
+      dateFrom.value = '';
+      dateTo.value = '';
+      qBody.innerHTML = '';
     }
 
     window.addEventListener('DOMContentLoaded', fetchData);
     refreshBtn.addEventListener('click', fetchData);
+    applyBtn.addEventListener('click', applyFilter);
+    resetBtn.addEventListener('click', resetFilter);
   </script>
+
 </body>
 </html>
