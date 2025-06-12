@@ -35,15 +35,43 @@
   <nav>
     <button id="btn-entry"   class="active">İş-Görev Giriş</button>
     <button id="btn-results">Form Sonuçları</button>
-    <button id="btn-data"   >İş - Süreç Takip</button>
+    <button id="btn-data"   >İş-Süreç Takip</button>
     <button id="btn-query"  >Sorgu</button>
   </nav>
 
-  <!-- ... (Sekme 1–3 aynı kalıyor) ... -->
+  <!-- 1. Sekme: Form Girişi -->
+  <div id="tab-entry" class="tab active">
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
+      title="İş-Görev Giriş Formu">
+    </iframe>
+    <p style="text-align:right; margin-top:0.5rem;">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
+         target="_blank" rel="noopener"
+         style="font-size:0.9rem; color:#007acc;">
+        ➤ Yeni pencerede aç
+      </a>
+    </p>
+  </div>
 
-  <!-- Sekme 3: CSV Tablosu + Yenile -->
+  <!-- 2. Sekme: Özet Grafikleri -->
+  <div id="tab-results" class="tab">
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"
+      title="Form Yanıtlar Özet Grafikleri">
+    </iframe>
+    <p style="text-align:right; margin-top:0.5rem;">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
+         target="_blank" rel="noopener"
+         style="font-size:0.9rem; color:#007acc;">
+        ➤ Yeni pencerede aç
+      </a>
+    </p>
+  </div>
+
+  <!-- 3. Sekme: CSV’den Tablo + Yenile -->
   <div id="tab-data" class="tab">
-    <h1>İş - Süreç Takip</h1>
+    <h1>İş-Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
     <div id="loading" style="display:none">Veriler yükleniyor…</div>
     <table id="responses-table" style="display:none">
@@ -52,35 +80,28 @@
     </table>
   </div>
 
-  <!-- Sekme 4: Sorgu -->
+  <!-- 4. Sekme: Sorgu -->
   <div id="tab-query" class="tab">
     <h1>Ana Tablo Sorgu</h1>
     <div class="filters">
       <label for="filter-responsible">Sorumlu:</label>
-      <select id="filter-responsible">
-        <option value="">Tümü</option>
-      </select>
+      <select id="filter-responsible"><option value="">Tümü</option></select>
 
       <label for="filter-status">Durum:</label>
-      <select id="filter-status">
-        <option value="">Tümü</option>
-      </select>
+      <select id="filter-status"><option value="">Tümü</option></select>
 
       <label for="filter-priority">Öncelik:</label>
-      <select id="filter-priority">
-        <option value="">Tümü</option>
-      </select>
+      <select id="filter-priority"><option value="">Tümü</option></select>
 
-      <label for="filter-start-from">Baş. Tarih ↓</label>
+      <label for="filter-start-from">Baş. Tarih ≥</label>
       <input type="date" id="filter-start-from">
 
-      <label for="filter-start-to">Baş. Tarih ↑</label>
+      <label for="filter-start-to">Baş. Tarih ≤</label>
       <input type="date" id="filter-start-to">
 
       <button id="apply-btn">Uygula</button>
       <button id="reset-btn">Temizle</button>
     </div>
-
     <table id="query-table">
       <thead id="query-head"></thead>
       <tbody id="query-body"></tbody>
@@ -88,25 +109,20 @@
   </div>
 
   <script>
-    // Tab geçişleri
+    // Tablar arası geçiş
     ['entry','results','data','query'].forEach(name => {
       document.getElementById('btn-'+name).onclick = () => {
         ['entry','results','data','query'].forEach(n => {
-          document.getElementById('btn-'+n)
-            .classList.toggle('active', n===name);
-          document.getElementById('tab-'+n)
-            .classList.toggle('active', n===name);
+          document.getElementById('btn-'+n).classList.toggle('active', n===name);
+          document.getElementById('tab-'+n).classList.toggle('active', n===name);
         });
       };
     });
 
-    // CSV linki
+    // CSV linkini buraya yapıştır:
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
 
-    // Global veri saklama
-    let allRows = [];  // her satır bir dizi
-    let headers = [];  // başlıklar
-
+    let headers = [], allRows = [];
     const loadingEl  = document.getElementById('loading');
     const tableEl    = document.getElementById('responses-table');
     const theadEl    = document.getElementById('table-head');
@@ -124,69 +140,59 @@
     const qHead = document.getElementById('query-head');
     const qBody = document.getElementById('query-body');
 
-    // Veriyi çek ve doldur
     async function fetchData() {
+      // Tablo temizle & yükleme göster
       tableEl.style.display   = 'none';
       loadingEl.style.display = '';
       theadEl.innerHTML = '';
       tbodyEl.innerHTML = '';
       allRows = [];
 
-      const res  = await fetch(sheetUrl);
+      // CSV çek
+      const res = await fetch(sheetUrl);
+      if (!res.ok) { alert('CSV yüklenemedi: '+res.status); return; }
       const text = await res.text();
-      const rows = text.trim().split('\n').map(l=>l.split(','));
+      const rows = text.trim().split('\n').map(r=>r.split(','));
       headers = rows[0]; allRows = rows.slice(1);
 
-      // Ana tablo oluştur
+      // Ana tablo
       theadEl.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
       tbodyEl.innerHTML = allRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
       tableEl.style.display = ''; loadingEl.style.display = 'none';
 
-      // Sorgu dropdownlarını doldur
-      populateFilter(selResp, allRows.map(r=>r[2])); // 2: Sorumlu
-      populateFilter(selStat, allRows.map(r=>r[5])); // 5: Durum
-      populateFilter(selPrio, allRows.map(r=>r[6])); // 6: Öncelik
+      // Dropdown doldur
+      fill(selResp, allRows.map(r=>r[2])); // Sorumlu sütunu index=2
+      fill(selStat, allRows.map(r=>r[5])); // Durum idx=5
+      fill(selPrio, allRows.map(r=>r[6])); // Öncelik idx=6
 
-      // Sorgu tablosunun başlığı
+      // Sorgu başlıkları
       qHead.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-      qBody.innerHTML = ''; 
+      qBody.innerHTML = '';
     }
 
-    function populateFilter(selectEl, values) {
-      const uniq = Array.from(new Set(values)).sort();
+    function fill(sel, arr) {
+      const uniq = Array.from(new Set(arr)).sort();
       uniq.forEach(v=>{
         const o = document.createElement('option');
-        o.value = v; o.textContent = v;
-        selectEl.appendChild(o);
+        o.value=o.textContent=v;
+        sel.appendChild(o);
       });
     }
 
     function applyFilter() {
-      let filtered = allRows.slice();
-
-      // Sorumlu
-      if (selResp.value) filtered = filtered.filter(r=>r[2]===selResp.value);
-      // Durum
-      if (selStat.value) filtered = filtered.filter(r=>r[5]===selStat.value);
-      // Öncelik
-      if (selPrio.value) filtered = filtered.filter(r=>r[6]===selPrio.value);
-      // Başlangıç tarih aralığı (3: Baş. Tarihi)
-      if (dateFrom.value) filtered = filtered.filter(r=>new Date(r[3]) >= new Date(dateFrom.value));
-      if (dateTo.value)   filtered = filtered.filter(r=>new Date(r[3]) <= new Date(dateTo.value));
-
-      // Sorgu tablosuna bas
-      qBody.innerHTML = filtered
-        .map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>')
-        .join('');
+      let f = allRows.slice();
+      if (selResp.value) f = f.filter(r=>r[2]===selResp.value);
+      if (selStat.value) f = f.filter(r=>r[5]===selStat.value);
+      if (selPrio.value) f = f.filter(r=>r[6]===selPrio.value);
+      if (dateFrom.value) f = f.filter(r=>new Date(r[3])>=new Date(dateFrom.value));
+      if (dateTo.value)   f = f.filter(r=>new Date(r[3])<=new Date(dateTo.value));
+      qBody.innerHTML = f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
     }
 
     function resetFilter() {
-      selResp.value = '';
-      selStat.value = '';
-      selPrio.value = '';
-      dateFrom.value = '';
-      dateTo.value = '';
-      qBody.innerHTML = '';
+      selResp.value=selStat.value=selPrio.value='';
+      dateFrom.value=dateTo.value='';
+      qBody.innerHTML='';
     }
 
     window.addEventListener('DOMContentLoaded', fetchData);
