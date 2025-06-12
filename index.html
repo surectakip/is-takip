@@ -3,11 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Form Yanıtları</title>
+  <title>Form Yanıtları & Formu Doldur</title>
+
+  <!-- Boş favicon ile 404 engelleme -->
+  <link rel="icon" href="data:;base64,iVBORw0KGgo=">
+
   <style>
     body { font-family: Arial, sans-serif; padding: 1rem; background: #fafafa; }
-    h1 { margin-bottom: .5rem; }
-    button { padding: .5rem 1rem; font-size: 1rem; }
+    header { display: flex; align-items: center; justify-content: space-between; }
+    h1 { margin: 0; font-size: 1.5rem; }
+    nav a, nav button {
+      margin-left: .5rem;
+      padding: .4rem .8rem;
+      font-size: .9rem;
+      text-decoration: none;
+      border: 1px solid #007acc;
+      background: #007acc;
+      color: white;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    nav a:hover, nav button:hover { background: #005fa3; }
     #loading { margin-top: .5rem; color: #555; }
     table { width:100%; border-collapse:collapse; margin-top:1rem; background:white; }
     th, td { border:1px solid #ddd; padding:.5rem; text-align:left; }
@@ -15,8 +31,19 @@
   </style>
 </head>
 <body>
-  <h1>Google Form Yanıtları</h1>
-  <button id="refresh-btn">Yenile 🔄</button>
+  <header>
+    <h1>Google Form Yanıtları</h1>
+    <nav>
+      <!-- Formu kendi Google Forms sayfasında açmak için -->
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?usp=header" 
+         target="_blank" rel="noopener">
+        Formu Doldur
+      </a>
+      <!-- Yenile butonu zaten mevcut -->
+      <button id="refresh-btn">Yenile 🔄</button>
+    </nav>
+  </header>
+
   <div id="loading" style="display:none">Veriler yükleniyor…</div>
   <table id="responses-table" style="display:none">
     <thead id="table-head"></thead>
@@ -35,33 +62,24 @@
     const refreshBtn = document.getElementById('refresh-btn');
 
     async function fetchData() {
-      // UI reset
       tableEl.style.display   = 'none';
       loadingEl.style.display = '';
       theadEl.innerHTML = '';
       tbodyEl.innerHTML = '';
 
       try {
-        const res = await fetch(sheetUrl);
-        if (!res.ok) throw new Error('Network response was not ok');
+        const res  = await fetch(sheetUrl);
         const text = await res.text();
 
-        // CSV'yi satırlara ve sütunlara böl
-        const rows = text.trim().split('\n').map(line =>
-          // Basit virgül ayırma; metin içinde virgül varsa daha gelişmiş parser gerekebilir
-          line.split(',')
-        );
-
+        const rows = text.trim().split('\n').map(l => l.split(','));
         if (rows.length < 2) {
           tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
         } else {
-          // Başlık satırı
           const headers = rows[0];
           theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-          // Veri satırları
           tbodyEl.innerHTML = rows.slice(1)
             .map(cells =>
-              '<tr>' + headers.map((_, i) => `<td>${cells[i] || ''}</td>`).join('') + '</tr>'
+              '<tr>' + headers.map((_,i) => `<td>${cells[i]||''}</td>`).join('') + '</tr>'
             ).join('');
         }
 
