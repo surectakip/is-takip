@@ -7,7 +7,7 @@
   <style>
     body { margin:0; font-family:Arial,sans-serif; background:#fafafa; }
     nav { display:flex; background:#007acc; }
-    nav button { flex:1; padding:.75rem; border:none; background:#005fa3; color:#fff; cursor:pointer; font-weight:bold; }
+    nav button { flex:1; padding:.75rem; border:none; background:#005fa3; color:#fff; font-weight:bold; cursor:pointer; }
     nav button.active { background:#003f7f; }
     .tab { display:none; padding:1rem; }
     .tab.active { display:block; }
@@ -15,9 +15,9 @@
     h1 { margin-top:0; }
     button { padding:.4rem .8rem; margin:.5rem .5rem .5rem 0; border:none; border-radius:4px; color:#fff; cursor:pointer; }
     #refresh-btn { background:#007acc; }
-    .save-btn     { background:#28a745; }
-    .status-select{ padding:.3rem; }
-    #loading      { color:#555; margin-top:.5rem; }
+    .save-btn { background:#28a745; }
+    .status-select { padding:.3rem; }
+    #loading { color:#555; margin-top:.5rem; }
     table { width:100%; border-collapse:collapse; margin-top:1rem; }
     th, td { border:1px solid #ddd; padding:.5rem; text-align:left; }
     th { background:#f0f0f0; }
@@ -34,25 +34,29 @@
     <button id="btn-query">Sorgu</button>
   </nav>
 
-  <!-- 1: Form Giriş -->
+  <!-- 1. Sekme: Form Giriş -->
   <div id="tab-entry" class="tab active">
     <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"></iframe>
     <p style="text-align:right; margin-top:.5rem;">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
-         target="_blank" rel="noopener" style="color:#007acc;">➤ Yeni pencerede aç</a>
+         target="_blank" rel="noopener" style="color:#007acc;">
+        ➤ Yeni pencerede aç
+      </a>
     </p>
   </div>
 
-  <!-- 2: Özet Grafikleri -->
+  <!-- 2. Sekme: Form Sonuçları -->
   <div id="tab-results" class="tab">
     <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"></iframe>
     <p style="text-align:right; margin-top:.5rem;">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
-         target="_blank" rel="noopener" style="color:#007acc;">➤ Yeni pencerede aç</a>
+         target="_blank" rel="noopener" style="color:#007acc;">
+        ➤ Yeni pencerede aç
+      </a>
     </p>
   </div>
 
-  <!-- 3: İş-Süreç Takip -->
+  <!-- 3. Sekme: İş-Süreç Takip -->
   <div id="tab-data" class="tab">
     <h1>İş-Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
@@ -63,7 +67,7 @@
     </table>
   </div>
 
-  <!-- 4: Sorgu -->
+  <!-- 4. Sekme: Sorgu -->
   <div id="tab-query" class="tab">
     <h1>Ana Tablo Sorgu</h1>
     <div class="filters">
@@ -88,7 +92,7 @@
     const tabs       = ['entry','results','data','query'];
     let headers = [], allRows = [];
 
-    // Elements
+    // Element refs
     const loadingEl  = document.getElementById('loading');
     const tableEl    = document.getElementById('responses-table');
     const theadEl    = document.getElementById('table-head');
@@ -116,7 +120,7 @@
       };
     });
 
-    // Load CSV and render table
+    // Load and render CSV
     async function loadData() {
       tableEl.style.display='none'; loadingEl.style.display='';
       theadEl.innerHTML=''; tbodyEl.innerHTML=''; allRows=[];
@@ -131,10 +135,10 @@
       allRows = rows;
 
       // Header
-      theadEl.innerHTML = '<tr>'
-        + headers.map(h=>`<th>${h}</th>`).join('')
-        + '<th>İşlem</th></tr>';
-      // Body
+      theadEl.innerHTML = '<tr>' +
+        headers.map(h=>`<th>${h}</th>`).join('') +
+        '<th>İşlem</th></tr>';
+      // Rows
       tbodyEl.innerHTML = allRows.map(r=>
         '<tr data-id="'+r[0]+'">' +
           r.map((c,i)=>
@@ -146,22 +150,19 @@
       ).join('');
       tableEl.style.display=''; loadingEl.style.display='none';
 
-      // Save handlers (no-cors)
+      // Save handlers via GET
       document.querySelectorAll('.save-btn').forEach(btn=>{
         btn.onclick = () => {
           const tr = btn.closest('tr');
           const id = tr.dataset.id;
           const newStatus = tr.querySelector('.status-select').value;
-          fetch(WEBAPP_URL, {
-            method:'POST', mode:'no-cors',
-            headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({ id, updates:{ 'Durum': newStatus } })
-          });
+          const url = `${WEBAPP_URL}?id=${encodeURIComponent(id)}&Durum=${encodeURIComponent(newStatus)}`;
+          fetch(url, { mode:'no-cors' });
           alert('Güncelleme isteği gönderildi. Lütfen Yenile tuşuna basın.');
         };
       });
 
-      // Populate filters
+      // Filters
       populate(selResp, allRows.map(r=>r[3]));
       populate(selStat, allRows.map(r=>r[6]));
       populate(selPrio, allRows.map(r=>r[7]));
