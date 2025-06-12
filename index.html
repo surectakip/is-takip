@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>İş - Süreç Takip</title>
-  <!-- Boş favicon ile 404 önleme -->
+  <!-- Boş favicon ile 404 engelleme -->
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <style>
     body { margin:0; font-family:Arial,sans-serif; background:#fafafa }
@@ -41,20 +41,34 @@
   <!-- Sekme 1: Formu Doldurma -->
   <div id="tab-entry" class="tab active">
     <iframe
-      src="FORM_EMBED" 
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
       title="İş-Görev Giriş Formu">
     </iframe>
+    <p style="text-align:right; margin-top:0.5rem;">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
+         target="_blank" rel="noopener"
+         style="font-size:0.9rem; color:#007acc;">
+        ➤ Yeni pencerede aç
+      </a>
+    </p>
   </div>
 
-  <!-- Sekme 2: Özet Grafikleri -->
+  <!-- Sekme 2: Özet Grafikleri (Yanıtlar → Özet) -->
   <div id="tab-results" class="tab">
     <iframe
-      src="FORM_ANALYTICS_EMBED"
-      title="Form Yanıtlar Özet">
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"
+      title="Form Yanıtlar Özet Grafikleri">
     </iframe>
+    <p style="text-align:right; margin-top:0.5rem;">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
+         target="_blank" rel="noopener"
+         style="font-size:0.9rem; color:#007acc;">
+        ➤ Yeni pencerede aç
+      </a>
+    </p>
   </div>
 
-  <!-- Sekme 3: CSV Tablosu + Yenile -->
+  <!-- Sekme 3: CSV’den canlı tablo + Yenile -->
   <div id="tab-data" class="tab">
     <h1>İş - Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
@@ -66,7 +80,7 @@
   </div>
 
   <script>
-    // Tab geçişleri
+    // Sekme geçişleri
     ['entry','results','data'].forEach(name => {
       document.getElementById('btn-'+name).onclick = () => {
         ['entry','results','data'].forEach(n => {
@@ -78,8 +92,8 @@
       };
     });
 
-    // CSV linkini buraya yapıştırın:
-    const sheetUrl = 'CSV_URL';
+    // CSV olarak yayımlanan Google Sheets linki
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
 
     const loadingEl  = document.getElementById('loading');
     const tableEl    = document.getElementById('responses-table');
@@ -97,26 +111,25 @@
         const res  = await fetch(sheetUrl);
         if (!res.ok) throw new Error(res.statusText);
         const text = await res.text();
-        const rows = text.trim().split('\n').map(l=>l.split(','));
+        const rows = text.trim().split('\n').map(l => l.split(','));
 
         if (rows.length < 2) {
           tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
         } else {
-          theadEl.innerHTML = '<tr>'+rows[0].map(h=>`<th>${h}</th>`).join('')+'</tr>';
+          theadEl.innerHTML = '<tr>' + rows[0].map(h => `<th>${h}</th>`).join('') + '</tr>';
           tbodyEl.innerHTML = rows.slice(1)
-            .map(r=>'<tr>'+rows[0].map((_,i)=>`<td>${r[i]||''}</td>`).join('')+'</tr>')
+            .map(r => '<tr>' + rows[0].map((_,i) => `<td>${r[i]||''}</td>`).join('') + '</tr>')
             .join('');
         }
         loadingEl.style.display = 'none';
         tableEl.style.display   = '';
       } catch (err) {
-        loadingEl.textContent = 'Veri yüklenirken hata: '+err.message;
+        loadingEl.textContent = 'Veri yüklenirken hata oluştu: ' + err.message;
       }
     }
 
     window.addEventListener('DOMContentLoaded', fetchData);
     refreshBtn.addEventListener('click', fetchData);
   </script>
-
 </body>
 </html>
