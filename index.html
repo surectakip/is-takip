@@ -34,7 +34,7 @@
     <button id="btn-query">Sorgu</button>
   </nav>
 
-  <!-- 1. Form Girişi -->
+  <!-- 1. Form Giriş -->
   <div id="tab-entry" class="tab active">
     <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
@@ -122,8 +122,11 @@
 
     // Load and render CSV
     async function loadData() {
-      tableEl.style.display='none'; loadingEl.style.display='';
-      theadEl.innerHTML=''; tbodyEl.innerHTML=''; allRows=[];
+      tableEl.style.display='none';
+      loadingEl.style.display='';
+      theadEl.innerHTML='';
+      tbodyEl.innerHTML='';
+      allRows=[];
       [selResp,selStat,selPrio].forEach(sel=>sel.options.length=1);
       qBody.innerHTML='';
 
@@ -135,9 +138,9 @@
       allRows = rows;
 
       // Header
-      theadEl.innerHTML = '<tr>' +
-        headers.map(h=>`<th>${h}</th>`).join('') +
-        '<th>İşlem</th></tr>';
+      theadEl.innerHTML = '<tr>'
+        + headers.map(h=>`<th>${h}</th>`).join('')
+        + '<th>İşlem</th></tr>';
       // Rows
       tbodyEl.innerHTML = allRows.map(r=>
         '<tr data-id="'+r[0]+'">' +
