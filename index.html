@@ -2,18 +2,66 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>İş - Süreç Takip</title>
   <style>
-    /* ... önceki stiller aynı ... */
+    body { margin:0; font-family:Arial, sans-serif; background:#fafafa; }
+    nav { display:flex; background:#007acc; }
+    nav button {
+      flex:1; padding:.75rem; border:none;
+      background:#005fa3; color:#fff; cursor:pointer;
+      font-weight:bold;
+    }
+    nav button.active { background:#003f7f; }
+    .tab { display:none; padding:1rem; }
+    .tab.active { display:block; }
+    iframe { width:100%; height:80vh; border:1px solid #ccc; border-radius:4px; }
+    h1 { margin-top:0; }
+    button { padding:.5rem 1rem; margin:0 .5rem .5rem 0; border:none; border-radius:4px; color:#fff; cursor:pointer; }
+    #refresh-btn { background:#007acc; }
+    .save-btn { background:#28a745; }
     .status-select { padding:.3rem; }
-    .save-btn     { background:#28a745; color:#fff; border:none; padding:.4rem .8rem; border-radius:4px; cursor:pointer; }
+    #loading { color:#555; margin-top:.5rem; }
+    table { width:100%; border-collapse:collapse; background:#fff; margin-top:1rem; }
+    th, td { border:1px solid #ddd; padding:.5rem; text-align:left; }
+    th { background:#f0f0f0; }
+    .filters { display:flex; flex-wrap:wrap; align-items:flex-end; margin-bottom:1rem; }
+    .filters label { margin-right:.25rem; }
+    .filters input, .filters select { margin-right:.5rem; padding:.4rem; }
   </style>
 </head>
 <body>
-  <!-- nav ve diğer sekmeler aynı ... -->
+  <nav>
+    <button id="btn-entry" class="active">İş-Görev Giriş</button>
+    <button id="btn-results">Form Sonuçları</button>
+    <button id="btn-data">İş-Süreç Takip</button>
+    <button id="btn-query">Sorgu</button>
+  </nav>
 
-  <!-- 3. Sekme: İş-Süreç Takip -->
+  <!-- 1: Form Giriş -->
+  <div id="tab-entry" class="tab active">
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
+      title="Form Girişi"></iframe>
+    <p style="text-align:right; margin-top:.5rem;">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
+         target="_blank" rel="noopener" style="color:#007acc;">Yeni pencerede aç</a>
+    </p>
+  </div>
+
+  <!-- 2: Özet Grafikleri -->
+  <div id="tab-results" class="tab">
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"
+      title="Form Analiz"></iframe>
+    <p style="text-align:right; margin-top:.5rem;">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
+         target="_blank" rel="noopener" style="color:#007acc;">Yeni pencerede aç</a>
+    </p>
+  </div>
+
+  <!-- 3: İş-Süreç Takip -->
   <div id="tab-data" class="tab">
     <h1>İş-Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
@@ -24,77 +72,161 @@
     </table>
   </div>
 
+  <!-- 4: Sorgu -->
+  <div id="tab-query" class="tab">
+    <h1>Ana Tablo Sorgu</h1>
+    <div class="filters">
+      <label>Sorumlu:</label><select id="filter-responsible"><option value="">Tümü</option></select>
+      <label>Durum:</label><select id="filter-status"><option value="">Tümü</option></select>
+      <label>Öncelik:</label><select id="filter-priority"><option value="">Tümü</option></select>
+      <label>Baş. Tarih ≥</label><input type="date" id="filter-start-from">
+      <label>Baş. Tarih ≤</label><input type="date" id="filter-start-to">
+      <label>Anahtar Kelime:</label><input type="text" id="filter-text" placeholder="Aranacak metin">
+      <button id="apply-btn">Uygula</button><button id="reset-btn">Temizle</button>
+    </div>
+    <table id="query-table">
+      <thead id="query-head"></thead>
+      <tbody id="query-body"></tbody>
+    </table>
+  </div>
+
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzTA_EoXhpjUOt1ArCF8bQurIhC05pvb6qruhxMYZeuvkx4Avyy81032aAt-jvlEGVHHw/exec';
-    const sheetUrl   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
-    let headers = [], allRows = [];
+    document.addEventListener('DOMContentLoaded', () => {
+      const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbzTA_EoXhpjUOt1ArCF8bQurIhC05pvb6qruhxMYZeuvkx4Avyy81032aAt-jvlEGVHHw/exec';
+      const sheetUrl   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+      const tabs       = ['entry','results','data','query'];
+      let headers = [], allRows = [];
 
-    const loadingEl  = document.getElementById('loading'),
-          tableEl    = document.getElementById('responses-table'),
-          theadEl    = document.getElementById('table-head'),
-          tbodyEl    = document.getElementById('table-body'),
-          refreshBtn = document.getElementById('refresh-btn');
+      // Element references
+      const loadingEl  = document.getElementById('loading');
+      const tableEl    = document.getElementById('responses-table');
+      const theadEl    = document.getElementById('table-head');
+      const tbodyEl    = document.getElementById('table-body');
+      const refreshBtn = document.getElementById('refresh-btn');
+      const selResp    = document.getElementById('filter-responsible');
+      const selStat    = document.getElementById('filter-status');
+      const selPrio    = document.getElementById('filter-priority');
+      const dateFrom   = document.getElementById('filter-start-from');
+      const dateTo     = document.getElementById('filter-start-to');
+      const txtFilter  = document.getElementById('filter-text');
+      const applyBtn   = document.getElementById('apply-btn');
+      const resetBtn   = document.getElementById('reset-btn');
+      const qHead      = document.getElementById('query-head');
+      const qBody      = document.getElementById('query-body');
 
-    async function fetchData() {
-      tableEl.style.display = 'none';
-      loadingEl.style.display = '';
-      theadEl.innerHTML = '';
-      tbodyEl.innerHTML = '';
-      allRows = [];
-
-      const res = await fetch(sheetUrl);
-      if (!res.ok) { alert('CSV çekilemedi: ' + res.status); return; }
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      headers = rows.shift();
-      allRows = rows;
-
-      // Başlık
-      theadEl.innerHTML = '<tr>'
-        + headers.map(h => `<th>${h}</th>`).join('')
-        + '<th>İşlem</th></tr>';
-
-      // Satırlar
-      tbodyEl.innerHTML = allRows.map(r => {
-        return '<tr data-id="' + r[0] + '">' +
-          r.map((c,i) => i === 6
-            ? '<td><select class="status-select"><option value="Devam Ediyor">Devam Ediyor</option><option value="Tamamlandı">Tamamlandı</option></select></td>'
-            : `<td>${c}</td>`
-          ).join('')
-          + '<td><button class="save-btn">Kaydet</button></td>' +
-        '</tr>';
-      }).join('');
-
-      tableEl.style.display = '';
-      loadingEl.style.display = 'none';
-
-      // Kaydet butonları
-      document.querySelectorAll('.save-btn').forEach(btn => {
-        btn.onclick = () => {
-          const tr = btn.closest('tr');
-          const id = tr.dataset.id;
-          const newStatus = tr.querySelector('.status-select').value;
-
-          // <-- Burada mode: 'no-cors' kullanıyoruz -->
-          fetch(WEBAPP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              id,
-              updates: { 'Durum': newStatus }
-            })
+      // Tab switching
+      tabs.forEach(tab => {
+        document.getElementById('btn-'+tab).onclick = () => {
+          tabs.forEach(t => {
+            document.getElementById('btn-'+t).classList.toggle('active', t===tab);
+            document.getElementById('tab-'+t).classList.toggle('active', t===tab);
           });
-
-          alert('Güncelleme isteği gönderildi. Lütfen Yenile butonuna basın.');
+          if (tab==='query' && allRows.length===0) loadData();
         };
       });
-    }
 
-    refreshBtn.addEventListener('click', fetchData);
-    fetchData();
-  });
+      // Load and render CSV data
+      async function loadData() {
+        tableEl.style.display = 'none';
+        loadingEl.style.display = '';
+        theadEl.innerHTML = '';
+        tbodyEl.innerHTML = '';
+        allRows = [];
+        [selResp, selStat, selPrio].forEach(s=>s.options.length=1);
+        qBody.innerHTML = '';
+
+        const res = await fetch(sheetUrl);
+        if (!res.ok) { alert('CSV çekilemedi: '+res.status); return; }
+        const text = await res.text();
+        const rows = text.trim().split('\n').map(r=>r.split(','));
+        headers = rows.shift();
+        allRows = rows;
+
+        // Table header
+        theadEl.innerHTML = '<tr>' +
+          headers.map(h=>`<th>${h}</th>`).join('') +
+          '<th>İşlem</th></tr>';
+
+        // Table body with status-select and save button
+        tbodyEl.innerHTML = allRows.map(r =>
+          '<tr data-id="'+r[0]+'">' +
+            r.map((c,i) =>
+              i===6
+                ? '<td><select class="status-select"><option value="Devam Ediyor">Devam Ediyor</option><option value="Tamamlandı">Tamamlandı</option></select></td>'
+                : `<td>${c}</td>`
+            ).join('') +
+            '<td><button class="save-btn">Kaydet</button></td>' +
+          '</tr>'
+        ).join('');
+
+        tableEl.style.display = '';
+        loadingEl.style.display = 'none';
+
+        // Save button handlers
+        document.querySelectorAll('.save-btn').forEach(btn => {
+          btn.onclick = async () => {
+            const tr = btn.closest('tr');
+            const id = tr.dataset.id;
+            const newStatus = tr.querySelector('.status-select').value;
+
+            try {
+              const resp = await fetch(WEBAPP_URL, {
+                method: 'POST', mode: 'cors',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ id, updates:{ 'Durum': newStatus } })
+              });
+              if (!resp.ok) throw new Error('HTTP '+resp.status);
+              const json = await resp.json();
+              if (json.status!=='ok') throw new Error(json.message);
+              alert('Güncellendi');
+            } catch(e) {
+              console.error(e);
+              alert('Güncelleme hatası: '+e.message);
+            }
+          };
+        });
+
+        // Populate filters
+        populate(selResp, allRows.map(r=>r[3]));
+        populate(selStat, allRows.map(r=>r[6]));
+        populate(selPrio, allRows.map(r=>r[7]));
+        qHead.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+      }
+
+      function populate(sel, arr) {
+        Array.from(new Set(arr)).sort().forEach(v=>{
+          const o=document.createElement('option');
+          o.value=o.textContent=v;
+          sel.appendChild(o);
+        });
+      }
+
+      function applyFilter() {
+        let f = allRows.slice();
+        if(selResp.value) f=f.filter(r=>r[3]===selResp.value);
+        if(selStat.value) f=f.filter(r=>r[6]===selStat.value);
+        if(selPrio.value) f=f.filter(r=>r[7]===selPrio.value);
+        if(dateFrom.value) f=f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
+        if(dateTo.value)   f=f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
+        if(txtFilter.value) {
+          const term = txtFilter.value.toLowerCase();
+          f = f.filter(r=>r.some(c=>c.toLowerCase().includes(term)));
+        }
+        qBody.innerHTML = f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+      }
+
+      function resetFilter() {
+        selResp.value = selStat.value = selPrio.value = '';
+        dateFrom.value = dateTo.value = txtFilter.value = '';
+        qBody.innerHTML = '';
+      }
+
+      refreshBtn.onclick = loadData;
+      applyBtn.onclick   = applyFilter;
+      resetBtn.onclick   = resetFilter;
+
+      loadData();
+    });
   </script>
 </body>
 </html>
