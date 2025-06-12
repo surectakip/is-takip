@@ -4,50 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Form Yanıtları</title>
-
-  <!-- Tabletop.js CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.4/tabletop.min.js"></script>
-
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 1rem;
-      background: #fafafa;
-    }
-    h1 {
-      margin-bottom: 0.5rem;
-    }
-    #loading {
-      font-style: italic;
-      color: #555;
-    }
-    button {
-      margin-top: 0.5rem;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-    }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      margin-top: 1rem;
-      background: white;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
-    }
-    th, td {
-      border: 1px solid #ddd;
-      padding: 0.5rem;
-      text-align: left;
-    }
-    th {
-      background: #f0f0f0;
-    }
+    body { font-family: Arial, sans-serif; padding: 1rem; background: #fafafa; }
+    h1 { margin-bottom: .5rem; }
+    button { padding: .5rem 1rem; font-size: 1rem; }
+    #loading { margin-top: .5rem; color: #555; }
+    table { width:100%; border-collapse:collapse; margin-top:1rem; background:white; }
+    th, td { border:1px solid #ddd; padding:.5rem; text-align:left; }
+    th { background:#f0f0f0; }
   </style>
 </head>
 <body>
   <h1>Google Form Yanıtları</h1>
   <button id="refresh-btn">Yenile 🔄</button>
   <div id="loading" style="display:none">Veriler yükleniyor…</div>
-
   <table id="responses-table" style="display:none">
     <thead id="table-head"></thead>
     <tbody id="table-body"></tbody>
@@ -64,45 +34,45 @@
     const tbodyEl    = document.getElementById('table-body');
     const refreshBtn = document.getElementById('refresh-btn');
 
-    // Veriyi çekip tabloyu yeniden oluştur
-    function fetchData() {
-      // UI ayarları
+    async function fetchData() {
+      // UI reset
       tableEl.style.display   = 'none';
       loadingEl.style.display = '';
-      tbodyEl.innerHTML       = '';
-      theadEl.innerHTML       = '';
+      theadEl.innerHTML = '';
+      tbodyEl.innerHTML = '';
 
-      Tabletop.init({
-        key: sheetUrl,
-        simpleSheet: true,
-        callback: renderTable,
-        debug: false
-      });
-    }
+      try {
+        const res = await fetch(sheetUrl);
+        if (!res.ok) throw new Error('Network response was not ok');
+        const text = await res.text();
 
-    // Gelen veriyi tabloya bas
-    function renderTable(data, tabletop) {
-      loadingEl.style.display = 'none';
-      tableEl.style.display   = '';
+        // CSV'yi satırlara ve sütunlara böl
+        const rows = text.trim().split('\n').map(line =>
+          // Basit virgül ayırma; metin içinde virgül varsa daha gelişmiş parser gerekebilir
+          line.split(',')
+        );
 
-      if (!data.length) {
-        tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
-        return;
+        if (rows.length < 2) {
+          tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
+        } else {
+          // Başlık satırı
+          const headers = rows[0];
+          theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+          // Veri satırları
+          tbodyEl.innerHTML = rows.slice(1)
+            .map(cells =>
+              '<tr>' + headers.map((_, i) => `<td>${cells[i] || ''}</td>`).join('') + '</tr>'
+            ).join('');
+        }
+
+        loadingEl.style.display = 'none';
+        tableEl.style.display   = '';
+      } catch (err) {
+        loadingEl.textContent = 'Veri yüklenirken hata oluştu: ' + err.message;
       }
-
-      // Başlıklar
-      const headers = Object.keys(data[0]);
-      theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-
-      // Satırlar
-      tbodyEl.innerHTML = data.map(row => {
-        return '<tr>' + headers.map(h => `<td>${row[h] || ''}</td>`).join('') + '</tr>';
-      }).join('');
     }
 
-    // İlk yüklemede veriyi çek
     window.addEventListener('DOMContentLoaded', fetchData);
-    // Butona tıklayınca yenile
     refreshBtn.addEventListener('click', fetchData);
   </script>
 </body>
