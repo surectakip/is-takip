@@ -3,54 +3,80 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Form Yanıtları & Formu Doldur</title>
-
+  <title>İş - Süreç Takip</title>
   <!-- Boş favicon ile 404 engelleme -->
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
 
   <style>
-    body { font-family: Arial, sans-serif; padding: 1rem; background: #fafafa; }
-    header { display: flex; align-items: center; justify-content: space-between; }
-    h1 { margin: 0; font-size: 1.5rem; }
-    nav a, nav button {
-      margin-left: .5rem;
-      padding: .4rem .8rem;
-      font-size: .9rem;
-      text-decoration: none;
-      border: 1px solid #007acc;
-      background: #007acc;
-      color: white;
-      border-radius: 4px;
-      cursor: pointer;
+    body { font-family: Arial, sans-serif; margin:0; padding:0; background:#fafafa; }
+    nav { background:#007acc; padding:0.5rem; display:flex; }
+    nav button {
+      background: white; color: #007acc;
+      border: none; padding:0.5rem 1rem; margin-right:0.5rem;
+      border-radius:4px; cursor:pointer;
+      font-weight:bold;
     }
-    nav a:hover, nav button:hover { background: #005fa3; }
-    #loading { margin-top: .5rem; color: #555; }
+    nav button.active { background:#005fa3; color:white; }
+    .tab { display:none; padding:1rem; }
+    .tab.active { display:block; }
+    #loading { color:#555; margin-top:1rem; }
     table { width:100%; border-collapse:collapse; margin-top:1rem; background:white; }
-    th, td { border:1px solid #ddd; padding:.5rem; text-align:left; }
+    th, td { border:1px solid #ddd; padding:0.5rem; text-align:left; }
     th { background:#f0f0f0; }
+    #refresh-btn {
+      padding:0.5rem 1rem;
+      background:#007acc; color:white;
+      border:none; border-radius:4px; cursor:pointer;
+      font-size:1rem;
+    }
+    iframe { width:100%; height:80vh; border:none; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Google Form Yanıtları</h1>
-    <nav>
-      <!-- Formu kendi Google Forms sayfasında açmak için -->
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?usp=header" 
-         target="_blank" rel="noopener">
-        Formu Doldur
-      </a>
-      <!-- Yenile butonu zaten mevcut -->
-      <button id="refresh-btn">Yenile 🔄</button>
-    </nav>
-  </header>
+  <nav>
+    <button id="btn-entry">İş-Görev Giriş</button>
+    <button id="btn-data" class="active">İş - Süreç Takip</button>
+  </nav>
 
-  <div id="loading" style="display:none">Veriler yükleniyor…</div>
-  <table id="responses-table" style="display:none">
-    <thead id="table-head"></thead>
-    <tbody id="table-body"></tbody>
-  </table>
+  <!-- Sekme 1: Form Girişi -->
+  <div id="tab-entry" class="tab">
+    <iframe 
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?usp=header" 
+      title="İş-Görev Giriş Formu">
+    </iframe>
+  </div>
+
+  <!-- Sekme 2: Veri Tablosu -->
+  <div id="tab-data" class="tab active">
+    <h1>İş - Süreç Takip</h1>
+    <button id="refresh-btn">Yenile 🔄</button>
+    <div id="loading" style="display:none">Veriler yükleniyor…</div>
+    <table id="responses-table" style="display:none">
+      <thead id="table-head"></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
 
   <script>
+    // Tab geçiş işlevi
+    const btnEntry = document.getElementById('btn-entry');
+    const btnData  = document.getElementById('btn-data');
+    const tabEntry = document.getElementById('tab-entry');
+    const tabData  = document.getElementById('tab-data');
+
+    btnEntry.addEventListener('click', () => {
+      btnEntry.classList.add('active');
+      btnData.classList.remove('active');
+      tabEntry.classList.add('active');
+      tabData.classList.remove('active');
+    });
+    btnData.addEventListener('click', () => {
+      btnData.classList.add('active');
+      btnEntry.classList.remove('active');
+      tabData.classList.add('active');
+      tabEntry.classList.remove('active');
+    });
+
     // —————— BURAYI DEĞİŞTİR ——————
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
     // ——————————————————————————
@@ -70,8 +96,8 @@
       try {
         const res  = await fetch(sheetUrl);
         const text = await res.text();
-
         const rows = text.trim().split('\n').map(l => l.split(','));
+
         if (rows.length < 2) {
           tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
         } else {
