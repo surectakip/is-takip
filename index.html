@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>İş - Süreç Takip</title>
-  <!-- Boş favicon ile 404 engelleme -->
+  <!-- Boş favicon ile 404 önleme -->
   <link rel="icon" href="data:;base64,iVBORw0KGgo=">
   <style>
     body { margin:0; font-family:Arial,sans-serif; background:#fafafa }
@@ -32,30 +32,29 @@
 </head>
 <body>
 
-  <!-- Üst gezinme -->
   <nav>
     <button id="btn-entry"   class="active">İş-Görev Giriş</button>
     <button id="btn-results">Form Sonuçları</button>
     <button id="btn-data"   >İş - Süreç Takip</button>
   </nav>
 
-  <!-- Sekme 1: Form Girişi -->
+  <!-- Sekme 1: Formu Doldurma -->
   <div id="tab-entry" class="tab active">
     <iframe
-      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
+      src="FORM_EMBED" 
       title="İş-Görev Giriş Formu">
     </iframe>
   </div>
 
-  <!-- Sekme 2: Özet Grafikleri (Yanıtlar → Özet) -->
+  <!-- Sekme 2: Özet Grafikleri -->
   <div id="tab-results" class="tab">
     <iframe
-      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics?embedded=true"
-      title="Form Yanıtlar Özet Grafikleri">
+      src="FORM_ANALYTICS_EMBED"
+      title="Form Yanıtlar Özet">
     </iframe>
   </div>
 
-  <!-- Sekme 3: CSV’den canlı tablo + Yenile -->
+  <!-- Sekme 3: CSV Tablosu + Yenile -->
   <div id="tab-data" class="tab">
     <h1>İş - Süreç Takip</h1>
     <button id="refresh-btn">Yenile 🔄</button>
@@ -67,7 +66,7 @@
   </div>
 
   <script>
-    // Tab buton/alan eşleştirmesi
+    // Tab geçişleri
     ['entry','results','data'].forEach(name => {
       document.getElementById('btn-'+name).onclick = () => {
         ['entry','results','data'].forEach(n => {
@@ -79,8 +78,8 @@
       };
     });
 
-    // CSV olarak yayımlanmış Google Sheets linki
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+    // CSV linkini buraya yapıştırın:
+    const sheetUrl = 'CSV_URL';
 
     const loadingEl  = document.getElementById('loading');
     const tableEl    = document.getElementById('responses-table');
@@ -88,7 +87,6 @@
     const tbodyEl    = document.getElementById('table-body');
     const refreshBtn = document.getElementById('refresh-btn');
 
-    // Veriyi çek ve tabloyu güncelle
     async function fetchData() {
       tableEl.style.display   = 'none';
       loadingEl.style.display = '';
@@ -99,25 +97,20 @@
         const res  = await fetch(sheetUrl);
         if (!res.ok) throw new Error(res.statusText);
         const text = await res.text();
-
-        // Basit CSV parse
-        const rows = text.trim().split('\n').map(l => l.split(','));
+        const rows = text.trim().split('\n').map(l=>l.split(','));
 
         if (rows.length < 2) {
           tbodyEl.innerHTML = '<tr><td colspan="100%">Henüz yanıt yok.</td></tr>';
         } else {
-          // Başlıklar
-          theadEl.innerHTML = '<tr>' + rows[0].map(h => `<th>${h}</th>`).join('') + '</tr>';
-          // İçerik satırları
+          theadEl.innerHTML = '<tr>'+rows[0].map(h=>`<th>${h}</th>`).join('')+'</tr>';
           tbodyEl.innerHTML = rows.slice(1)
-            .map(r => '<tr>' + rows[0].map((_,i) => `<td>${r[i]||''}</td>`).join('') + '</tr>')
+            .map(r=>'<tr>'+rows[0].map((_,i)=>`<td>${r[i]||''}</td>`).join('')+'</tr>')
             .join('');
         }
-
         loadingEl.style.display = 'none';
         tableEl.style.display   = '';
       } catch (err) {
-        loadingEl.textContent = 'Veri yüklenirken hata oluştu: ' + err.message;
+        loadingEl.textContent = 'Veri yüklenirken hata: '+err.message;
       }
     }
 
