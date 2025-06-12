@@ -20,8 +20,8 @@
     h1 { margin-top:0 }
     button, select, input { margin:0 .5rem .5rem 0; padding:.4rem; }
     #refresh-btn { background:#007acc; color:#fff; border:none; border-radius:4px; }
-    #apply-btn { background:#28a745; color:#fff; border:none; border-radius:4px; }
-    #reset-btn { background:#dc3545; color:#fff; border:none; border-radius:4px; }
+    #apply-btn   { background:#28a745; color:#fff; border:none; border-radius:4px; }
+    #reset-btn   { background:#dc3545; color:#fff; border:none; border-radius:4px; }
     #loading { color:#555; margin-top:.5rem }
     table { width:100%; border-collapse:collapse; margin-top:1rem; background:#fff }
     th, td { border:1px solid #ddd; padding:.5rem; text-align:left }
@@ -104,12 +104,17 @@
     ['entry','results','data','query'].forEach(name => {
       document.getElementById('btn-'+name).onclick = () => {
         ['entry','results','data','query'].forEach(n => {
-          document.getElementById('btn-'+n).classList.toggle('active', n===name);
-          document.getElementById('tab-'+n).classList.toggle('active', n===name);
+          document.getElementById('btn-'+n)
+            .classList.toggle('active', n===name);
+          document.getElementById('tab-'+n)
+            .classList.toggle('active', n===name);
         });
+        // Sorgu sekmesine ilk geçişte veri çek
+        if (name==='query' && allRows.length===0) fetchData();
       };
     });
 
+    // Google Sheets CSV URL
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
 
     let headers = [], allRows = [];
@@ -119,25 +124,28 @@
     const tbodyEl    = document.getElementById('table-body');
     const refreshBtn = document.getElementById('refresh-btn');
 
-    const selResp = document.getElementById('filter-responsible');
-    const selStat = document.getElementById('filter-status');
-    const selPrio = document.getElementById('filter-priority');
-    const dateFrom = document.getElementById('filter-start-from');
-    const dateTo   = document.getElementById('filter-start-to');
-    const applyBtn = document.getElementById('apply-btn');
-    const resetBtn = document.getElementById('reset-btn');
-    const qHead = document.getElementById('query-head');
-    const qBody = document.getElementById('query-body');
+    const selResp   = document.getElementById('filter-responsible');
+    const selStat   = document.getElementById('filter-status');
+    const selPrio   = document.getElementById('filter-priority');
+    const dateFrom  = document.getElementById('filter-start-from');
+    const dateTo    = document.getElementById('filter-start-to');
+    const applyBtn  = document.getElementById('apply-btn');
+    const resetBtn  = document.getElementById('reset-btn');
+    const qHead     = document.getElementById('query-head');
+    const qBody     = document.getElementById('query-body');
 
     async function fetchData() {
       // Temizle
-      tableEl.style.display = 'none'; loadingEl.style.display = '';
-      theadEl.innerHTML = ''; tbodyEl.innerHTML = '';
+      tableEl.style.display   = 'none';
+      loadingEl.style.display = '';
+      theadEl.innerHTML = '';
+      tbodyEl.innerHTML = '';
       allRows = [];
-      // Dropdownları sıfırla (seçenekleri koru ilk “Tümü” hariç)
-      [selResp, selStat, selPrio].forEach(s => s.options.length = 1);
+      // Dropdownları varsayılan yalnızca “Tümü” kalsın
+      [selResp, selStat, selPrio].forEach(s=>s.options.length=1);
       qBody.innerHTML = '';
 
+      // CSV’i çek
       const res = await fetch(sheetUrl);
       if (!res.ok) { alert('CSV yüklenemedi: '+res.status); return; }
       const text = await res.text();
@@ -149,10 +157,10 @@
       tbodyEl.innerHTML = allRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
       tableEl.style.display = ''; loadingEl.style.display = 'none';
 
-      // Dropdown doldur
-      populate(selResp, allRows.map(r=>r[2]));
-      populate(selStat, allRows.map(r=>r[5]));
-      populate(selPrio, allRows.map(r=>r[6]));
+      // Sorgu dropdown’ları
+      populate(selResp, allRows.map(r=>r[3])); // Sorumlu
+      populate(selStat, allRows.map(r=>r[6])); // Durum
+      populate(selPrio, allRows.map(r=>r[7])); // Öncelik
 
       // Sorgu başlığı
       qHead.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
@@ -168,18 +176,18 @@
 
     function applyFilter() {
       let f = allRows.slice();
-      if (selResp.value) f = f.filter(r=>r[2]===selResp.value);
-      if (selStat.value) f = f.filter(r=>r[5]===selStat.value);
-      if (selPrio.value) f = f.filter(r=>r[6]===selPrio.value);
-      if (dateFrom.value) f = f.filter(r=>new Date(r[3])>=new Date(dateFrom.value));
-      if (dateTo.value)   f = f.filter(r=>new Date(r[3])<=new Date(dateTo.value));
+      if (selResp.value) f = f.filter(r=>r[3]===selResp.value);
+      if (selStat.value) f = f.filter(r=>r[6]===selStat.value);
+      if (selPrio.value) f = f.filter(r=>r[7]===selPrio.value);
+      if (dateFrom.value) f = f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
+      if (dateTo.value)   f = f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
       qBody.innerHTML = f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
     }
 
     function resetFilter() {
-      selResp.value=selStat.value=selPrio.value='';
-      dateFrom.value=dateTo.value='';
-      qBody.innerHTML='';
+      selResp.value = selStat.value = selPrio.value = '';
+      dateFrom.value = dateTo.value = '';
+      qBody.innerHTML = '';
     }
 
     window.addEventListener('DOMContentLoaded', fetchData);
