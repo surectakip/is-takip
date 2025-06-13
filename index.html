@@ -1,29 +1,195 @@
+<!DOCTYPE html>
+<html lang="tr">
 <head>
-  <!-- ... -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>İş - Süreç Takip</title>
   <style>
-    html, body { height: 100%; margin:0; }
-    body { font-family: Arial, sans-serif; background: #fafafa; }
-    nav { display: flex; background: #007acc; height: 3rem; }
-    nav button { /* ... */ }
+    html, body { height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; background: #fafafa; }
+    nav { display: flex; flex-wrap: wrap; background: #007acc; }
+    nav button {
+      flex: 1 1 120px;
+      padding: .75rem;
+      border: none;
+      background: #005fa3;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+      text-align: center;
+    }
+    nav button.active { background: #003f7f; }
     .tab {
       display: none;
-      padding: 0;
-      height: calc(100% - 3rem);
+      height: calc(100% - 3.5rem);
+      overflow: auto;
     }
     .tab.active { display: block; }
-    #tab-entry iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
+    iframe { border: none; }
+    h1 { margin: 1rem; }
+    button { padding: .4rem .8rem; margin: .5rem; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
+    #refresh-btn { background: #007acc; }
+    #loading { color: #555; margin: 1rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
+    th { background: #f0f0f0; }
+    .table-container { overflow-x: auto; }
+    .filters { display: flex; flex-wrap: wrap; align-items: flex-end; margin: 1rem; }
+    .filters label { margin-right: .25rem; }
+    .filters input, .filters select { margin-right: .5rem; padding: .4rem; margin-bottom: .5rem; }
+    .link-bottom { text-align: right; margin: 1rem; }
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1rem; }
+    @media(max-width:600px) {
+      nav button { flex: 1 1 100%; }
+      .filters { flex-direction: column; }
+      .filters label, .filters input, .filters select, .filters button { width: 100%; margin: .25rem 0; }
     }
-    /* diğer stil kuralları... */
   </style>
 </head>
 <body>
-  <nav> … </nav>
+  <nav>
+    <button id="btn-entry" class="active">Giriş</button>
+    <button id="btn-results">Sonuçlar</button>
+    <button id="btn-data">Takip</button>
+    <button id="btn-query">Sorgu</button>
+    <button id="btn-edit">Düzenle</button>
+    <button id="btn-charts">Grafikler</button>
+  </nav>
+
   <div id="tab-entry" class="tab active">
-    <iframe src="YOUR_FORM_URL?embedded=true"></iframe>
+    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
+            width="100%" height="100%"></iframe>
+    <p class="link-bottom">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
+         target="_blank" rel="noopener" style="color:#007acc;">
+        ➤ Yeni Pencerede Aç
+      </a>
+    </p>
   </div>
-  <!-- diğer sekmeler -->
-  <!-- ... -->
-</body>
+
+  <div id="tab-results" class="tab">
+    <p class="link-bottom">
+      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
+         target="_blank" rel="noopener" style="color:#007acc; font-weight:bold;">
+        ➤ Analizleri Aç
+      </a>
+    </p>
+  </div>
+
+  <div id="tab-data" class="tab">
+    <h1>İş-Süreç Takip</h1>
+    <button id="refresh-btn">Yenile</button>
+    <div id="loading" style="display:none">Veriler yükleniyor…</div>
+    <div class="table-container">
+      <table id="responses-table" style="display:none">
+        <thead id="table-head"></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-query" class="tab">
+    <h1>Ana Tablo Sorgu</h1>
+    <div class="filters">
+      <label>Sorumlu:</label><select id="filter-responsible"><option value="">Tümü</option></select>
+      <label>Durum:</label><select id="filter-status"><option value="">Tümü</option></select>
+      <label>Öncelik:</label><select id="filter-priority"><option value="">Tümü</option></select>
+      <label>Baş. Tarih ≥</label><input type="date" id="filter-start-from">
+      <label>Baş. Tarih ≤</label><input type="date" id="filter-start-to">
+      <label>Anahtar Kelime:</label><input type="text" id="filter-text" placeholder="Aranacak metin">
+      <button id="apply-btn">Uygula</button>
+      <button id="reset-btn">Temizle</button>
+    </div>
+    <div class="table-container">
+      <table id="query-table">
+        <thead id="query-head"></thead>
+        <tbody id="query-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-edit" class="tab">
+    <h1>Tabloyu Düzenle</h1>
+    <button onclick="window.open(
+      'https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit',
+      '_blank'
+    )">Google Sheets'te Aç</button>
+  </div>
+
+  <div id="tab-charts" class="tab">
+    <h1>Canlı Grafikler</h1>
+    <div class="charts-grid">
+      <div>
+        <h3>Tamamlandı mı?</h3>
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
+                width="100%" height="300"></iframe>
+      </div>
+      <div>
+        <h3>Durum Dağılımı</h3>
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=989307124&format=interactive"
+                width="100%" height="300"></iframe>
+      </div>
+      <div>
+        <h3>Öncelik Dağılımı</h3>
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
+                width="100%" height="300"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = ['entry','results','data','query','edit','charts'];
+      tabs.forEach(tab => {
+        document.getElementById('btn-'+tab).onclick = () => {
+          tabs.forEach(t => {
+            document.getElementById('btn-'+t).classList.toggle('active', t===tab);
+            document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+          });
+          if(tab==='data') loadData();
+        };
+      });
+
+      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+      const loadingEl = document.getElementById('loading');
+      const tableEl = document.getElementById('responses-table');
+      const theadEl = document.getElementById('table-head');
+      const tbodyEl = document.getElementById('table-body');
+      const refreshBtn = document.getElementById('refresh-btn');
+      const selResp = document.getElementById('filter-responsible');
+      const selStat = document.getElementById('filter-status');
+      const selPrio = document.getElementById('filter-priority');
+      const dateFrom = document.getElementById('filter-start-from');
+      const dateTo = document.getElementById('filter-start-to');
+      const txtFilter = document.getElementById('filter-text');
+      const applyBtn = document.getElementById('apply-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const qHead = document.getElementById('query-head');
+      const qBody = document.getElementById('query-body');
+      let allRows = [], headers = [];
+
+      async function loadData() {
+        tableEl.style.display = 'none'; loadingEl.style.display = '';
+        theadEl.innerHTML = ''; tbodyEl.innerHTML = '';
+        [selResp,selStat,selPrio].forEach(s=>s.options.length=1);
+        qBody.innerHTML=''; allRows=[];
+
+        const res = await fetch(sheetUrl);
+        if(!res.ok){ alert('CSV okunamadı: '+res.status); return; }
+        const text = await res.text();
+        const rows = text.trim().split('\n').map(r=>r.split(','));
+        headers = rows.shift(); allRows = rows;
+
+        theadEl.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+        tbodyEl.innerHTML = allRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+        tableEl.style.display = ''; loadingEl.style.display = 'none';
+
+        populate(selResp, allRows.map(r=>r[3]));
+        populate(selStat, allRows.map(r=>r[6]));
+        populate(selPrio, allRows.map(r=>r[7]));
+        qHead.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+      }
+
+      function populate(sel, arr) {
+        Array.from(new Set(arr)).sort().forEach(v => {
+          let o = document.createElement('option');
+          o.value = o.textContent = v;
