@@ -11,7 +11,7 @@
     nav button.active { background: #003f7f; }
     .tab { display: none; padding: 1rem; }
     .tab.active { display: block; }
-    iframe { width: 100%; height: 80vh; border: 1px solid #ccc; border-radius: 4px; }
+    iframe { border: 1px solid #ccc; border-radius: 4px; }
     h1 { margin-top: 0; }
     button { padding: .4rem .8rem; margin: .5rem .5rem .5rem 0; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
     #refresh-btn { background: #007acc; }
@@ -32,13 +32,16 @@
     <button id="btn-data">İş-Süreç Takip</button>
     <button id="btn-query">Sorgu</button>
     <button id="btn-edit">Düzenle</button>
+    <button id="btn-charts">Grafikler</button>
   </nav>
 
   <!-- 1: Form Girişi -->
   <div id="tab-entry" class="tab active">
     <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
-      title="Form Girişi"></iframe>
+      title="Form Girişi"
+      width="100%" height="80vh">
+    </iframe>
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
          target="_blank" rel="noopener" style="color:#007acc;">
@@ -47,7 +50,7 @@
     </p>
   </div>
 
-  <!-- 2: Form Sonuçları (Analiz) -->
+  <!-- 2: Form Sonuçları -->
   <div id="tab-results" class="tab">
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
@@ -55,7 +58,6 @@
         ➤ Form Sonuçlarını Yeni Pencerede Aç
       </a>
     </p>
-    <!-- iframe tamamen kaldırıldı -->
   </div>
 
   <!-- 3: İş-Süreç Takip -->
@@ -96,12 +98,44 @@
     )">Google Sheets'te Aç ve Düzenle</button>
   </div>
 
+  <!-- 6: Grafikleri Embed Et -->
+  <div id="tab-charts" class="tab">
+    <h1>Canlı Form Grafikleri</h1>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;">
+      <div>
+        <h3>Tamamlandı mı?</h3>
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
+                width="100%" height="350" frameborder="0"></iframe>
+      </div>
+      <div>
+        <h3>Durum Dağılımı</h3>
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=989307124&format=interactive"
+                width="100%" height="350" frameborder="0"></iframe>
+      </div>
+      <div>
+        <h3>Öncelik Dağılımı</h3>
+        <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
+                width="100%" height="350" frameborder="0"></iframe>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
-      const tabs    = ['entry','results','data','query','edit'];
-      let allRows = [], headers = [];
+      const tabs = ['entry','results','data','query','edit','charts'];
+      tabs.forEach(tab => {
+        document.getElementById('btn-'+tab).onclick = () => {
+          tabs.forEach(t => {
+            document.getElementById('btn-'+t)
+              .classList.toggle('active', t===tab);
+            document.getElementById('tab-'+t)
+              .classList.toggle('active', t===tab);
+          });
+          if (tab==='data') loadData();
+        };
+      });
 
+      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
       const loadingEl  = document.getElementById('loading');
       const tableEl    = document.getElementById('responses-table');
       const theadEl    = document.getElementById('table-head');
@@ -117,53 +151,40 @@
       const resetBtn   = document.getElementById('reset-btn');
       const qHead      = document.getElementById('query-head');
       const qBody      = document.getElementById('query-body');
+      let allRows = [], headers = [];
 
-      // Tab switch
-      tabs.forEach(tab => {
-        document.getElementById('btn-'+tab).onclick = () => {
-          tabs.forEach(t => {
-            document.getElementById('btn-'+t)
-              .classList.toggle('active', t===tab);
-            document.getElementById('tab-'+t)
-              .classList.toggle('active', t===tab);
-          });
-          if (tab==='query' && allRows.length===0) loadData();
-        };
-      });
-
-      // CSV yükle & render et
       async function loadData() {
         tableEl.style.display = 'none';
         loadingEl.style.display = '';
         theadEl.innerHTML = '';
         tbodyEl.innerHTML = '';
-        [selResp,selStat,selPrio].forEach(s=>s.options.length=1);
+        [selResp, selStat, selPrio].forEach(s => s.options.length = 1);
         qBody.innerHTML = '';
-        allRows = [];
+        allRows = []; 
 
         const res = await fetch(sheetUrl);
         if (!res.ok) { alert('CSV okunamadı: '+res.status); return; }
         const text = await res.text();
-        const rows = text.trim().split('\n').map(r=>r.split(','));
+        const rows = text.trim().split('\n').map(r => r.split(','));
         headers = rows.shift();
         allRows = rows;
 
-        theadEl.innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
-        tbodyEl.innerHTML = allRows.map(r=>
-          '<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>'
+        theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+        tbodyEl.innerHTML = allRows.map(r =>
+          '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>'
         ).join('');
 
         tableEl.style.display = '';
         loadingEl.style.display = 'none';
 
-        populate(selResp, allRows.map(r=>r[3]));
-        populate(selStat, allRows.map(r=>r[6]));
-        populate(selPrio, allRows.map(r=>r[7]));
-        qHead.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+        populate(selResp, allRows.map(r => r[3]));
+        populate(selStat, allRows.map(r => r[6]));
+        populate(selPrio, allRows.map(r => r[7]));
+        qHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
       }
 
       function populate(sel, arr) {
-        Array.from(new Set(arr)).sort().forEach(v=>{
+        Array.from(new Set(arr)).sort().forEach(v => {
           const o = document.createElement('option');
           o.value = o.textContent = v;
           sel.appendChild(o);
@@ -172,30 +193,29 @@
 
       function applyFilter() {
         let f = allRows.slice();
-        if (selResp.value) f=f.filter(r=>r[3]===selResp.value);
-        if (selStat.value) f=f.filter(r=>r[6]===selStat.value);
-        if (selPrio.value) f=f.filter(r=>r[7]===selPrio.value);
-        if (dateFrom.value) f=f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
-        if (dateTo.value)   f=f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
-        if (txtFilter.value){ const t=txtFilter.value.toLowerCase();
-          f=f.filter(r=>r.some(c=>c.toLowerCase().includes(t)));
+        if (selResp.value) f = f.filter(r => r[3] === selResp.value);
+        if (selStat.value) f = f.filter(r => r[6] === selStat.value);
+        if (selPrio.value) f = f.filter(r => r[7] === selPrio.value);
+        if (dateFrom.value) f = f.filter(r => new Date(r[4]) >= new Date(dateFrom.value));
+        if (dateTo.value)   f = f.filter(r => new Date(r[4]) <= new Date(dateTo.value));
+        if (txtFilter.value) {
+          const term = txtFilter.value.toLowerCase();
+          f = f.filter(r => r.some(c => c.toLowerCase().includes(term)));
         }
-        qBody.innerHTML = f.map(r=>
-          '<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>'
+        qBody.innerHTML = f.map(r =>
+          '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>'
         ).join('');
       }
 
       function resetFilter() {
-        selResp.value=selStat.value=selPrio.value='';
-        dateFrom.value=dateTo.value=txtFilter.value='';
-        qBody.innerHTML='';
+        selResp.value = selStat.value = selPrio.value = '';
+        dateFrom.value = dateTo.value = txtFilter.value = '';
+        qBody.innerHTML = '';
       }
 
       refreshBtn.onclick = loadData;
       applyBtn.onclick   = applyFilter;
       resetBtn.onclick   = resetFilter;
-
-      loadData();
     });
   </script>
 </body>
