@@ -159,6 +159,22 @@
     </div>
   </div>
 
+
+      /* ===== BUTONLAR IÇIN EKLEME ===== */
+    button {
+      /* eğer dilerseniz tüm butonları biraz koyulaştırın */
+      color: #fff;             /* her daim beyaz yazı */
+    }
+    button:disabled {
+      background: #999 !important;  /* devredışı butonlara koyu gri */
+      color: #fff !important;       /* yine beyaz yazı */
+      opacity: 1;                   /* tam opak */
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+
+  
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Tab butonları
