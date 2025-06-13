@@ -15,167 +15,144 @@
     }
 
     /* YENİ TAKİP SEKMESİ STİLLERİ */
-.table-container {
-  background: white;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  margin: 1rem 0;
-}
+    .table-container {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin: 1rem 0;
+    }
 
-.table-header {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  gap: 1rem;
-}
+    .table-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+    }
 
-.table-controls {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
+    .table-controls {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
 
-.refresh-button {
-  padding: 0.7rem 1.2rem;
-  background: #007acc;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.2s;
-}
+    .refresh-button {
+      padding: 0.7rem 1.2rem;
+      background: #007acc;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
 
-.refresh-button:hover {
-  background: #0062a3;
-  transform: translateY(-1px);
-}
+    .refresh-button:hover {
+      background: #0062a3;
+      transform: translateY(-1px);
+    }
 
-.refresh-icon {
-  font-size: 1.1em;
-}
+    .refresh-icon {
+      font-size: 1.1em;
+    }
 
-.loading-indicator {
-  display: none;
-  align-items: center;
-  gap: 0.7rem;
-  color: #555;
-  font-size: 0.95rem;
-}
+    .loading-indicator {
+      display: none;
+      align-items: center;
+      gap: 0.7rem;
+      color: #555;
+      font-size: 0.95rem;
+    }
 
-.spinner {
-  width: 18px;
-  height: 18px;
-  border: 3px solid rgba(0,0,0,0.1);
-  border-radius: 50%;
-  border-top-color: #007acc;
-  animation: spin 1s linear infinite;
-}
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: #007acc;
+      animation: spin 1s linear infinite;
+    }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
-.record-count {
-  background: #f0f4f8;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  color: #4a5568;
-  margin-left: auto;
-}
+    .record-count {
+      background: #f0f4f8;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      color: #4a5568;
+      margin-left: auto;
+    }
 
-.table-scroll {
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-}
+    .table-scroll {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
 
-#responses-table {
-  width: 100%;
-  min-width: 800px;
-  border-collapse: collapse;
-  font-size: 0.95rem;
-}
+    #responses-table {
+      width: 100%;
+      min-width: 800px;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
 
-#responses-table th {
-  background: #f8fafc;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #4a5568;
-  border-bottom: 2px solid #e2e8f0;
-  position: sticky;
-  top: 0;
-}
+    #responses-table th {
+      background: #f8fafc;
+      padding: 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #4a5568;
+      border-bottom: 2px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+    }
 
-#responses-table td {
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid #edf2f7;
-  color: #2d3748;
-}
+    #responses-table td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid #edf2f7;
+      color: #2d3748;
+    }
 
-#responses-table tr:last-child td {
-  border-bottom: none;
-}
+    #responses-table tr:last-child td {
+      border-bottom: none;
+    }
 
-#responses-table tr:hover {
-  background-color: #f8fafc;
-}
+    #responses-table tr:hover {
+      background-color: #f8fafc;
+    }
 
-/* Durum etiketleri */
-.status-badge {
-  display: inline-block;
-  padding: 0.3rem 0.8rem;
-  border-radius: 12px;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
+    /* Durum etiketleri */
+    .status-badge {
+      display: inline-block;
+      padding: 0.3rem 0.8rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
 
-.status-pending {
-  background: #ffedd5;
-  color: #9a3412;
-}
+    .status-pending {
+      background: #ffedd5;
+      color: #9a3412;
+    }
 
-.status-completed {
-  background: #dcfce7;
-  color: #166534;
-}
+    .status-completed {
+      background: #dcfce7;
+      color: #166534;
+    }
 
-.status-inprogress {
-  background: #dbeafe;
-  color: #1e40af;
-}
+    .status-inprogress {
+      background: #dbeafe;
+      color: #1e40af;
+    }
 
-/* Mobil uyumluluk */
-@media (max-width: 768px) {
-  .table-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .table-controls {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-  
-  .record-count {
-    margin-left: 0;
-    width: 100%;
-    text-align: center;
-  }
-  
-  #responses-table th,
-  #responses-table td {
-    padding: 0.7rem;
-  }
-}
     /* --- Navigasyon --- */
     nav { 
       display: flex; 
@@ -368,7 +345,100 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
-    /* --- Mobil Uyumluluk --- */
+    /* Sorgu Sekmesi Stilleri */
+    .query-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .filter-card {
+      background: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .filter-header h3 {
+      margin: 0;
+      color: #2d3748;
+    }
+
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .filter-group {
+      margin-bottom: 0.5rem;
+    }
+
+    .filter-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #4a5568;
+    }
+
+    .filter-select, .filter-input {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+
+    /* Filtre buton stilleri */
+    .filter-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+      justify-content: flex-end;
+    }
+
+    .filter-btn {
+      padding: 0.7rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .filter-btn.primary {
+      background: #4299e1;
+      color: white;
+    }
+
+    .filter-btn.danger {
+      background: #f56565;
+      color: white;
+    }
+
+    .filter-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    .results-info {
+      margin: 1rem 0;
+      padding: 0.5rem 1rem;
+      background: #f8fafc;
+      border-radius: 6px;
+      color: #4a5568;
+    }
+
+    /* Mobil Uyumluluk */
     @media (max-width: 768px) {
       nav button {
         flex: 1 1 33%;
@@ -386,141 +456,24 @@
       .filters label {
         grid-column: span 2;
       }
+      .filter-grid {
+        grid-template-columns: 1fr;
+      }
+      .filter-card {
+        padding: 1rem;
+      }
+      #query-table th, 
+      #query-table td {
+        padding: 0.7rem;
+      }
+      .filter-actions {
+        justify-content: center;
+      }
+      .filter-btn {
+        width: 48%;
+        padding: 0.8rem;
+      }
     }
-    /* Sorgu Sekmesi Stilleri */
-.query-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
-
-.filter-card {
-  background: white;
-  border-radius: 10px;
-  padding: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  margin-bottom: 1.5rem;
-}
-
-.filter-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.filter-header h3 {
-  margin: 0;
-  color: #2d3748;
-}
-
-.filter-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.filter-group {
-  margin-bottom: 0.5rem;
-}
-
-.filter-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #4a5568;
-}
-
-.filter-select, .filter-input {
-  width: 100%;
-  padding: 0.7rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-
-.filter-btn {
-  padding: 0.7rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.filter-btn.primary {
-  background: #4299e1;
-  color: white;
-}
-
-.filter-btn.danger {
-  background: #f56565;
-  color: white;
-}
-
-.filter-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.results-info {
-  margin: 1rem 0;
-  padding: 0.5rem 1rem;
-  background: #f8fafc;
-  border-radius: 6px;
-  color: #4a5568;
-}
-
-.table-scroll {
-  overflow-x: auto;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: white;
-}
-
-#query-table {
-  width: 100%;
-  min-width: 800px;
-  border-collapse: collapse;
-}
-
-#query-table th {
-  background: #f8fafc;
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  color: #4a5568;
-  border-bottom: 2px solid #e2e8f0;
-  position: sticky;
-  top: 0;
-}
-
-#query-table td {
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid #edf2f7;
-  color: #2d3748;
-}
-
-#query-table tr:hover {
-  background-color: #f8fafc;
-}
-
-/* Mobil Uyumluluk */
-@media (max-width: 768px) {
-  .filter-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .filter-card {
-    padding: 1rem;
-  }
-  
-  #query-table th, 
-  #query-table td {
-    padding: 0.7rem;
-  }
-}
   </style>
 </head>
 <body>
@@ -571,144 +524,96 @@
     </div>
   </div>
 
-    <!-- 3. Ana Tablo (YENİ) -->
-<div id="tab-data" class="tab">
-  <div class="table-container">
-    <div class="table-header">
-      <h1>İş-Süreç Takip</h1>
-      <div class="table-controls">
-        <button id="refresh-btn" class="refresh-button">
-          <span class="refresh-icon">🔄</span> Yenile
-        </button>
-        <div id="loading" class="loading-indicator">
-          <div class="spinner"></div>
-          <span>Veriler yükleniyor...</span>
+  <!-- 3. Ana Tablo -->
+  <div id="tab-data" class="tab">
+    <div class="table-container">
+      <div class="table-header">
+        <h1>İş-Süreç Takip</h1>
+        <div class="table-controls">
+          <button id="refresh-btn" class="refresh-button">
+            <span class="refresh-icon">🔄</span> Yenile
+          </button>
+          <div id="loading" class="loading-indicator">
+            <div class="spinner"></div>
+            <span>Veriler yükleniyor...</span>
+          </div>
+          <div class="record-count" id="record-count"></div>
         </div>
-        <div class="record-count" id="record-count"></div>
+      </div>
+      
+      <div class="table-scroll">
+        <table id="responses-table">
+          <thead id="table-head"></thead>
+          <tbody id="table-body"></tbody>
+        </table>
       </div>
     </div>
-    
-    <div class="table-scroll">
-      <table id="responses-table">
-        <thead id="table-head"></thead>
-        <tbody id="table-body"></tbody>
-      </table>
-    </div>
   </div>
-</div>
 
   <!-- 4. Sorgu -->
-<div id="tab-query" class="tab">
-  <div class="query-container">
-    <h1>İş Takip Sorgu</h1>
-    
-    <div class="filter-card">
-      <div class="filter-header">
-        <h3>Filtreleme Seçenekleri</h3>
-       
+  <div id="tab-query" class="tab">
+    <div class="query-container">
+      <h1>İş Takip Sorgu</h1>
+      
+      <div class="filter-card">
+        <div class="filter-header">
+          <h3>Filtreleme Seçenekleri</h3>
+        </div>
+        
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>Sorumlu</label>
+            <select id="filter-responsible" class="filter-select">
+              <option value="">Tümü</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label>Durum</label>
+            <select id="filter-status" class="filter-select">
+              <option value="">Tümü</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label>Öncelik</label>
+            <select id="filter-priority" class="filter-select">
+              <option value="">Tümü</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label>Başlangıç Tarihi (Min)</label>
+            <input type="date" id="filter-start-from" class="filter-input">
+          </div>
+          
+          <div class="filter-group">
+            <label>Başlangıç Tarihi (Max)</label>
+            <input type="date" id="filter-start-to" class="filter-input">
+          </div>
+          
+          <div class="filter-group">
+            <label>Anahtar Kelime</label>
+            <input type="text" id="filter-text" placeholder="Arama yapın..." class="filter-input">
+          </div>
+        </div>
+        
+        <div class="filter-actions">
+          <button id="apply-btn" class="filter-btn primary">Filtrele</button>
+          <button id="reset-btn" class="filter-btn danger">Temizle</button>
+        </div>
       </div>
       
-      <div class="filter-grid">
-        <div class="filter-group">
-          <label>Sorumlu</label>
-          <select id="filter-responsible" class="filter-select">
-            <option value="">Tümü</option>
-          </select>
-        </div>
-        
-        <div class="filter-group">
-          <label>Durum</label>
-          <select id="filter-status" class="filter-select">
-            <option value="">Tümü</option>
-          </select>
-        </div>
-        
-        <div class="filter-group">
-          <label>Öncelik</label>
-          <select id="filter-priority" class="filter-select">
-            <option value="">Tümü</option>
-          </select>
-        </div>
-        
-        <div class="filter-group">
-          <label>Başlangıç Tarihi (Min)</label>
-          <input type="date" id="filter-start-from" class="filter-input">
-        </div>
-        
-        <div class="filter-group">
-          <label>Başlangıç Tarihi (Max)</label>
-          <input type="date" id="filter-start-to" class="filter-input">
-        </div>
-        
-        <div class="filter-group full-width">
-          <label>Anahtar Kelime</label>
-          <input type="text" id="filter-text" placeholder="Arama yapın..." class="filter-input">
-        </div>
-      </div>
+      <div class="results-info" id="results-info"></div>
       
-<!-- YENİ BUTON GRUBU -->
-  <div class="filter-actions">
-    <button id="apply-btn" class="filter-btn primary">Filtrele</button>
-    <button id="reset-btn" class="filter-btn danger">Temizle</button>
-  </div>
-</div>
-
-
-      /* YENİ BUTON STİLLERİ */
-.filter-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  justify-content: flex-end;
-}
-
-.filter-btn {
-  padding: 0.7rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.filter-btn.primary {
-  background: #4299e1;
-  color: white;
-}
-
-.filter-btn.danger {
-  background: #f56565;
-  color: white;
-}
-
-.filter-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-/* MOBİL UYUMLULUK */
-@media (max-width: 768px) {
-  .filter-actions {
-    justify-content: center;
-  }
-  .filter-btn {
-    width: 48%;
-    padding: 0.8rem;
-  }
-}
-    
-
-    
-    <div class="results-info" id="results-info"></div>
-    
-    <div class="table-scroll">
-      <table id="query-table">
-        <thead id="query-head"></thead>
-        <tbody id="query-body"></tbody>
-      </table>
+      <div class="table-scroll">
+        <table id="query-table">
+          <thead id="query-head"></thead>
+          <tbody id="query-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
-</div>
   
   <!-- 5: Düzenle -->
   <div id="tab-edit" class="tab">
@@ -789,62 +694,62 @@
       let allRows = [], headers = [];
 
       // CSV'den veri oku, tabloya doldur
-     async function loadData(){
-  console.clear();
-  loadingEl.style.display = 'flex';
-  theadEl.innerHTML = '';
-  tbodyEl.innerHTML = '';
-  document.getElementById('record-count').textContent = '';
-  [selResp, selStat, selPrio].forEach(s=> s.innerHTML = '<option value="">Tümü</option>');
-  qBody.innerHTML = '';
-  allRows = [];
+      async function loadData(){
+        console.clear();
+        loadingEl.style.display = 'flex';
+        theadEl.innerHTML = '';
+        tbodyEl.innerHTML = '';
+        document.getElementById('record-count').textContent = '';
+        [selResp, selStat, selPrio].forEach(s=> s.innerHTML = '<option value="">Tümü</option>');
+        qBody.innerHTML = '';
+        allRows = [];
 
-  try {
-    const res = await fetch(sheetUrl);
-    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-    
-    const text = await res.text();
-    const rows = text.trim().split('\n').map(r => r.split(','));
-    headers = rows.shift();
-    allRows = rows;
+        try {
+          const res = await fetch(sheetUrl);
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          
+          const text = await res.text();
+          const rows = text.trim().split('\n').map(r => r.split(','));
+          headers = rows.shift();
+          allRows = rows;
 
-    // Tablo başlıkları
-    theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-    
-    // Tablo gövdesi (durum renklendirmesi ile)
-    tbodyEl.innerHTML = allRows.map(row => {
-      const statusClass = getStatusClass(row[6]);
-      return `
-        <tr>
-          ${row.map((cell, i) => 
-            i === 6 ? `<td><span class="status-badge ${statusClass}">${cell}</span></td>` 
-                    : `<td>${cell}</td>`
-          ).join('')}
-        </tr>
-      `;
-    }).join('');
+          // Tablo başlıkları
+          theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+          
+          // Tablo gövdesi (durum renklendirmesi ile)
+          tbodyEl.innerHTML = allRows.map(row => {
+            const statusClass = getStatusClass(row[6]);
+            return `
+              <tr>
+                ${row.map((cell, i) => 
+                  i === 6 ? `<td><span class="status-badge ${statusClass}">${cell}</span></td>` 
+                          : `<td>${cell}</td>`
+                ).join('')}
+              </tr>
+            `;
+          }).join('');
 
-    document.getElementById('record-count').textContent = `${allRows.length} kayıt`;
-    populate(selResp, 3);
-    populate(selStat, 6);
-    populate(selPrio, 7);
-    qHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+          document.getElementById('record-count').textContent = `${allRows.length} kayıt`;
+          populate(selResp, 3);
+          populate(selStat, 6);
+          populate(selPrio, 7);
+          qHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('');
 
-  } catch (error) {
-    console.error('Hata:', error);
-    document.getElementById('record-count').textContent = `Hata: ${error.message}`;
-    document.getElementById('record-count').style.color = '#e53e3e';
-  } finally {
-    loadingEl.style.display = 'none';
-  }
-}
+        } catch (error) {
+          console.error('Hata:', error);
+          document.getElementById('record-count').textContent = `Hata: ${error.message}`;
+          document.getElementById('record-count').style.color = '#e53e3e';
+        } finally {
+          loadingEl.style.display = 'none';
+        }
+      }
 
-function getStatusClass(statusText) {
-  const status = (statusText || '').toLowerCase();
-  if (status.includes('tamam')) return 'status-completed';
-  if (status.includes('devam')) return 'status-inprogress';
-  return 'status-pending';
-}
+      function getStatusClass(statusText) {
+        const status = (statusText || '').toLowerCase();
+        if (status.includes('tamam')) return 'status-completed';
+        if (status.includes('devam')) return 'status-inprogress';
+        return 'status-pending';
+      }
 
       function populate(sel, idx){
         Array.from(new Set(allRows.map(r=>r[idx]))).sort()
@@ -856,82 +761,48 @@ function getStatusClass(statusText) {
       }
 
       function applyFilter() {
-  let f = allRows.slice();
-  
-  if (selResp.value) f = f.filter(r => r[3] === selResp.value);
-  if (selStat.value) f = f.filter(r => r[6] === selStat.value);
-  if (selPrio.value) f = f.filter(r => r[7] === selPrio.value);
-  
-  if (dateFrom.value) {
-    f = f.filter(r => {
-      const rowDate = new Date(r[4]);
-      const filterDate = new Date(dateFrom.value);
-      return rowDate >= filterDate;
-    });
-  }
-  
-  if (dateTo.value) {
-    f = f.filter(r => {
-      const rowDate = new Date(r[4]);
-      const filterDate = new Date(dateTo.value);
-      return rowDate <= filterDate;
-    });
-  }
-  
-  if (txtFilter.value) {
-    const t = txtFilter.value.toLowerCase();
-    f = f.filter(r => r.some(c => c && c.toLowerCase().includes(t)));
-  }
-  
-  // Sonuç bilgisini güncelle
-  document.getElementById('results-info').textContent = 
-    `${f.length} sonuç bulundu (Toplam ${allRows.length} kayıt)`;
-  
-  // Tabloyu güncelle
-  qBody.innerHTML = f.map(r =>
-    '<tr>' + r.map(c => `<td>${c || ''}</td>`).join('') + '</tr>'
-  ).join('');
-}
-function groupValues(values) {
-  // Durum için özel gruplama
-  if (values.some(v => v && (v.includes('Tamamlandı') || v.includes('Tamam')))) {
-    return [
-      { 
-        category: 'Tamamlananlar', 
-        values: values.filter(v => v && (v.includes('Tamamlandı') || v.includes('Tamam'))) 
-      },
-      { 
-        category: 'Devam Edenler', 
-        values: values.filter(v => v && (v.includes('Devam') || v.includes('İşlemde'))) 
-      },
-      { 
-        category: 'Diğer', 
-        values: values.filter(v => v && !v.includes('Tamamlandı') && !v.includes('Tamam') && 
-                                 !v.includes('Devam') && !v.includes('İşlemde')) 
+        let f = allRows.slice();
+        
+        if (selResp.value) f = f.filter(r => r[3] === selResp.value);
+        if (selStat.value) f = f.filter(r => r[6] === selStat.value);
+        if (selPrio.value) f = f.filter(r => r[7] === selPrio.value);
+        
+        if (dateFrom.value) {
+          f = f.filter(r => {
+            const rowDate = new Date(r[4]);
+            const filterDate = new Date(dateFrom.value);
+            return rowDate >= filterDate;
+          });
+        }
+        
+        if (dateTo.value) {
+          f = f.filter(r => {
+            const rowDate = new Date(r[4]);
+            const filterDate = new Date(dateTo.value);
+            return rowDate <= filterDate;
+          });
+        }
+        
+        if (txtFilter.value) {
+          const t = txtFilter.value.toLowerCase();
+          f = f.filter(r => r.some(c => c && c.toLowerCase().includes(t)));
+        }
+        
+        // Sonuç bilgisini güncelle
+        document.getElementById('results-info').textContent = 
+          `${f.length} sonuç bulundu (Toplam ${allRows.length} kayıt)`;
+        
+        // Tabloyu güncelle
+        qBody.innerHTML = f.map(r =>
+          '<tr>' + r.map(c => `<td>${c || ''}</td>`).join('') + '</tr>'
+        ).join('');
       }
-    ];
-  }
-  
-  // Öncelik için gruplama
-  if (values.some(v => v && (v.includes('Yüksek') || v.includes('Düşük')))) {
-    return [
-      { 
-        category: 'Öncelik Seviyeleri', 
-        values: values.sort((a,b) => {
-          const priorityOrder = ['Çok Yüksek', 'Yüksek', 'Orta', 'Düşük'];
-          return priorityOrder.indexOf(a) - priorityOrder.indexOf(b);
-        })
-      }
-    ];
-  }
-  
-  // Diğer alanlar için normal gruplama
-  return [{ category: 'Tüm Seçenekler', values: values.sort() }];
-}
+
       function resetFilter(){
         selResp.value=selStat.value=selPrio.value='';
         dateFrom.value=dateTo.value=txtFilter.value='';
         qBody.innerHTML='';
+        document.getElementById('results-info').textContent = '';
       }
 
       refreshBtn.onclick = loadData;
