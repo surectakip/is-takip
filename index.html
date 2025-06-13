@@ -55,9 +55,12 @@
     <button id="btn-charts">Grafikler</button>
   </nav>
 
+  <!-- 1: Form Girişi -->
   <div id="tab-entry" class="tab active">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
-            width="100%" height="100%"></iframe>
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
+      width="100%" height="100%">
+    </iframe>
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
          target="_blank" rel="noopener" style="color:#007acc;">
@@ -66,6 +69,7 @@
     </p>
   </div>
 
+  <!-- 2: Form Sonuçları -->
   <div id="tab-results" class="tab">
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
@@ -75,6 +79,7 @@
     </p>
   </div>
 
+  <!-- 3: İş-Süreç Takip -->
   <div id="tab-data" class="tab">
     <h1>İş-Süreç Takip</h1>
     <button id="refresh-btn">Yenile</button>
@@ -87,6 +92,7 @@
     </div>
   </div>
 
+  <!-- 4: Sorgu -->
   <div id="tab-query" class="tab">
     <h1>Ana Tablo Sorgu</h1>
     <div class="filters">
@@ -107,6 +113,7 @@
     </div>
   </div>
 
+  <!-- 5: Düzenle -->
   <div id="tab-edit" class="tab">
     <h1>Tabloyu Düzenle</h1>
     <button onclick="window.open(
@@ -115,6 +122,7 @@
     )">Google Sheets'te Aç</button>
   </div>
 
+  <!-- 6: Grafikleri Embed Et -->
   <div id="tab-charts" class="tab">
     <h1>Canlı Grafikler</h1>
     <div class="charts-grid">
@@ -193,3 +201,34 @@
         Array.from(new Set(arr)).sort().forEach(v => {
           let o = document.createElement('option');
           o.value = o.textContent = v;
+          sel.appendChild(o);
+        });
+      }
+
+      function applyFilter() {
+        let f = allRows.slice();
+        if (selResp.value) f = f.filter(r => r[3] === selResp.value);
+        if (selStat.value) f = f.filter(r => r[6] === selStat.value);
+        if (selPrio.value) f = f.filter(r => r[7] === selPrio.value);
+        if (dateFrom.value) f = f.filter(r => new Date(r[4]) >= new Date(dateFrom.value));
+        if (dateTo.value)   f = f.filter(r => new Date(r[4]) <= new Date(dateTo.value));
+        if (txtFilter.value) {
+          const term = txtFilter.value.toLowerCase();
+          f = f.filter(r => r.some(c => c.toLowerCase().includes(term)));
+        }
+        qBody.innerHTML = f.map(r => '<tr>' + r.map(c => `<td>${c}</td>`).join('') + '</tr>').join('');
+      }
+
+      function resetFilter() {
+        selResp.value = selStat.value = selPrio.value = '';
+        dateFrom.value = dateTo.value = txtFilter.value = '';
+        qBody.innerHTML = '';
+      }
+
+      refreshBtn.onclick = loadData;
+      applyBtn.onclick   = applyFilter;
+      resetBtn.onclick   = resetFilter;
+    });
+  </script>
+</body>
+</html>
