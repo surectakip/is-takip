@@ -5,258 +5,98 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>İş - Süreç Takip</title>
   <style>
-    /* --- GENEL STİLLER (Değişmedi) --- */
+    /* --- ORİJİNAL STİLLER (Değişmedi) --- */
     * { box-sizing: border-box; }
-    body { 
-      margin: 0; 
-      font-family: Arial, sans-serif; 
-      background: #f5f5f5; 
-      line-height: 1.6;
-    }
-    nav { 
-      display: flex; 
-      flex-wrap: wrap; 
-      background: #007acc; 
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
+    body { margin: 0; font-family: Arial, sans-serif; background: #fafafa; }
+    nav { display: flex; flex-wrap: wrap; background: #007acc; }
     nav button {
       flex: 1 1 auto;
-      padding: 1rem;
+      padding: .75rem;
       border: none;
       background: #005fa3;
       color: #fff;
       cursor: pointer;
       font-weight: bold;
       min-width: 100px;
-      transition: all 0.3s ease;
     }
-    nav button:hover { background: #004a8c; }
-    nav button.active { 
-      background: #003f7f; 
-      box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
-    }
-    .tab { 
-      display: none; 
-      padding: 1.5rem; 
-      animation: fadeIn 0.5s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
+    nav button.active { background: #003f7f; }
+    .tab { display: none; padding: 1rem; }
     .tab.active { display: block; }
     iframe {
       width: 100%;
       border: none;
-      border-radius: 8px;
+      border-radius: 4px;
       min-height: 80vh;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      background: white;
     }
-    .link-bottom { 
-      text-align: right; 
-      margin: 1rem 0; 
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
+    th { background: #f0f0f0; }
+    button { padding: .4rem .8rem; margin: .5rem .5rem .5rem 0; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
+    #refresh-btn { background: #007acc; }
+    #loading { color: #555; margin-top: .5rem; }
+    .charts-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .chart-box {
+      flex: 1 1 300px;
+      background: #fff;
+      padding: .5rem;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .chart-box h3 { margin-top: 0; }
+    .link-bottom { text-align: right; margin: .5rem 0; }
+    .btn-edit {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background: #28a745;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-top: 0.5rem;
+    }
+    .btn-edit:hover {
+      background: #218838;
     }
 
-    /* ################## YENİ TAKİP SEKMESİ STİLLERİ ################## */
+    /* --- YENİ TAKİP SEKMESİ STİLLERİ --- */
     .table-container {
       background: white;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-      padding: 1.5rem;
-      margin-top: 1rem;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
-    
     .table-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1rem;
     }
-    
-    .table-title {
-      font-size: 1.5rem;
-      color: #2d3748;
-      margin: 0;
-    }
-    
-    .table-controls {
-      display: flex;
-      gap: 0.75rem;
-      align-items: center;
-    }
-    
-    .table-btn {
-      padding: 0.65rem 1.25rem;
-      background: #4299e1;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .table-btn:hover {
-      background: #3182ce;
-      transform: translateY(-1px);
-    }
-    
-    .table-btn.secondary {
-      background: #e2e8f0;
-      color: #4a5568;
-    }
-    
-    .table-btn.secondary:hover {
-      background: #cbd5e0;
-    }
-    
-    .loading-indicator {
-      display: none;
-      align-items: center;
-      gap: 0.75rem;
-      color: #4a5568;
-      font-size: 0.95rem;
-    }
-    
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 3px solid rgba(0, 0, 0, 0.1);
-      border-radius: 50%;
-      border-top-color: #4299e1;
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    .table-info {
-      font-size: 0.9rem;
-      color: #718096;
-      background: #f7fafc;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      margin-left: auto;
-    }
-    
     .table-wrapper {
       overflow-x: auto;
-      border-radius: 8px;
-      border: 1px solid #edf2f7;
-      background: white;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
-    
     #responses-table {
-      width: 100%;
-      min-width: 800px;
-      border-collapse: collapse;
-      font-size: 0.95rem;
+      min-width: 600px;
     }
-    
-    #responses-table thead {
-      background-color: #f8fafc;
-      position: sticky;
-      top: 0;
-    }
-    
-    #responses-table th {
-      padding: 1rem;
-      text-align: left;
-      font-weight: 600;
-      color: #4a5568;
-      border-bottom: 2px solid #e2e8f0;
-      white-space: nowrap;
-    }
-    
-    #responses-table td {
-      padding: 0.85rem 1rem;
-      border-bottom: 1px solid #edf2f7;
-      vertical-align: middle;
-      color: #2d3748;
-    }
-    
-    #responses-table tr:last-child td {
-      border-bottom: none;
-    }
-    
     #responses-table tr:hover {
-      background-color: #f8fafc;
+      background-color: #f5f5f5;
     }
-    
-    /* Durum Etiketleri */
     .status {
-      display: inline-block;
-      padding: 0.35rem 0.75rem;
-      border-radius: 9999px;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
       font-size: 0.85rem;
-      font-weight: 500;
+      display: inline-block;
     }
-    
-    .status-pending {
-      background-color: #fffaf0;
-      color: #c05621;
-    }
-    
-    .status-completed {
-      background-color: #f0fff4;
-      color: #2f855a;
-    }
-    
-    .status-inprogress {
-      background-color: #ebf8ff;
-      color: #2b6cb0;
-    }
-    
-    /* ################## MOBİL UYUMLULUK ################## */
-    @media (max-width: 768px) {
-      .table-container {
-        padding: 1rem;
-      }
-      
-      .table-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-      
-      .table-controls {
-        width: 100%;
-        flex-wrap: wrap;
-      }
-      
-      .table-info {
-        margin-left: 0;
-        width: 100%;
-        text-align: center;
-      }
-      
-      #responses-table th,
-      #responses-table td {
-        padding: 0.75rem;
-      }
-      
-      .table-btn {
-        flex: 1 1 45%;
-        justify-content: center;
-      }
-    }
-
-    /* --- DİĞER SEKMELERİN STİLLERİ (Aynı Kaldı) --- */
-    /* ... (Diğer stiller aynen korundu) ... */
+    .status-pending { background: #ffedd5; color: #9a3412; }
+    .status-completed { background: #dcfce7; color: #166534; }
+    .status-inprogress { background: #dbeafe; color: #1e40af; }
   </style>
 </head>
 <body>
-  <!-- NAVIGASYON (Aynı Kaldı) -->
+  <!-- NAVİGASYON (ORİJİNAL) -->
   <nav>
     <button id="btn-entry" class="active">Giriş</button>
     <button id="btn-results">Sonuçlar</button>
@@ -266,7 +106,7 @@
     <button id="btn-charts">Grafikler</button>
   </nav>
 
-  <!-- 1. GİRİŞ SEKMESİ (Aynı Kaldı) -->
+  <!-- 1. GİRİŞ SEKMESİ (ORİJİNAL) -->
   <div id="tab-entry" class="tab active">
     <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
@@ -279,37 +119,28 @@
     </p>
   </div>
 
-  <!-- 2. SONUÇLAR SEKMESİ (Aynı Kaldı) -->
+  <!-- 2. SONUÇLAR SEKMESİ (ORİJİNAL) -->
   <div id="tab-results" class="tab">
-    <div class="analiz-container">
-      <h2>Form Analiz Sonuçları</h2>
-      <p>Google Forms analiz sayfası tarayıcınızda yeni bir sekmede açılacaktır.</p>
+    <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
-         target="_blank" rel="noopener" class="analiz-btn">
-        Analiz Sayfasını Aç
+         target="_blank" rel="noopener" style="color:#007acc;font-weight:bold;">
+        ➤ Analiz Grafikleri Yeni Pencerede Aç
       </a>
-    </div>
+    </p>
   </div>
 
   <!-- 3. TAKİP SEKMESİ (YENİLENDİ) -->
   <div id="tab-data" class="tab">
     <div class="table-container">
       <div class="table-header">
-        <h1 class="table-title">İş Takip Tablosu</h1>
-        <div class="table-controls">
-          <button id="refresh-btn" class="table-btn">
-            <span>Yenile</span> 🔄
-          </button>
-          <div id="loading" class="loading-indicator">
-            <div class="spinner"></div>
-            <span>Yükleniyor...</span>
-          </div>
-          <div class="table-info" id="table-info"></div>
+        <h1>İş-Süreç Takip</h1>
+        <div>
+          <button id="refresh-btn">Yenile 🔄</button>
+          <span id="loading" style="display:none">Veriler yükleniyor…</span>
         </div>
       </div>
-      
       <div class="table-wrapper">
-        <table id="responses-table">
+        <table id="responses-table" style="display:none">
           <thead id="table-head"></thead>
           <tbody id="table-body"></tbody>
         </table>
@@ -317,22 +148,22 @@
     </div>
   </div>
 
-  <!-- 4-6. DİĞER SEKMELER (Aynı Kaldı) -->
+  <!-- 4-6. DİĞER SEKMELER (ORİJİNAL) -->
   <div id="tab-query" class="tab">
-    <!-- ... (Sorgu sekmesi içeriği aynı) ... -->
+    <!-- ... (Orijinal sorgu sekmesi içeriği) ... -->
   </div>
 
   <div id="tab-edit" class="tab">
-    <!-- ... (Düzenle sekmesi içeriği aynı) ... -->
+    <!-- ... (Orijinal düzenle sekmesi içeriği) ... -->
   </div>
 
   <div id="tab-charts" class="tab">
-    <!-- ... (Grafikler sekmesi içeriği aynı) ... -->
+    <!-- ... (Orijinal grafikler sekmesi içeriği) ... -->
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-      // Tab butonları (Aynı Kaldı)
+      // Tab butonları (ORİJİNAL)
       const tabs = ['entry','results','data','query','edit','charts'];
       tabs.forEach(t => {
         document.getElementById('btn-'+t).onclick = () => {
@@ -346,18 +177,17 @@
         };
       });
 
-      // CSV URL (Aynı Kaldı)
+      // CSV URL (ORİJİNAL)
       const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
 
-      // DOM element referansları (Güncellendi)
+      // DOM element referansları
       const loadingEl  = document.getElementById('loading');
       const tableEl    = document.getElementById('responses-table');
       const theadEl    = document.getElementById('table-head');
       const tbodyEl    = document.getElementById('table-body');
       const refreshBtn = document.getElementById('refresh-btn');
-      const tableInfo  = document.getElementById('table-info');
       
-      // Diğer değişkenler (Aynı Kaldı)
+      // Diğer değişkenler (ORİJİNAL)
       const selResp    = document.getElementById('filter-responsible');
       const selStat    = document.getElementById('filter-status');
       const selPrio    = document.getElementById('filter-priority');
@@ -371,15 +201,12 @@
 
       let allRows = [], headers = [];
 
-      // CSV'den veri oku, tabloya doldur (Güncellendi)
+      // CSV'den veri oku, tabloya doldur (GÜNCELLENDİ)
       async function loadData(){
-        console.clear();
-        console.log('▶ Veriler yükleniyor...');
-
-        loadingEl.style.display = 'flex';
+        console.log('Veriler yükleniyor...');
+        loadingEl.style.display = '';
         theadEl.innerHTML = '';
         tbodyEl.innerHTML = '';
-        tableInfo.textContent = '';
         [selResp, selStat, selPrio].forEach(s=> s.innerHTML = '<option value="">Tümü</option>');
         qBody.innerHTML = '';
         allRows = [];
@@ -409,9 +236,7 @@
             `;
           }).join('');
 
-          // Tablo bilgisi
-          tableInfo.textContent = `${allRows.length} kayıt`;
-          tableEl.style.display = '';
+          tableEl.style.display = 'table';
 
           // Dropdown'ları doldur
           populate(selResp, 3);
@@ -420,9 +245,8 @@
           qHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
         } catch (error) {
-          console.error('❌ Hata:', error);
-          tableInfo.textContent = `Hata: ${error.message}`;
-          tableInfo.style.color = '#e53e3e';
+          console.error('Hata:', error);
+          loadingEl.textContent = `Hata: ${error.message}`;
         } finally {
           loadingEl.style.display = 'none';
         }
@@ -430,13 +254,13 @@
 
       // Durum sınıfını belirleme
       function getStatusClass(statusText) {
-        const status = statusText.toLowerCase();
+        const status = (statusText || '').toLowerCase();
         if (status.includes('tamam')) return 'status-completed';
         if (status.includes('devam')) return 'status-inprogress';
         return 'status-pending';
       }
 
-      // Diğer fonksiyonlar (Aynı Kaldı)
+      // Diğer fonksiyonlar (ORİJİNAL)
       function populate(sel, idx) {
         Array.from(new Set(allRows.map(r => r[idx]))).sort()
              .forEach(v => {
@@ -468,7 +292,7 @@
         qBody.innerHTML = '';
       }
 
-      // Event listener'lar (Aynı Kaldı)
+      // Event listener'lar (ORİJİNAL)
       refreshBtn.onclick = loadData;
       applyBtn.onclick = applyFilter;
       resetBtn.onclick = resetFilter;
