@@ -7,73 +7,229 @@
   <style>
     /* --- Genel Reset & Mobil Uyumlu --- */
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: Arial, sans-serif; background: #fafafa; }
-    nav { display: flex; flex-wrap: wrap; background: #007acc; }
+    body { 
+      margin: 0; 
+      font-family: Arial, sans-serif; 
+      background: #f5f5f5; 
+      line-height: 1.6;
+    }
+    
+    /* --- Navigasyon --- */
+    nav { 
+      display: flex; 
+      flex-wrap: wrap; 
+      background: #007acc; 
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
     nav button {
       flex: 1 1 auto;
-      padding: .75rem;
+      padding: 1rem;
       border: none;
       background: #005fa3;
       color: #fff;
       cursor: pointer;
       font-weight: bold;
       min-width: 100px;
+      transition: all 0.3s ease;
     }
-    nav button.active { background: #003f7f; }
+    nav button:hover { background: #004a8c; }
+    nav button.active { 
+      background: #003f7f; 
+      box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
+    }
 
     /* --- Sekme İçerikleri --- */
-    .tab { display: none; padding: 1rem; }
+    .tab { 
+      display: none; 
+      padding: 1.5rem; 
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
     .tab.active { display: block; }
 
-    /* --- Iframe bütün alana otursun --- */
+    /* --- Iframe Stilleri --- */
     iframe {
       width: 100%;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       min-height: 80vh;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      background: white;
     }
 
-    /* --- Tablo stili --- */
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
-    th { background: #f0f0f0; }
+    /* --- Tablo Stilleri --- */
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      margin-top: 1rem;
+      background: white;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    th, td { 
+      border: 1px solid #ddd; 
+      padding: 0.75rem; 
+      text-align: left; 
+    }
+    th { 
+      background: #f0f0f0; 
+      position: sticky;
+      top: 0;
+    }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #f1f1f1; }
 
-    /* --- Butonlar, yükleniyor metni --- */
-    button { padding: .4rem .8rem; margin: .5rem .5rem .5rem 0; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
+    /* --- Butonlar --- */
+    button { 
+      padding: 0.6rem 1.2rem; 
+      margin: 0.5rem 0.5rem 0.5rem 0; 
+      border: none; 
+      border-radius: 4px; 
+      color: #fff; 
+      cursor: pointer; 
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
     #refresh-btn { background: #007acc; }
-    #loading { color: #555; margin-top: .5rem; }
+    #refresh-btn:hover { background: #005fa3; }
+    #loading { color: #555; margin-top: 0.5rem; }
 
-    /* --- Grafikler flex --- */
+    /* --- Filtre Alanı --- */
+    .filters {
+      background: white;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .filters label {
+      margin-right: 0.5rem;
+      font-weight: bold;
+    }
+    .filters select, 
+    .filters input {
+      padding: 0.5rem;
+      margin-right: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    #apply-btn { background: #28a745; }
+    #apply-btn:hover { background: #218838; }
+    #reset-btn { background: #dc3545; }
+    #reset-btn:hover { background: #c82333; }
+
+    /* --- Grafikler --- */
     .charts-container {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 1.5rem;
+      justify-content: center;
     }
     .chart-box {
-      flex: 1 1 300px;
+      flex: 1 1 350px;
       background: #fff;
-      padding: .5rem;
-      border-radius: 4px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
     }
-    .chart-box h3 { margin-top: 0; }
+    .chart-box:hover {
+      transform: translateY(-5px);
+    }
+    .chart-box h3 { 
+      margin-top: 0; 
+      color: #333;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
 
-    /* --- Link alt --- */
-    .link-bottom { text-align: right; margin: .5rem 0; }
+    /* --- Linkler --- */
+    .link-bottom { 
+      text-align: right; 
+      margin: 1rem 0; 
+    }
     .btn-edit {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  background: #28a745;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 4px;
-  font-weight: bold;
-  margin-top: 0.5rem;
-}
-.btn-edit:hover {
-  background: #218838;
-}
-</style>
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: #28a745;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-weight: bold;
+      margin: 1rem 0;
+      transition: all 0.3s ease;
+    }
+    .btn-edit:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+
+    /* --- Analiz Sekmesi Özel Stil --- */
+    .analiz-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .analiz-container h2 {
+      color: #007acc;
+      margin-bottom: 1.5rem;
+    }
+    .analiz-btn {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: #007acc;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin: 1.5rem 0;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .analiz-btn:hover {
+      background: #005fa3;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0,0,0,0.15);
+    }
+    .qr-code {
+      margin: 1.5rem auto;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      display: inline-block;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    /* --- Mobil Uyumluluk --- */
+    @media (max-width: 768px) {
+      nav button {
+        flex: 1 1 33%;
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
+      .tab {
+        padding: 1rem;
+      }
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      .filters label {
+        grid-column: span 2;
+      }
+    }
+  </style>
 </head>
 <body>
   <nav>
@@ -100,12 +256,27 @@
 
   <!-- 2. Sonuçlar -->
   <div id="tab-results" class="tab">
-    <p class="link-bottom">
+    <div class="analiz-container">
+      <h2>Form Analiz Sonuçları</h2>
+      <p>Google Forms analiz sayfası tarayıcınızda yeni bir sekmede açılacaktır. Aşağıdaki butona tıklayarak analiz sayfasına ulaşabilirsiniz.</p>
+      
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
-         target="_blank" rel="noopener" style="color:#007acc;font-weight:bold;">
-        ➤ Analiz Grafikleri Yeni Pencerede Aç
+         target="_blank" rel="noopener" class="analiz-btn">
+        Analiz Sayfasını Aç
       </a>
-    </p>
+      
+      <p>Mobil cihazınızdan erişmek için QR kodu tarayabilirsiniz:</p>
+      
+      <div class="qr-code">
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics" 
+             alt="QR Code">
+      </div>
+      
+      <p style="font-size:0.9em; color:#666;">
+        Not: Analiz sayfası doğrudan bu pencerede gösterilememektedir. 
+        Google tarafından bu özellik kısıtlanmıştır.
+      </p>
+    </div>
   </div>
 
   <!-- 3. Ana Tablo -->
@@ -123,12 +294,24 @@
   <div id="tab-query" class="tab">
     <h1>Ana Tablo Sorgu</h1>
     <div class="filters">
-      <label>Sorumlu:</label><select id="filter-responsible"><option value="">Tümü</option></select>
-      <label>Durum:</label><select id="filter-status"><option value="">Tümü</option></select>
-      <label>Öncelik:</label><select id="filter-priority"><option value="">Tümü</option></select>
-      <label>Baş. ≥</label><input type="date" id="filter-start-from">
-      <label>Baş. ≤</label><input type="date" id="filter-start-to">
-      <label>Anahtar:</label><input type="text" id="filter-text" placeholder="Metin arayın">
+      <label>Sorumlu:</label>
+      <select id="filter-responsible"><option value="">Tümü</option></select>
+      
+      <label>Durum:</label>
+      <select id="filter-status"><option value="">Tümü</option></select>
+      
+      <label>Öncelik:</label>
+      <select id="filter-priority"><option value="">Tümü</option></select>
+      
+      <label>Baş. ≥</label>
+      <input type="date" id="filter-start-from">
+      
+      <label>Baş. ≤</label>
+      <input type="date" id="filter-start-to">
+      
+      <label>Anahtar:</label>
+      <input type="text" id="filter-text" placeholder="Metin arayın">
+      
       <button id="apply-btn">Uygula</button>
       <button id="reset-btn">Temizle</button>
     </div>
@@ -138,20 +321,24 @@
     </table>
   </div>
 
- <!-- 5: Düzenle -->
-<div id="tab-edit" class="tab">
-  <h1>Tabloyu Düzenle</h1>
-  <a href="https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit"
-     target="_blank"
-     class="btn-edit">
-    Google Sheets'te Aç & Düzenle
-  </a>
-</div>
-
+  <!-- 5: Düzenle -->
+  <div id="tab-edit" class="tab">
+    <h1>Tabloyu Düzenle</h1>
+    <p>Google Sheets üzerinden verileri düzenlemek için aşağıdaki butona tıklayın:</p>
+    <a href="https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit"
+       target="_blank"
+       class="btn-edit">
+      Google Sheets'te Aç & Düzenle
+    </a>
+    <p style="color:#666; font-size:0.9em;">
+      Not: Değişikliklerinizin görüntülenmesi için "Takip" sekmesindeki 
+      "Yenile" butonuna basmanız gerekebilir.
+    </p>
+  </div>
 
   <!-- 6. Grafikler -->
   <div id="tab-charts" class="tab">
-    <h1>Canlı Grafikleri</h1>
+    <h1>Canlı Grafikler</h1>
     <div class="charts-container">
       <div class="chart-box">
         <h3>Sorumlulara Göre Dağılım</h3>
