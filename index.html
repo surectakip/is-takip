@@ -8,40 +8,32 @@
     html, body { height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; background: #fafafa; }
     nav { display: flex; flex-wrap: wrap; background: #007acc; }
     nav button {
-      flex: 1 1 120px;
-      padding: .75rem;
-      border: none;
-      background: #005fa3;
-      color: #fff;
-      cursor: pointer;
-      font-weight: bold;
-      text-align: center;
+      flex: 1 1 100px; padding: .75rem; border: none;
+      background: #005fa3; color: #fff; cursor: pointer; font-weight: bold;
     }
     nav button.active { background: #003f7f; }
-    .tab {
-      display: none;
-      height: calc(100% - 3.5rem);
-      overflow: auto;
-    }
+    .tab { display: none; height: calc(100% - 3.5rem); overflow: auto; }
     .tab.active { display: block; }
-    iframe { border: none; }
+    iframe { border: none; width: 100%; }
     h1 { margin: 1rem; }
     button { padding: .4rem .8rem; margin: .5rem; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
     #refresh-btn { background: #007acc; }
     #loading { color: #555; margin: 1rem; }
-    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
     th { background: #f0f0f0; }
-    .table-container { overflow-x: auto; }
     .filters { display: flex; flex-wrap: wrap; align-items: flex-end; margin: 1rem; }
     .filters label { margin-right: .25rem; }
-    .filters input, .filters select { margin-right: .5rem; padding: .4rem; margin-bottom: .5rem; }
+    .filters input, .filters select { margin: .25rem; padding: .4rem; }
+    .filters button { margin: .25rem; }
     .link-bottom { text-align: right; margin: 1rem; }
     .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1rem; }
+    .charts-grid iframe { height: 0; padding-bottom: 60%; } /* 3:5 oranlı yer tutucu */
     @media(max-width:600px) {
       nav button { flex: 1 1 100%; }
       .filters { flex-direction: column; }
-      .filters label, .filters input, .filters select, .filters button { width: 100%; margin: .25rem 0; }
+      .filters * { width: 100%; margin: .25rem 0; }
     }
   </style>
 </head>
@@ -59,7 +51,7 @@
   <div id="tab-entry" class="tab active">
     <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
-      width="100%" height="100%">
+      allowfullscreen>
     </iframe>
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
@@ -73,7 +65,7 @@
   <div id="tab-results" class="tab">
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
-         target="_blank" rel="noopener" style="color:#007acc; font-weight:bold;">
+         target="_blank" rel="noopener" style="color:#007acc;font-weight:bold;">
         ➤ Analizleri Aç
       </a>
     </p>
@@ -127,22 +119,22 @@
     <h1>Canlı Grafikler</h1>
     <div class="charts-grid">
       <div>
-        <h3>Tamamlandı mı?</h3>
+        <h3>İşlerin Sorumlulara Göre Dağılımı</h3>
         <iframe
           src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
-          width="100%" height="300"></iframe>
+        ></iframe>
       </div>
       <div>
         <h3>Durum Dağılımı</h3>
         <iframe
-          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=989307124&format=interactive"
-          width="100%" height="300"></iframe>
+          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
+        ></iframe>
       </div>
       <div>
         <h3>Öncelik Dağılımı</h3>
         <iframe
           src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
-          width="100%" height="300"></iframe>
+        ></iframe>
       </div>
     </div>
   </div>
@@ -153,10 +145,8 @@
       tabs.forEach(tab => {
         document.getElementById('btn-'+tab).onclick = () => {
           tabs.forEach(t => {
-            document.getElementById('btn-'+t)
-              .classList.toggle('active', t===tab);
-            document.getElementById('tab-'+t)
-              .classList.toggle('active', t===tab);
+            document.getElementById('btn-'+t).classList.toggle('active', t===tab);
+            document.getElementById('tab-'+t).classList.toggle('active', t===tab);
           });
           if (tab==='data') loadData();
         };
@@ -200,7 +190,7 @@
       }
 
       function populate(sel, arr) {
-        Array.from(new Set(arr)).sort().forEach(v=>{
+        Array.from(new Set(arr)).sort().forEach(v=> {
           let o=document.createElement('option');
           o.value=o.textContent=v; sel.appendChild(o);
         });
