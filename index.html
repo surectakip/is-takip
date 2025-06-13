@@ -13,7 +13,169 @@
       background: #f5f5f5; 
       line-height: 1.6;
     }
-    
+
+    /* YENİ TAKİP SEKMESİ STİLLERİ */
+.table-container {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin: 1rem 0;
+}
+
+.table-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
+}
+
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.refresh-button {
+  padding: 0.7rem 1.2rem;
+  background: #007acc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.refresh-button:hover {
+  background: #0062a3;
+  transform: translateY(-1px);
+}
+
+.refresh-icon {
+  font-size: 1.1em;
+}
+
+.loading-indicator {
+  display: none;
+  align-items: center;
+  gap: 0.7rem;
+  color: #555;
+  font-size: 0.95rem;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(0,0,0,0.1);
+  border-radius: 50%;
+  border-top-color: #007acc;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.record-count {
+  background: #f0f4f8;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  color: #4a5568;
+  margin-left: auto;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+#responses-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+#responses-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #4a5568;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+}
+
+#responses-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+
+#responses-table tr:last-child td {
+  border-bottom: none;
+}
+
+#responses-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Durum etiketleri */
+.status-badge {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.status-pending {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.status-completed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-inprogress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+/* Mobil uyumluluk */
+@media (max-width: 768px) {
+  .table-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .table-controls {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  
+  .record-count {
+    margin-left: 0;
+    width: 100%;
+    text-align: center;
+  }
+  
+  #responses-table th,
+  #responses-table td {
+    padding: 0.7rem;
+  }
+}
     /* --- Navigasyon --- */
     nav { 
       display: flex; 
@@ -279,16 +441,31 @@
     </div>
   </div>
 
-  <!-- 3. Ana Tablo -->
-  <div id="tab-data" class="tab">
-    <h1>İş-Süreç Takip</h1>
-    <button id="refresh-btn">Yenile 🔄</button>
-    <span id="loading" style="display:none">Veriler yükleniyor…</span>
-    <table id="responses-table" style="display:none">
-      <thead id="table-head"></thead>
-      <tbody id="table-body"></tbody>
-    </table>
+    <!-- 3. Ana Tablo (YENİ) -->
+<div id="tab-data" class="tab">
+  <div class="table-container">
+    <div class="table-header">
+      <h1>İş-Süreç Takip</h1>
+      <div class="table-controls">
+        <button id="refresh-btn" class="refresh-button">
+          <span class="refresh-icon">🔄</span> Yenile
+        </button>
+        <div id="loading" class="loading-indicator">
+          <div class="spinner"></div>
+          <span>Veriler yükleniyor...</span>
+        </div>
+        <div class="record-count" id="record-count"></div>
+      </div>
+    </div>
+    
+    <div class="table-scroll">
+      <table id="responses-table">
+        <thead id="table-head"></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
   </div>
+</div>
 
   <!-- 4. Sorgu -->
   <div id="tab-query" class="tab">
@@ -400,55 +577,62 @@
       let allRows = [], headers = [];
 
       // CSV'den veri oku, tabloya doldur
-      async function loadData(){
-        console.clear();
-        console.log('▶ loadData() çağrıldı, URL:', sheetUrl);
+     async function loadData(){
+  console.clear();
+  loadingEl.style.display = 'flex';
+  theadEl.innerHTML = '';
+  tbodyEl.innerHTML = '';
+  document.getElementById('record-count').textContent = '';
+  [selResp, selStat, selPrio].forEach(s=> s.innerHTML = '<option value="">Tümü</option>');
+  qBody.innerHTML = '';
+  allRows = [];
 
-        loadingEl.style.display = '';
-        theadEl.innerHTML = '';
-        tbodyEl.innerHTML = '';
-        [selResp, selStat, selPrio].forEach(s=> s.innerHTML = '<option value="">Tümü</option>');
-        qBody.innerHTML = '';
-        allRows = [];
+  try {
+    const res = await fetch(sheetUrl);
+    if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+    
+    const text = await res.text();
+    const rows = text.trim().split('\n').map(r => r.split(','));
+    headers = rows.shift();
+    allRows = rows;
 
-        let res;
-        try {
-          res = await fetch(sheetUrl);
-        } catch(e) {
-          console.error('❌ Network hatası:', e);
-          alert('Network hatası: '+e.message);
-          loadingEl.style.display = 'none';
-          return;
-        }
-        console.log('HTTP status:', res.status);
-        if (!res.ok) {
-          alert(`CSV okunamadı: ${res.status} ${res.statusText}`);
-          loadingEl.style.display = 'none';
-          return;
-        }
+    // Tablo başlıkları
+    theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+    
+    // Tablo gövdesi (durum renklendirmesi ile)
+    tbodyEl.innerHTML = allRows.map(row => {
+      const statusClass = getStatusClass(row[6]);
+      return `
+        <tr>
+          ${row.map((cell, i) => 
+            i === 6 ? `<td><span class="status-badge ${statusClass}">${cell}</span></td>` 
+                    : `<td>${cell}</td>`
+          ).join('')}
+        </tr>
+      `;
+    }).join('');
 
-        const text = await res.text();
-        console.log('▶ CSV raw (ilk 200 char):\n', text.slice(0,200)+'…');
+    document.getElementById('record-count').textContent = `${allRows.length} kayıt`;
+    populate(selResp, 3);
+    populate(selStat, 6);
+    populate(selPrio, 7);
+    qHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
 
-        const rows = text.trim().split('\n').map(r=>r.split(','));
-        headers = rows.shift();
-        allRows = rows;
-        console.log('▶ Başlıklar:', headers);
-        console.log('▶ Satır sayısı:', allRows.length);
+  } catch (error) {
+    console.error('Hata:', error);
+    document.getElementById('record-count').textContent = `Hata: ${error.message}`;
+    document.getElementById('record-count').style.color = '#e53e3e';
+  } finally {
+    loadingEl.style.display = 'none';
+  }
+}
 
-        theadEl.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-        tbodyEl.innerHTML = allRows.map(r=>
-          '<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>'
-        ).join('');
-        tableEl.style.display = '';
-
-        // dropdown doldur
-        populate(selResp, 3);
-        populate(selStat, 6);
-        populate(selPrio, 7);
-        qHead.innerHTML = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-        loadingEl.style.display = 'none';
-      }
+function getStatusClass(statusText) {
+  const status = (statusText || '').toLowerCase();
+  if (status.includes('tamam')) return 'status-completed';
+  if (status.includes('devam')) return 'status-inprogress';
+  return 'status-pending';
+}
 
       function populate(sel, idx){
         Array.from(new Set(allRows.map(r=>r[idx]))).sort()
