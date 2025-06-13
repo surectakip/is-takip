@@ -280,11 +280,7 @@
       border: 1px solid #ddd;
       border-radius: 4px;
     }
-    #apply-btn { background: #28a745; }
-    #apply-btn:hover { background: #218838; }
-    #reset-btn { background: #dc3545; }
-    #reset-btn:hover { background: #c82333; }
-
+    
     /* --- Grafikler --- */
     .charts-container {
       display: flex;
@@ -609,7 +605,7 @@
     <div class="filter-card">
       <div class="filter-header">
         <h3>Filtreleme Seçenekleri</h3>
-        <button id="reset-btn" class="filter-btn danger">Temizle</button>
+       
       </div>
       
       <div class="filter-grid">
@@ -649,8 +645,13 @@
           <input type="text" id="filter-text" placeholder="Arama yapın..." class="filter-input">
         </div>
       </div>
+<!-- YENİ BUTON GRUBU -->
+  <div class="filter-actions">
+    <button id="apply-btn" class="filter-btn primary">Filtrele</button>
+    <button id="reset-btn" class="filter-btn danger">Temizle</button>
+  </div>
+</div>
       
-      <button id="apply-btn" class="filter-btn primary">Filtrele</button>
     </div>
     
     <div class="results-info" id="results-info"></div>
