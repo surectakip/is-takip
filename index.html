@@ -391,6 +391,140 @@
         grid-column: span 2;
       }
     }
+    /* Sorgu Sekmesi Stilleri */
+.query-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.filter-card {
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  margin-bottom: 1.5rem;
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.filter-header h3 {
+  margin: 0;
+  color: #2d3748;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.filter-group {
+  margin-bottom: 0.5rem;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.filter-select, .filter-input {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.filter-btn {
+  padding: 0.7rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.primary {
+  background: #4299e1;
+  color: white;
+}
+
+.filter-btn.danger {
+  background: #f56565;
+  color: white;
+}
+
+.filter-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.results-info {
+  margin: 1rem 0;
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border-radius: 6px;
+  color: #4a5568;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: white;
+}
+
+#query-table {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: collapse;
+}
+
+#query-table th {
+  background: #f8fafc;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #4a5568;
+  border-bottom: 2px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+}
+
+#query-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #edf2f7;
+  color: #2d3748;
+}
+
+#query-table tr:hover {
+  background-color: #f8fafc;
+}
+
+/* Mobil Uyumluluk */
+@media (max-width: 768px) {
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filter-card {
+    padding: 1rem;
+  }
+  
+  #query-table th, 
+  #query-table td {
+    padding: 0.7rem;
+  }
+}
   </style>
 </head>
 <body>
@@ -468,36 +602,68 @@
 </div>
 
   <!-- 4. Sorgu -->
-  <div id="tab-query" class="tab">
-    <h1>Ana Tablo Sorgu</h1>
-    <div class="filters">
-      <label>Sorumlu:</label>
-      <select id="filter-responsible"><option value="">Tümü</option></select>
+<div id="tab-query" class="tab">
+  <div class="query-container">
+    <h1>İş Takip Sorgu</h1>
+    
+    <div class="filter-card">
+      <div class="filter-header">
+        <h3>Filtreleme Seçenekleri</h3>
+        <button id="reset-btn" class="filter-btn danger">Temizle</button>
+      </div>
       
-      <label>Durum:</label>
-      <select id="filter-status"><option value="">Tümü</option></select>
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label>Sorumlu</label>
+          <select id="filter-responsible" class="filter-select">
+            <option value="">Tümü</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Durum</label>
+          <select id="filter-status" class="filter-select">
+            <option value="">Tümü</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Öncelik</label>
+          <select id="filter-priority" class="filter-select">
+            <option value="">Tümü</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Başlangıç Tarihi (Min)</label>
+          <input type="date" id="filter-start-from" class="filter-input">
+        </div>
+        
+        <div class="filter-group">
+          <label>Başlangıç Tarihi (Max)</label>
+          <input type="date" id="filter-start-to" class="filter-input">
+        </div>
+        
+        <div class="filter-group full-width">
+          <label>Anahtar Kelime</label>
+          <input type="text" id="filter-text" placeholder="Arama yapın..." class="filter-input">
+        </div>
+      </div>
       
-      <label>Öncelik:</label>
-      <select id="filter-priority"><option value="">Tümü</option></select>
-      
-      <label>Baş. ≥</label>
-      <input type="date" id="filter-start-from">
-      
-      <label>Baş. ≤</label>
-      <input type="date" id="filter-start-to">
-      
-      <label>Anahtar:</label>
-      <input type="text" id="filter-text" placeholder="Metin arayın">
-      
-      <button id="apply-btn">Uygula</button>
-      <button id="reset-btn">Temizle</button>
+      <button id="apply-btn" class="filter-btn primary">Filtrele</button>
     </div>
-    <table id="query-table">
-      <thead id="query-head"></thead>
-      <tbody id="query-body"></tbody>
-    </table>
+    
+    <div class="results-info" id="results-info"></div>
+    
+    <div class="table-scroll">
+      <table id="query-table">
+        <thead id="query-head"></thead>
+        <tbody id="query-body"></tbody>
+      </table>
+    </div>
   </div>
-
+</div>
+  
   <!-- 5: Düzenle -->
   <div id="tab-edit" class="tab">
     <h1>Tabloyu Düzenle</h1>
