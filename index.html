@@ -2,38 +2,43 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>İş - Süreç Takip</title>
   <style>
-    html, body { height: 100%; margin: 0; padding: 0; font-family: Arial, sans-serif; background: #fafafa; }
-    nav { display: flex; flex-wrap: wrap; background: #007acc; }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    html, body { height:100%; font-family:sans-serif; }
+    nav { display:flex; flex-wrap:wrap; background:#007acc; }
     nav button {
-      flex: 1 1 100px; padding: .75rem; border: none;
-      background: #005fa3; color: #fff; cursor: pointer; font-weight: bold;
+      flex:1 1 100px; padding:.75rem; border:none;
+      background:#005fa3; color:#fff; font-weight:bold; cursor:pointer;
     }
-    nav button.active { background: #003f7f; }
-    .tab { display: none; height: calc(100% - 3.5rem); overflow: auto; }
-    .tab.active { display: block; }
-    iframe { border: none; width: 100%; }
-    h1 { margin: 1rem; }
-    button { padding: .4rem .8rem; margin: .5rem; border: none; border-radius: 4px; color: #fff; cursor: pointer; }
-    #refresh-btn { background: #007acc; }
-    #loading { color: #555; margin: 1rem; }
-    .table-container { overflow-x: auto; margin: 1rem 0; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
-    th { background: #f0f0f0; }
-    .filters { display: flex; flex-wrap: wrap; align-items: flex-end; margin: 1rem; }
-    .filters label { margin-right: .25rem; }
-    .filters input, .filters select { margin: .25rem; padding: .4rem; }
-    .filters button { margin: .25rem; }
-    .link-bottom { text-align: right; margin: 1rem; }
-    .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1rem; }
-    .charts-grid iframe { height: 0; padding-bottom: 60%; } /* 3:5 oranlı yer tutucu */
+    nav button.active { background:#003f7f; }
+    .tab { display:none; height:calc(100% - 3.5rem); overflow:auto; }
+    .tab.active { display:block; }
+    iframe { border:none; width:100%; }
+    h1 { padding:1rem; }
+    .link-bottom { padding:1rem; text-align:right; }
+    .link-bottom a { color:#007acc; text-decoration:none; font-weight:bold; }
+    .table-container { overflow-x:auto; padding:1rem; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border:1px solid #ddd; padding:.5rem; }
+    th { background:#f7f7f7; }
+    .filters { display:flex; flex-wrap:wrap; padding:1rem; gap:.5rem; }
+    .filters > * { flex:1 1 120px; }
+    .charts-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+      gap:1rem;
+      padding:1rem;
+    }
+    .charts-grid .chart {
+      position:relative; padding-bottom:56.25%;
+    }
+    .charts-grid .chart iframe {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+    }
     @media(max-width:600px) {
-      nav button { flex: 1 1 100%; }
-      .filters { flex-direction: column; }
-      .filters * { width: 100%; margin: .25rem 0; }
+      nav button { flex:1 1 100%; }
     }
   </style>
 </head>
@@ -47,7 +52,7 @@
     <button id="btn-charts">Grafikler</button>
   </nav>
 
-  <!-- 1: Form Girişi -->
+  <!-- 1. İş-Görev Giriş -->
   <div id="tab-entry" class="tab active">
     <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
@@ -55,47 +60,49 @@
     </iframe>
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
-         target="_blank" rel="noopener" style="color:#007acc;">
+         target="_blank" rel="noopener">
         ➤ Yeni Pencerede Aç
       </a>
     </p>
   </div>
 
-  <!-- 2: Form Sonuçları -->
+  <!-- 2. Form Sonuçları -->
   <div id="tab-results" class="tab">
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
-         target="_blank" rel="noopener" style="color:#007acc;font-weight:bold;">
+         target="_blank" rel="noopener">
         ➤ Analizleri Aç
       </a>
     </p>
   </div>
 
-  <!-- 3: İş-Süreç Takip -->
+  <!-- 3. İş-Süreç Takip -->
   <div id="tab-data" class="tab">
     <h1>İş-Süreç Takip</h1>
-    <button id="refresh-btn">Yenile</button>
-    <div id="loading" style="display:none">Veriler yükleniyor…</div>
+    <div style="padding:1rem;">
+      <button onclick="loadData()" style="padding:.5rem 1rem;background:#007acc;color:#fff;border:none;">Yenile</button>
+      <span id="loading" style="margin-left:1rem;display:none;">Yükleniyor…</span>
+    </div>
     <div class="table-container">
-      <table id="responses-table" style="display:none">
+      <table id="responses-table">
         <thead id="table-head"></thead>
         <tbody id="table-body"></tbody>
       </table>
     </div>
   </div>
 
-  <!-- 4: Sorgu -->
+  <!-- 4. Sorgu -->
   <div id="tab-query" class="tab">
     <h1>Ana Tablo Sorgu</h1>
     <div class="filters">
-      <label>Sorumlu:</label><select id="filter-responsible"><option value="">Tümü</option></select>
-      <label>Durum:</label><select id="filter-status"><option value="">Tümü</option></select>
-      <label>Öncelik:</label><select id="filter-priority"><option value="">Tümü</option></select>
-      <label>Baş. Tarih ≥</label><input type="date" id="filter-start-from">
-      <label>Baş. Tarih ≤</label><input type="date" id="filter-start-to">
-      <label>Anahtar Kelime:</label><input type="text" id="filter-text" placeholder="Aranacak metin">
-      <button id="apply-btn">Uygula</button>
-      <button id="reset-btn">Temizle</button>
+      <select id="f-resp"><option value="">Tümü (Sorumlu)</option></select>
+      <select id="f-stat"><option value="">Tümü (Durum)</option></select>
+      <select id="f-prio"><option value="">Tümü (Öncelik)</option></select>
+      <input type="date" id="f-from">
+      <input type="date" id="f-to">
+      <input type="text" id="f-text" placeholder="Anahtar kelime">
+      <button onclick="applyFilter()" style="background:#28a745;color:#fff;">Uygula</button>
+      <button onclick="resetFilter()" style="background:#dc3545;color:#fff;">Temizle</button>
     </div>
     <div class="table-container">
       <table id="query-table">
@@ -105,121 +112,101 @@
     </div>
   </div>
 
-  <!-- 5: Düzenle -->
+  <!-- 5. Düzenle -->
   <div id="tab-edit" class="tab">
-    <h1>Tabloyu Düzenle</h1>
-    <button onclick="window.open(
-      'https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit',
-      '_blank'
-    )">Google Sheets'te Aç</button>
+    <h1>Google Sheets’te Düzenle</h1>
+    <div style="padding:1rem;">
+      <button onclick="window.open(
+        'https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit',
+        '_blank')"
+        style="padding:.5rem 1rem;background:#17a2b8;color:#fff;border:none;">
+        Aç ve Düzenle
+      </button>
+    </div>
   </div>
 
-  <!-- 6: Grafikleri Embed Et -->
+  <!-- 6. Grafikler -->
   <div id="tab-charts" class="tab">
     <h1>Canlı Grafikler</h1>
     <div class="charts-grid">
-      <div>
-        <h3>İşlerin Sorumlulara Göre Dağılımı</h3>
+      <div class="chart">
         <iframe
-          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
-        ></iframe>
+          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive">
+        </iframe>
       </div>
-      <div>
-        <h3>Durum Dağılımı</h3>
+      <div class="chart">
         <iframe
-          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
-        ></iframe>
+          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive">
+        </iframe>
       </div>
-      <div>
-        <h3>Öncelik Dağılımı</h3>
+      <div class="chart">
         <iframe
-          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
-        ></iframe>
+          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive">
+        </iframe>
       </div>
     </div>
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const tabs = ['entry','results','data','query','edit','charts'];
-      tabs.forEach(tab => {
-        document.getElementById('btn-'+tab).onclick = () => {
-          tabs.forEach(t => {
-            document.getElementById('btn-'+t).classList.toggle('active', t===tab);
-            document.getElementById('tab-'+t).classList.toggle('active', t===tab);
-          });
-          if (tab==='data') loadData();
-        };
-      });
-
-      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
-      const loadingEl = document.getElementById('loading');
-      const tableEl   = document.getElementById('responses-table');
-      const theadEl   = document.getElementById('table-head');
-      const tbodyEl   = document.getElementById('table-body');
-      const refreshBtn= document.getElementById('refresh-btn');
-      const selResp   = document.getElementById('filter-responsible');
-      const selStat   = document.getElementById('filter-status');
-      const selPrio   = document.getElementById('filter-priority');
-      const dateFrom  = document.getElementById('filter-start-from');
-      const dateTo    = document.getElementById('filter-start-to');
-      const txtFilter = document.getElementById('filter-text');
-      const applyBtn  = document.getElementById('apply-btn');
-      const resetBtn  = document.getElementById('reset-btn');
-      const qHead     = document.getElementById('query-head');
-      const qBody     = document.getElementById('query-body');
-      let allRows=[], headers=[];
-
-      async function loadData() {
-        tableEl.style.display='none'; loadingEl.style.display='';
-        theadEl.innerHTML=''; tbodyEl.innerHTML='';
-        [selResp,selStat,selPrio].forEach(s=>s.options.length=1);
-        qBody.innerHTML=''; allRows=[];
-        const res=await fetch(sheetUrl);
-        if(!res.ok){ alert('CSV okunamadı:'+res.status); return; }
-        const text=await res.text();
-        const rows=text.trim().split('\n').map(r=>r.split(','));
-        headers=rows.shift(); allRows=rows;
-        theadEl.innerHTML='<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-        tbodyEl.innerHTML=allRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
-        tableEl.style.display=''; loadingEl.style.display='none';
-        populate(selResp, allRows.map(r=>r[3]));
-        populate(selStat, allRows.map(r=>r[6]));
-        populate(selPrio, allRows.map(r=>r[7]));
-        qHead.innerHTML='<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-      }
-
-      function populate(sel, arr) {
-        Array.from(new Set(arr)).sort().forEach(v=> {
-          let o=document.createElement('option');
-          o.value=o.textContent=v; sel.appendChild(o);
+    const tabs=['entry','results','data','query','edit','charts'];
+    tabs.forEach(t=> {
+      document.getElementById('btn-'+t).onclick = () => {
+        tabs.forEach(x=> {
+          document.getElementById('btn-'+x).classList.toggle('active', x===t);
+          document.getElementById('tab-'+x).classList.toggle('active', x===t);
         });
-      }
-
-      function applyFilter() {
-        let f=allRows.slice();
-        if(selResp.value) f=f.filter(r=>r[3]===selResp.value);
-        if(selStat.value) f=f.filter(r=>r[6]===selStat.value);
-        if(selPrio.value) f=f.filter(r=>r[7]===selPrio.value);
-        if(dateFrom.value) f=f.filter(r=>new Date(r[4])>=new Date(dateFrom.value));
-        if(dateTo.value)   f=f.filter(r=>new Date(r[4])<=new Date(dateTo.value));
-        if(txtFilter.value){
-          const t=txtFilter.value.toLowerCase();
-          f=f.filter(r=>r.some(c=>c.toLowerCase().includes(t)));
-        }
-        qBody.innerHTML=f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
-      }
-
-      function resetFilter(){
-        selResp.value=selStat.value=selPrio.value='';
-        dateFrom.value=dateTo.value=txtFilter.value='';
-        qBody.innerHTML='';
-      }
-
-      refreshBtn.onclick=loadData;
-      applyBtn.onclick=applyFilter;
-      resetBtn.onclick=resetFilter;
+        if(t==='data') loadData();
+      };
     });
+
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+    let allRows=[], headers=[];
+
+    async function loadData(){
+      document.getElementById('loading').style.display='inline';
+      const res = await fetch(sheetUrl);
+      if(!res.ok){ alert('CSV okunamadı: '+res.status); return; }
+      const txt = await res.text();
+      const rows = txt.trim().split('\n').map(r=>r.split(','));
+      headers = rows.shift(); allRows = rows;
+      const thead = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
+      const tbody = allRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+      document.getElementById('table-head').innerHTML=thead;
+      document.getElementById('table-body').innerHTML=tbody;
+      document.getElementById('loading').style.display='none';
+      ['f-resp','f-stat','f-prio'].forEach((id,i)=>populate(id,[3,6,7][i]));
+      document.getElementById('query-head').innerHTML=thead;
+    }
+
+    function populate(selId, col){
+      const sel = document.getElementById(selId);
+      const vals = Array.from(new Set(allRows.map(r=>r[col]))).sort();
+      sel.innerHTML = '<option value="">Tümü</option>'+vals.map(v=>`<option>${v}</option>`).join('');
+    }
+
+    function applyFilter(){
+      let f=allRows.slice();
+      const v1=document.getElementById('f-resp').value;
+      const v2=document.getElementById('f-stat').value;
+      const v3=document.getElementById('f-prio').value;
+      const from=document.getElementById('f-from').value;
+      const to=document.getElementById('f-to').value;
+      const txt=document.getElementById('f-text').value.toLowerCase();
+      if(v1) f=f.filter(r=>r[3]===v1);
+      if(v2) f=f.filter(r=>r[6]===v2);
+      if(v3) f=f.filter(r=>r[7]===v3);
+      if(from) f=f.filter(r=>new Date(r[4])>=new Date(from));
+      if(to)   f=f.filter(r=>new Date(r[4])<=new Date(to));
+      if(txt)  f=f.filter(r=>r.join(' ').toLowerCase().includes(txt));
+      document.getElementById('query-body').innerHTML =
+        f.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+    }
+
+    function resetFilter(){
+      ['f-resp','f-stat','f-prio','f-from','f-to','f-text']
+        .forEach(id=>document.getElementById(id).value='');
+      document.getElementById('query-body').innerHTML='';
+    }
   </script>
 </body>
 </html>
