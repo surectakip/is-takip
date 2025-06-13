@@ -13,28 +13,30 @@
       background:#005fa3; color:#fff; font-weight:bold; cursor:pointer;
     }
     nav button.active { background:#003f7f; }
-    .tab { display:none; height:calc(100% - 3.5rem); overflow:auto; }
+    .tab {
+      display:none;
+      height:calc(100% - 3.5rem);
+      overflow:hidden;
+      position:relative;
+    }
     .tab.active { display:block; }
     iframe { border:none; width:100%; }
     h1 { padding:1rem; }
-    .link-bottom { padding:1rem; text-align:right; }
-    .link-bottom a { color:#007acc; text-decoration:none; font-weight:bold; }
-    .table-container { overflow-x:auto; padding:1rem; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { border:1px solid #ddd; padding:.5rem; }
-    th { background:#f7f7f7; }
-    .filters { display:flex; flex-wrap:wrap; padding:1rem; gap:.5rem; }
-    .filters > * { flex:1 1 120px; }
+    .link-bottom, .chart-header {
+      position:absolute; bottom:0; width:100%;
+      background:rgba(255,255,255,0.85); padding:.5rem 1rem;
+      text-align:right;
+    }
+    .link-bottom a, .chart-header a {
+      color:#007acc; text-decoration:none; font-weight:bold;
+    }
     .charts-grid {
-      display:grid;
-      grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
-      gap:1rem;
-      padding:1rem;
+      display:flex; flex-direction:column; height:100%;
     }
-    .charts-grid .chart {
-      position:relative; padding-bottom:56.25%;
+    .chart-container {
+      position:relative; flex:1; margin:1rem;
     }
-    .charts-grid .chart iframe {
+    .chart-container iframe {
       position:absolute; top:0; left:0; width:100%; height:100%;
     }
     @media(max-width:600px) {
@@ -53,10 +55,11 @@
   </nav>
 
   <!-- 1. İş-Görev Giriş -->
-  <div id="tab-entry" class="tab active">
+  <div id="tab-entry" class="tab active" style="display:flex; flex-direction:column;">
     <iframe
       src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform?embedded=true"
-      allowfullscreen>
+      allowfullscreen
+      style="flex:1;">
     </iframe>
     <p class="link-bottom">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewform"
@@ -68,10 +71,10 @@
 
   <!-- 2. Form Sonuçları -->
   <div id="tab-results" class="tab">
-    <p class="link-bottom">
+    <p style="padding:1rem;">
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
          target="_blank" rel="noopener">
-        ➤ Analizleri Aç
+        ➤ Analizleri Yeni Pencerede Aç
       </a>
     </p>
   </div>
@@ -80,11 +83,13 @@
   <div id="tab-data" class="tab">
     <h1>İş-Süreç Takip</h1>
     <div style="padding:1rem;">
-      <button onclick="loadData()" style="padding:.5rem 1rem;background:#007acc;color:#fff;border:none;">Yenile</button>
+      <button onclick="loadData()" style="padding:.5rem 1rem;background:#007acc;color:#fff;border:none;">
+        Yenile
+      </button>
       <span id="loading" style="margin-left:1rem;display:none;">Yükleniyor…</span>
     </div>
-    <div class="table-container">
-      <table id="responses-table">
+    <div style="overflow-x:auto; padding:1rem; height:calc(100% - 4.5rem);">
+      <table id="responses-table" style="width:100%; border-collapse:collapse;">
         <thead id="table-head"></thead>
         <tbody id="table-body"></tbody>
       </table>
@@ -94,7 +99,7 @@
   <!-- 4. Sorgu -->
   <div id="tab-query" class="tab">
     <h1>Ana Tablo Sorgu</h1>
-    <div class="filters">
+    <div style="display:flex; flex-wrap:wrap; gap:.5rem; padding:1rem;">
       <select id="f-resp"><option value="">Tümü (Sorumlu)</option></select>
       <select id="f-stat"><option value="">Tümü (Durum)</option></select>
       <select id="f-prio"><option value="">Tümü (Öncelik)</option></select>
@@ -104,8 +109,8 @@
       <button onclick="applyFilter()" style="background:#28a745;color:#fff;">Uygula</button>
       <button onclick="resetFilter()" style="background:#dc3545;color:#fff;">Temizle</button>
     </div>
-    <div class="table-container">
-      <table id="query-table">
+    <div style="overflow-x:auto; padding:1rem; height:calc(100% - 6.5rem);">
+      <table id="query-table" style="width:100%; border-collapse:collapse;">
         <thead id="query-head"></thead>
         <tbody id="query-body"></tbody>
       </table>
@@ -113,36 +118,36 @@
   </div>
 
   <!-- 5. Düzenle -->
-  <div id="tab-edit" class="tab">
+  <div id="tab-edit" class="tab" style="padding:1rem;">
     <h1>Google Sheets’te Düzenle</h1>
-    <div style="padding:1rem;">
-      <button onclick="window.open(
-        'https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit',
-        '_blank')"
-        style="padding:.5rem 1rem;background:#17a2b8;color:#fff;border:none;">
-        Aç ve Düzenle
-      </button>
-    </div>
+    <button onclick="window.open(
+      'https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit', '_blank')"
+      style="padding:.5rem 1rem;background:#17a2b8;color:#fff;border:none;">
+      Aç ve Düzenle
+    </button>
   </div>
 
   <!-- 6. Grafikler -->
-  <div id="tab-charts" class="tab">
-    <h1>Canlı Grafikler</h1>
-    <div class="charts-grid">
-      <div class="chart">
+  <div id="tab-charts" class="tab" style="display:flex; flex-direction:column;">
+    <h1 style="padding:1rem;">Canlı Grafikler</h1>
+    <div class="charts-grid" style="flex:1; display:flex; gap:1rem; padding:1rem;">
+      <div class="chart-container">
         <iframe
           src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive">
         </iframe>
+        <div class="chart-header">Sorumlulara Göre Dağılım</div>
       </div>
-      <div class="chart">
+      <div class="chart-container">
         <iframe
           src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive">
         </iframe>
+        <div class="chart-header">Durum Dağılımı</div>
       </div>
-      <div class="chart">
+      <div class="chart-container">
         <iframe
           src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive">
         </iframe>
+        <div class="chart-header">Öncelik Dağılımı</div>
       </div>
     </div>
   </div>
@@ -152,14 +157,17 @@
     tabs.forEach(t=> {
       document.getElementById('btn-'+t).onclick = () => {
         tabs.forEach(x=> {
-          document.getElementById('btn-'+x).classList.toggle('active', x===t);
-          document.getElementById('tab-'+x).classList.toggle('active', x===t);
+          document.getElementById('btn-'+x)
+            .classList.toggle('active', x===t);
+          document.getElementById('tab-'+x)
+            .classList.toggle('active', x===t);
         });
         if(t==='data') loadData();
       };
     });
 
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+    const sheetUrl =
+      'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
     let allRows=[], headers=[];
 
     async function loadData(){
@@ -170,7 +178,9 @@
       const rows = txt.trim().split('\n').map(r=>r.split(','));
       headers = rows.shift(); allRows = rows;
       const thead = '<tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr>';
-      const tbody = allRows.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('');
+      const tbody = allRows.map(r=>
+        '<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>'
+      ).join('');
       document.getElementById('table-head').innerHTML=thead;
       document.getElementById('table-body').innerHTML=tbody;
       document.getElementById('loading').style.display='none';
@@ -179,9 +189,10 @@
     }
 
     function populate(selId, col){
-      const sel = document.getElementById(selId);
-      const vals = Array.from(new Set(allRows.map(r=>r[col]))).sort();
-      sel.innerHTML = '<option value="">Tümü</option>'+vals.map(v=>`<option>${v}</option>`).join('');
+      const sel=document.getElementById(selId);
+      const vals=Array.from(new Set(allRows.map(r=>r[col]))).sort();
+      sel.innerHTML='<option value="">Tümü</option>'+
+        vals.map(v=>`<option>${v}</option>`).join('');
     }
 
     function applyFilter(){
