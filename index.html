@@ -258,29 +258,78 @@
       border-radius: 4px;
     }
     
-    /* --- Grafikler --- */
-    .charts-container {
+    /* --- Grafikler Sekmesi --- */
+    .charts-header {
       display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
       flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .chart-controls {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
       gap: 1.5rem;
-      justify-content: center;
+      margin-top: 1rem;
     }
-    .chart-box {
-      flex: 1 1 350px;
-      background: #fff;
-      padding: 1rem;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      transition: transform 0.3s ease;
+
+    .chart-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      overflow: hidden;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    .chart-box:hover {
+
+    .chart-card:hover {
       transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
     }
-    .chart-box h3 { 
-      margin-top: 0; 
-      color: #333;
-      border-bottom: 1px solid #eee;
-      padding-bottom: 0.5rem;
+
+    .chart-header {
+      padding: 1.2rem 1.5rem;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .chart-header h3 {
+      margin: 0;
+      color: #2d3748;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .chart-icon {
+      font-size: 1.3em;
+    }
+
+    .chart-info {
+      font-size: 0.9rem;
+      color: #718096;
+      margin-top: 0.3rem;
+    }
+
+    .chart-container {
+      padding: 1rem;
+      min-height: 300px;
+    }
+
+    .chart-container iframe {
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
     }
 
     /* --- Linkler --- */
@@ -473,6 +522,16 @@
         width: 48%;
         padding: 0.8rem;
       }
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+      .chart-header {
+        padding: 1rem;
+      }
+      .chart-container {
+        padding: 0.5rem;
+        min-height: 250px;
+      }
     }
   </style>
 </head>
@@ -630,27 +689,64 @@
     </p>
   </div>
 
-  <!-- 6. Grafikler -->
+  <!-- 6. Grafikler (GÜNCELLENMİŞ) -->
   <div id="tab-charts" class="tab">
-    <h1>Canlı Grafikler</h1>
-    <div class="charts-container">
-      <div class="chart-box">
-        <h3>Sorumlulara Göre Dağılım</h3>
-        <iframe
-          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
-          height="300"></iframe>
+    <div class="charts-header">
+      <h1>İş Takip Analizleri</h1>
+      <div class="chart-controls">
+        <button id="refresh-charts" class="refresh-button">
+          <span class="refresh-icon">🔄</span> Grafikleri Yenile
+        </button>
       </div>
-      <div class="chart-box">
-        <h3>Durum Dağılımı</h3>
-        <iframe
-          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
-          height="300"></iframe>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><span class="chart-icon">📊</span> Sorumlulara Göre Dağılım</h3>
+          <div class="chart-info">Görevlerin sorumlu kişilere göre dağılımı</div>
+        </div>
+        <div class="chart-container">
+          <iframe
+            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
+            height="300"></iframe>
+        </div>
       </div>
-      <div class="chart-box">
-        <h3>Öncelik Dağılımı</h3>
-        <iframe
-          src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
-          height="300"></iframe>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><span class="chart-icon">📈</span> Durum Dağılımı</h3>
+          <div class="chart-info">Görevlerin tamamlanma durumları</div>
+        </div>
+        <div class="chart-container">
+          <iframe
+            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
+            height="300"></iframe>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3><span class="chart-icon">🔝</span> Öncelik Dağılımı</h3>
+          <div class="chart-info">Görevlerin öncelik seviyeleri</div>
+        </div>
+        <div class="chart-container">
+          <iframe
+            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
+            height="300"></iframe>
+        </div>
+      </div>
+
+      <div class="chart-card full-width">
+        <div class="chart-header">
+          <h3><span class="chart-icon">🗓️</span> Zaman Çizelgesi</h3>
+          <div class="chart-info">Görevlerin zaman içindeki dağılımı</div>
+        </div>
+        <div class="chart-container">
+          <iframe
+            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=2109876543&format=interactive"
+            height="350"></iframe>
+        </div>
       </div>
     </div>
   </div>
@@ -804,6 +900,23 @@
         qBody.innerHTML='';
         document.getElementById('results-info').textContent = '';
       }
+
+      // Grafikleri yenileme butonu
+      document.getElementById('refresh-charts').addEventListener('click', function() {
+        const iframes = document.querySelectorAll('.chart-container iframe');
+        iframes.forEach(iframe => {
+          const src = iframe.src;
+          iframe.src = '';
+          setTimeout(() => { iframe.src = src; }, 100);
+        });
+        
+        // Kullanıcıya bildirim
+        const originalText = this.innerHTML;
+        this.innerHTML = '<span class="refresh-icon">✓</span> Grafikler Yenilendi';
+        setTimeout(() => {
+          this.innerHTML = originalText;
+        }, 2000);
+      });
 
       refreshBtn.onclick = loadData;
       applyBtn.onclick   = applyFilter;
