@@ -1,1053 +1,390 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>İş - Süreç Takip</title>
-  <style>
-    /* --- Genel Reset & Mobil Uyumlu --- */
-    * { box-sizing: border-box; }
-    body { 
-      margin: 0; 
-      font-family: Arial, sans-serif; 
-      background: #f5f5f5; 
-      line-height: 1.6;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İş Takip Sistemi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-    /* YENİ TAKİP SEKMESİ STİLLERİ */
-    .table-container {
-      background: white;
-      border-radius: 10px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin: 1rem 0;
-    }
+        header {
+            background-color: #fff;
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-    .table-header {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      gap: 1rem;
-    }
+        .logo {
+            height: 40px; /* Adjust as needed */
+        }
 
-    .table-controls {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+        .header-title {
+            font-size: 24px;
+            color: #007acc; /* Mavi renk */
+            margin-left: 15px;
+        }
 
-    .refresh-button {
-      padding: 0.7rem 1.2rem;
-      background: #007acc;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s;
-    }
+        .tabs {
+            display: flex;
+            background-color: #007acc; /* Mavi ton */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
 
-    .refresh-button:hover {
-      background: #0062a3;
-      transform: translateY(-1px);
-    }
+        .tab-button {
+            padding: 15px 25px;
+            text-align: center;
+            cursor: pointer;
+            color: #fff;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            flex-grow: 1; /* Tabs will take equal width */
+            border-right: 1px solid rgba(255,255,255,0.1); /* Separator */
+            user-select: none; /* Prevent text selection */
+        }
 
-    .refresh-icon {
-      font-size: 1.1em;
-    }
+        .tab-button:last-child {
+            border-right: none;
+        }
 
-    .loading-indicator {
-      display: none;
-      align-items: center;
-      gap: 0.7rem;
-      color: #555;
-      font-size: 0.95rem;
-    }
+        .tab-button:hover {
+            background-color: #005f99; /* Darker blue on hover */
+            transform: translateY(-2px);
+        }
 
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 3px solid rgba(0,0,0,0.1);
-      border-radius: 50%;
-      border-top-color: #007acc;
-      animation: spin 1s linear infinite;
-    }
+        .tab-button.active {
+            background-color: #005f99; /* Darker blue for active tab */
+            border-bottom: 3px solid #f0b000; /* Yellow accent */
+            box-shadow: inset 0 -3px 5px rgba(0,0,0,0.2);
+        }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+        .tab-content {
+            flex-grow: 1; /* Make tab content fill available space */
+            padding: 20px;
+            background-color: #fdfdfd;
+            border-radius: 0 0 8px 8px; /* Rounded corners for bottom */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin: 20px;
+            overflow-y: auto; /* Enable scrolling for content if needed */
+        }
 
-    .record-count {
-      background: #f0f4f8;
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      color: #4a5568;
-      margin-left: auto;
-    }
+        .tab {
+            display: none;
+        }
 
-    .table-scroll {
-      overflow-x: auto;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-    }
+        .tab.active {
+            display: block;
+        }
 
-    #responses-table {
-      width: 100%;
-      min-width: 800px;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
+        /* --- Genel Iframe Stilleri --- */
+        /* Form girişi için kullanılacak varsayılan iframe stili */
+        .form-iframe {
+            width: 100%;
+            border: none;
+            border-radius: 8px;
+            min-height: 80vh; /* Form iframe'i için varsayılan minimum yükseklik */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: white;
+        }
 
-    #responses-table th {
-      background: #f8fafc;
-      padding: 1rem;
-      text-align: left;
-      font-weight: 600;
-      color: #4a5568;
-      border-bottom: 2px solid #e2e8f0;
-      position: sticky;
-      top: 0;
-    }
+        /* Chart iframe'leri için responsive kapsayıcı */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 75%; /* 4:3 en boy oranı için. Grafikleriniz 16:9 ise %56.25 yapın. */
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px; /* Chart iframe kapsayıcısına da border-radius ekle */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Chart iframe kapsayıcısına da gölge ekle */
+        }
 
-    #responses-table td {
-      padding: 0.8rem 1rem;
-      border-bottom: 1px solid #edf2f7;
-      color: #2d3748;
-    }
+        .chart-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            /* Chart iframe'leri için min-height veya sabit height olmayacak, responsive olacak */
+        }
 
-    #responses-table tr:last-child td {
-      border-bottom: none;
-    }
+        /* --- Grafikler Sekmesi CSS (Grid Düzeni) --- */
+        #tab-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 300px min genişlik */
+            gap: 20px; /* Grafikler arası boşluk */
+            align-items: start; /* Content aligns to the top of the grid cell */
+            padding: 20px;
+        }
 
-    #responses-table tr:hover {
-      background-color: #f8fafc;
-    }
+        #charts-grid.auto-fit-on {
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
 
-    /* Durum etiketleri */
-    .status-badge {
-      display: inline-block;
-      padding: 0.3rem 0.8rem;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      font-weight: 500;
-    }
+        #charts-grid.auto-fit-off {
+            grid-template-columns: 1fr; /* Tek sütun */
+        }
 
-    .status-pending {
-      background: #ffedd5;
-      color: #9a3412;
-    }
+        /* Toggle Button Styling */
+        .toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+            padding: 0 20px;
+        }
 
-    .status-completed {
-      background: #dcfce7;
-      color: #166534;
-    }
+        .toggle-button {
+            background-color: #007acc;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
 
-    .status-inprogress {
-      background: #dbeafe;
-      color: #1e40af;
-    }
+        .toggle-button:hover {
+            background-color: #005f99;
+        }
 
-    /* --- Navigasyon --- */
-    nav { 
-      display: flex; 
-      flex-wrap: wrap; 
-      background: #007acc; 
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    nav button {
-      flex: 1 1 auto;
-      padding: 1rem;
-      border: none;
-      background: #005fa3;
-      color: #fff;
-      cursor: pointer;
-      font-weight: bold;
-      min-width: 100px;
-      transition: all 0.3s ease;
-    }
-    nav button:hover { background: #004a8c; }
-    nav button.active { 
-      background: #003f7f; 
-      box-shadow: inset 0 3px 5px rgba(0,0,0,0.2);
-    }
+        /* Responsive Ayarlamalar */
+        @media (max-width: 1024px) {
+            #tab-charts {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+        }
 
-    /* --- Sekme İçerikleri --- */
-    .tab { 
-      display: none; 
-      padding: 1.5rem; 
-      animation: fadeIn 0.5s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-    .tab.active { display: block; }
+        @media (max-width: 768px) {
+            .tab-button {
+                padding: 12px 15px;
+                font-size: 14px;
+            }
+            #tab-charts {
+                grid-template-columns: 1fr; /* Küçük ekranlarda tek sütun */
+            }
+            .chart-container {
+                padding-bottom: 70%; /* Daha küçük ekranlar için oranı ayarla */
+            }
+        }
 
-    /* --- Iframe Stilleri --- */
-    /* Genel iframe, eğer spesifik bir .chart-container içinde değilse */
-    iframe {
-      width: 100%;
-      border: none;
-      border-radius: 8px;
-      min-height: 80vh; /* Form iframe'i için uygun bir yükseklik */
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      background: white;
-    }
+        @media (max-width: 480px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .tabs {
+                flex-wrap: wrap;
+            }
+            .tab-button {
+                flex-basis: 50%; /* İkişerli sıralanır */
+                border-right: none;
+                border-bottom: 1px solid rgba(255,255,255,0.1);
+            }
+            .tab-button:nth-child(even) {
+                border-right: none;
+            }
+             .tab-button:last-child {
+                border-bottom: none;
+            }
+            .tab-content {
+                margin: 10px;
+                padding: 15px;
+            }
+        }
 
-    /* --- Tablo Stilleri --- */
-    table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-top: 1rem;
-      background: white;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    th, td { 
-      border: 1px solid #ddd; 
-      padding: 0.75rem; 
-      text-align: left; 
-    }
-    th { 
-      background: #f0f0f0; 
-      position: sticky;
-      top: 0;
-    }
-    tr:nth-child(even) { background-color: #f9f9f9; }
-    tr:hover { background-color: #f1f1f1; }
+        .link-bottom {
+            text-align: right;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+        .link-bottom a {
+            text-decoration: none;
+            font-weight: bold;
+        }
 
-    /* --- Butonlar --- */
-    button { 
-      padding: 0.6rem 1.2rem; 
-      margin: 0.5rem 0.5rem 0.5rem 0; 
-      border: none; 
-      border-radius: 4px; 
-      color: #fff; 
-      cursor: pointer; 
-      font-weight: bold;
-      transition: all 0.3s ease;
-    }
-    #refresh-btn { background: #007acc; }
-    #refresh-btn:hover { background: #005fa3; }
-    #loading { color: #555; margin-top: 0.5rem; }
-
-    /* --- Filtre Alanı --- */
-    .filters {
-      background: white;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .filters label {
-      margin-right: 0.5rem;
-      font-weight: bold;
-    }
-    .filters select, 
-    .filters input {
-      padding: 0.5rem;
-      margin-right: 1rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    
-    /* --- GÜNCELLENMİŞ Grafikler Sekmesi --- */
-    .charts-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-
-    .chart-controls {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-
-    .auto-fit-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.9rem;
-      color: #4a5568;
-    }
-
-    .charts-grid {
-      display: grid;
-      grid-template-columns: 1fr; /* Mobil için tek sütun */
-      gap: 1.5rem;
-      margin-top: 1rem;
-    }
-
-    @media (min-width: 768px) {
-      .charts-grid {
-        grid-template-columns: repeat(2, 1fr); /* Tablet ve üstü için 2 sütun */
-      }
-    }
-
-    @media (min-width: 1024px) {
-      .charts-grid {
-        grid-template-columns: repeat(2, 1fr); /* Masaüstü için yine 2 sütun, ihtiyaca göre 3 veya 4 yapılabilir */
-      }
-    }
-
-
-    .chart-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      overflow: hidden;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      width: 100%;
-    }
-
-    .chart-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
-    }
-
-    .chart-header {
-      padding: 1rem;
-      border-bottom: 1px solid #f0f0f0;
-    }
-
-    .chart-header h3 {
-      margin: 0;
-      color: #2d3748;
-      font-size: 1.1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .chart-icon {
-      font-size: 1.2em;
-    }
-
-    .chart-info {
-      font-size: 0.85rem;
-      color: #718096;
-      margin-top: 0.3rem;
-    }
-
-    /* Grafikler için responsive kapsayıcı */
-    .chart-container {
-      position: relative; /* iframe'in absolute konumlandırması için */
-      width: 100%;
-      /* En boy oranını korumak için, örneğin 4:3 oranı (yükseklik/genişlik * 100) */
-      padding-bottom: 75%; /* 4/3 = 0.75 yani %75 */ 
-      height: 0; /* padding-bottom ile yükseklik belirleneceği için 0 yapılır */
-      overflow: hidden; /* Taşmaları gizle */
-    }
-
-    .chart-container iframe {
-      position: absolute; /* Kapsayıcının boyutuna tamamen yayılacak */
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: none;
-      /* min-height kaldırıldı, artık padding-bottom ile kontrol ediliyor */
-    }
-
-    /* Auto-fit toggle switch */
-    .switch {
-      position: relative;
-      display: inline-block;
-      width: 50px;
-      height: 24px;
-    }
-
-    .switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 24px;
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 4px;
-      bottom: 4px;
-      background-color: white;
-      transition: .4s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: #007acc;
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(26px);
-    }
-
-    /* --- Linkler --- */
-    .link-bottom { 
-      text-align: right; 
-      margin: 1rem 0; 
-    }
-    .btn-edit {
-      display: inline-block;
-      padding: 0.75rem 1.5rem;
-      background: #28a745;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 4px;
-      font-weight: bold;
-      margin: 1rem 0;
-      transition: all 0.3s ease;
-    }
-    .btn-edit:hover {
-      background: #218838;
-      transform: translateY(-2px);
-    }
-
-    /* --- GÜNCELLENMİŞ Analiz Sekmesi Stilleri (Basitleştirilmiş) --- */
-    .analiz-container {
-      max-width: 600px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-    .analiz-container h2 {
-      color: #007acc;
-      margin-bottom: 1.5rem;
-    }
-    .analiz-btn {
-      display: inline-block;
-      padding: 1rem 2rem;
-      background: #007acc;
-      color: white;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 1.1rem;
-      font-weight: bold;
-      margin: 1.5rem 0;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .analiz-btn:hover {
-      background: #005fa3;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 10px rgba(0,0,0,0.15);
-    }
-
-    /* Sorgu Sekmesi Stilleri */
-    .query-container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-
-    .filter-card {
-      background: white;
-      border-radius: 10px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-      margin-bottom: 1.5rem;
-    }
-
-    .filter-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .filter-header h3 {
-      margin: 0;
-      color: #2d3748;
-    }
-
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .filter-group {
-      margin-bottom: 0.5rem;
-    }
-
-    .filter-group label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-      color: #4a5568;
-    }
-
-    .filter-select, .filter-input {
-      width: 100%;
-      padding: 0.7rem;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      font-size: 0.95rem;
-    }
-
-    /* Filtre buton stilleri */
-    .filter-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 15px;
-      justify-content: flex-end;
-    }
-
-    .filter-btn {
-      padding: 0.7rem 1.2rem;
-      border: none;
-      border-radius: 6px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .filter-btn.primary {
-      background: #4299e1;
-      color: white;
-    }
-
-    .filter-btn.danger {
-      background: #f56565;
-      color: white;
-    }
-
-    .filter-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-
-    .results-info {
-      margin: 1rem 0;
-      padding: 0.5rem 1rem;
-      background: #f8fafc;
-      border-radius: 6px;
-      color: #4a5568;
-    }
-
-    /* Mobil Uyumluluk */
-    @media (max-width: 768px) {
-      nav button {
-        flex: 1 1 33%;
-        padding: 0.8rem;
-        font-size: 0.9rem;
-      }
-      .tab {
-        padding: 1rem;
-      }
-      .filters {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 0.5rem;
-      }
-      .filters label {
-        grid-column: span 2;
-      }
-      .filter-grid {
-        grid-template-columns: 1fr;
-      }
-      .filter-card {
-        padding: 1rem;
-      }
-      #query-table th, 
-      #query-table td {
-        padding: 0.7rem;
-      }
-      .filter-actions {
-        justify-content: center;
-      }
-      .filter-btn {
-        width: 48%;
-        padding: 0.8rem;
-      }
-      /* Grafikler için mobil görünümde tam genişlik ve responsive kapsayıcı korunur */
-      .charts-grid {
-        grid-template-columns: 1fr; /* Mobil için tek sütun */
-      }
-    }
-  </style>
+        footer {
+            text-align: center;
+            padding: 15px;
+            background-color: #eee;
+            color: #777;
+            font-size: 14px;
+            margin-top: auto; /* Pushes footer to the bottom */
+        }
+    </style>
 </head>
 <body>
-  <nav>
-    <button id="btn-entry" class="active">Giriş</button>
-    <button id="btn-results">Sonuçlar</button>
-    <button id="btn-data">Takip</button>
-    <button id="btn-query">Sorgu</button>
-    <button id="btn-edit">Düzenle</button>
-    <button id="btn-charts">Grafikler</button>
-  </nav>
+    <header>
+        <img src="https://lh3.googleusercontent.com/u/0/d/1Bf2h7Rk5Q_d_f8W7p5Q_Z9y7Q0m_L-w=w1280-h720-iv1" alt="Logo" class="logo">
+        <h1 class="header-title">İş Takip Sistemi</h1>
+    </header>
 
-  <div id="tab-entry" class="tab active">
-    <iframe
-      src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform?embedded=true"
-      title="Form Girişi"></iframe>
-    <p class="link-bottom">
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform"
-          target="_blank" rel="noopener" style="color:#007acc;">
-        ➤ Yeni Pencerede Aç
-      </a>
-    </p>
-  </div>
+    <nav class="tabs">
+        <div class="tab-button active" data-tab="tab-entry">Giriş</div>
+        <div class="tab-button" data-tab="tab-data">Sonuçlar</div>
+        <div class="tab-button" data-tab="tab-query">Sorgu</div>
+        <div class="tab-button" data-tab="tab-edit">Düzenle</div>
+        <div class="tab-button" data-tab="tab-charts">Grafikler</div>
+    </nav>
 
-  <div id="tab-results" class="tab">
-    <div class="analiz-container">
-      <h2>Form Analiz Sonuçları</h2>
-      <p>Google Forms analiz sayfasını görüntülemek için:</p>
-      <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewanalytics"
-          target="_blank" rel="noopener" class="analiz-btn">
-        Analiz Sayfasını Aç
-      </a>
-    </div>
-  </div>
-
-  <div id="tab-data" class="tab">
-    <div class="table-container">
-      <div class="table-header">
-        <h1>İş-Süreç Takip</h1>
-        <div class="table-controls">
-          <button id="refresh-btn" class="refresh-button">
-            <span class="refresh-icon">🔄</span> Yenile
-          </button>
-          <div id="loading" class="loading-indicator">
-            <div class="spinner"></div>
-            <span>Veriler yükleniyor...</span>
-          </div>
-          <div class="record-count" id="record-count"></div>
+    <main class="tab-content">
+        <div id="tab-entry" class="tab active">
+            <iframe
+                class="form-iframe"
+                src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform?embedded=true"
+                title="Form Girişi"></iframe>
+            <p class="link-bottom">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform"
+                    target="_blank" rel="noopener" style="color:#007acc;">
+                    ➤ Yeni Pencerede Aç
+                </a>
+            </p>
         </div>
-      </div>
-      
-      <div class="table-scroll">
-        <table id="responses-table">
-          <thead id="table-head"></thead>
-          <tbody id="table-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 
-  <div id="tab-query" class="tab">
-    <div class="query-container">
-      <h1>İş Takip Sorgu</h1>
-      
-      <div class="filter-card">
-        <div class="filter-header">
-          <h3>Filtreleme Seçenekleri</h3>
+        <div id="tab-data" class="tab">
+            <iframe
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649&amp;single=true&amp;widget=true&amp;headers=false"
+                class="form-iframe" title="Veri Tablosu"></iframe>
+            <p class="link-bottom">
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649"
+                    target="_blank" rel="noopener" style="color:#007acc;">
+                    ➤ Yeni Pencerede Aç
+                </a>
+            </p>
         </div>
-        
-        <div class="filter-grid">
-          <div class="filter-group">
-            <label>Sorumlu</label>
-            <select id="filter-responsible" class="filter-select">
-              <option value="">Tümü</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Durum</label>
-            <select id="filter-status" class="filter-select">
-              <option value="">Tümü</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Öncelik</label>
-            <select id="filter-priority" class="filter-select">
-              <option value="">Tümü</option>
-            </select>
-          </div>
-          
-          <div class="filter-group">
-            <label>Başlangıç Tarihi (Min)</label>
-            <input type="date" id="filter-start-from" class="filter-input">
-          </div>
-          
-          <div class="filter-group">
-            <label>Başlangıç Tarihi (Max)</label>
-            <input type="date" id="filter-start-to" class="filter-input">
-          </div>
-          
-          <div class="filter-group">
-            <label>Anahtar Kelime</label>
-            <input type="text" id="filter-text" placeholder="Arama yapın..." class="filter-input">
-          </div>
+
+        <div id="tab-query" class="tab">
+            <iframe
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650&amp;single=true&amp;widget=true&amp;headers=false"
+                class="form-iframe" title="Sorgu Tablosu"></iframe>
+            <p class="link-bottom">
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650"
+                    target="_blank" rel="noopener" style="color:#007acc;">
+                    ➤ Yeni Pencerede Aç
+                </a>
+            </p>
         </div>
-        
-        <div class="filter-actions">
-          <button id="apply-btn" class="filter-btn primary">Filtrele</button>
-          <button id="reset-btn" class="filter-btn danger">Temizle</button>
+
+        <div id="tab-edit" class="tab">
+             <iframe
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1815124976&amp;single=true&amp;widget=true&amp;headers=false"
+                class="form-iframe" title="Düzenleme Tablosu"></iframe>
+            <p class="link-bottom">
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1815124976"
+                    target="_blank" rel="noopener" style="color:#007acc;">
+                    ➤ Yeni Pencerede Aç
+                </a>
+            </p>
         </div>
-      </div>
-      
-      <div class="results-info" id="results-info"></div>
-      
-      <div class="table-scroll">
-        <table id="query-table">
-          <thead id="query-head"></thead>
-          <tbody id="query-body"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-  
-  <div id="tab-edit" class="tab">
-    <h1>Tabloyu Düzenle</h1>
-    <p>Google Sheets üzerinden verileri düzenlemek için aşağıdaki butona tıklayın:</p>
-    <a href="https://docs.google.com/spreadsheets/d/1MRE6qxE6jj9CXm2J6AP6glijTMR-Bn9imPLHRvAErfU/edit"
-        target="_blank"
-        class="btn-edit">
-      Google Sheets'te Aç & Düzenle
-    </a>
-    <p style="color:#666; font-size:0.9em;">
-      Not: Değişikliklerinizin görüntülenmesi için "Takip" sekmesindeki 
-      "Yenile" butonuna basmanız gerekebilir.
-    </p>
-  </div>
 
-  <div id="tab-charts" class="tab">
-    <div class="charts-header">
-      <h1>İş Takip Analizleri</h1>
-      <div class="chart-controls">
-        <div class="auto-fit-toggle">
-          <label class="switch">
-            <input type="checkbox" id="auto-fit-toggle" checked>
-            <span class="slider"></span>
-          </label>
-          <span>Ekrana Sığdır</span>
+        <div id="tab-charts" class="tab">
+            <div class="toggle-container">
+                <button id="auto-fit-toggle" class="toggle-button">Otomatik Sütun Düzeni</button>
+            </div>
+
+            <div id="charts-grid">
+                <div class="chart-container">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1109927702&amp;format=interactive" title="İş Durumu Grafiği"></iframe>
+                </div>
+
+                <div class="chart-container">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1943890288&amp;format=interactive" title="Öncelik Dağılımı Grafiği"></iframe>
+                </div>
+
+                <div class="chart-container">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=735492472&amp;format=interactive" title="Sorumlu Dağılımı Grafiği"></iframe>
+                </div>
+
+                <div class="chart-container">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1659795098&amp;format=interactive" title="Geçen Süre Grafiği"></iframe>
+                </div>
+
+                <div class="chart-container">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1375971439&amp;format=interactive" title="İş Türü Dağılımı Grafiği"></iframe>
+                </div>
+
+                <div class="chart-container">
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1903496338&amp;format=interactive" title="Son Durum ve Geçen Süre İlişkisi Grafiği"></iframe>
+                </div>
+            </div>
         </div>
-        <button id="refresh-charts" class="refresh-button">
-          <span class="refresh-icon">🔄</span> Grafikleri Yenile
-        </button>
-      </div>
-    </div>
+    </main>
 
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3><span class="chart-icon">📊</span> Sorumlulara Göre Dağılım</h3>
-          <div class="chart-info">Görevlerin sorumlu kişilere göre dağılımı</div>
-        </div>
-        <div class="chart-container">
-          <iframe
-            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=451563990&format=interactive"
-            ></iframe>
-        </div>
-      </div>
+    <footer>
+        <p>&copy; 2025 İş Takip Sistemi. Tüm hakları saklıdır.</p>
+    </footer>
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3><span class="chart-icon">📈</span> Durum Dağılımı</h3>
-          <div class="chart-info">Görevlerin tamamlanma durumları</div>
-        </div>
-        <div class="chart-container">
-          <iframe
-            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
-            ></iframe>
-        </div>
-      </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabs = document.querySelectorAll('.tab');
+            const chartsGrid = document.getElementById('charts-grid');
+            const autoFitToggle = document.getElementById('auto-fit-toggle');
+            let isAutoFit = true; // Başlangıçta otomatik sığdırma açık
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3><span class="chart-icon">🔝</span> Öncelik Dağılımı</h3>
-          <div class="chart-info">Görevlerin öncelik seviyeleri</div>
-        </div>
-        <div class="chart-container">
-          <iframe
-            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
-            ></iframe>
-        </div>
-      </div>
+            function showTab(tabId) {
+                tabs.forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                document.getElementById(tabId).classList.add('active');
 
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3><span class="chart-icon">🗓️</span> Zaman Çizelgesi</h3>
-          <div class="chart-info">Görevlerin zaman içindeki dağılımı</div>
-        </div>
-        <div class="chart-container">
-          <iframe
-            src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubhtml?gid=729938623&single=true"
-            ></iframe>
-        </div>
-      </div>
-    </div>
-  </div>
+                tabButtons.forEach(button => {
+                    button.classList.remove('active');
+                });
+                document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
 
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Tab butonları
-      const tabs = ['entry','results','data','query','edit','charts'];
-      tabs.forEach(t => {
-        document.getElementById('btn-'+t).onclick = () => {
-          tabs.forEach(x => {
-            document.getElementById('btn-'+x)
-              .classList.toggle('active', x===t);
-            document.getElementById('tab-'+x)
-              .classList.toggle('active', x===t);
-          });
-          if (t==='data') loadData();
-          // Grafikler sekmesine geçildiğinde boyutları ayarla
-          if (t === 'charts') {
-              // Küçük bir gecikme ekleyerek sayfanın render olmasını bekle
-              setTimeout(adjustChartSizes, 100); 
-          }
-        };
-      });
+                // Grafikler sekmesine geçildiğinde grafik boyutlarını ayarla/yenile
+                if (tabId === 'tab-charts') {
+                    refreshCharts();
+                }
+            }
 
-      // CSV URL'nizi buraya tam kopyalayın:
-      const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv';
+            function refreshCharts() {
+                const chartIframes = document.querySelectorAll('#tab-charts .chart-container iframe');
+                chartIframes.forEach(iframe => {
+                    const currentSrc = iframe.src;
+                    // iframe'i önce boş yapıp sonra tekrar yükleyerek içeriği zorla yenile
+                    iframe.src = 'about:blank';
+                    iframe.src = currentSrc;
+                });
+            }
 
-      // DOM element referansları
-      const loadingEl  = document.getElementById('loading');
-      const tableEl    = document.getElementById('responses-table');
-      const theadEl    = document.getElementById('table-head');
-      const tbodyEl    = document.getElementById('table-body');
-      const refreshBtn = document.getElementById('refresh-btn');
-      const selResp    = document.getElementById('filter-responsible');
-      const selStat    = document.getElementById('filter-status');
-      const selPrio    = document.getElementById('filter-priority');
-      const dateFrom   = document.getElementById('filter-start-from');
-      const dateTo     = document.getElementById('filter-start-to');
-      const txtFilter  = document.getElementById('filter-text');
-      const applyBtn   = document.getElementById('apply-btn');
-      const resetBtn   = document.getElementById('reset-btn');
-      const qHead      = document.getElementById('query-head');
-      const qBody      = document.getElementById('query-body');
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const tabId = button.dataset.tab;
+                    showTab(tabId);
+                });
+            });
 
-      let allRows = [], headers = [];
+            // Otomatik Sığdırma Butonu İşlevselliği
+            autoFitToggle.addEventListener('click', () => {
+                isAutoFit = !isAutoFit;
+                if (isAutoFit) {
+                    chartsGrid.classList.remove('auto-fit-off');
+                    chartsGrid.classList.add('auto-fit-on');
+                    autoFitToggle.textContent = 'Otomatik Sütun Düzeni';
+                } else {
+                    chartsGrid.classList.remove('auto-fit-on');
+                    chartsGrid.classList.add('auto-fit-off');
+                    autoFitToggle.textContent = 'Tek Sütun Düzeni';
+                }
+                refreshCharts(); // Düzen değiştiğinde grafikleri yenile
+            });
 
-      // CSV'den veri oku, tabloya doldur
-      async function loadData(){
-        console.clear();
-        loadingEl.style.display = 'flex';
-        theadEl.innerHTML = '';
-        tbodyEl.innerHTML = '';
-        document.getElementById('record-count').textContent = '';
-        [selResp, selStat, selPrio].forEach(s=> s.innerHTML = '<option value="">Tümü</option>');
-        qBody.innerHTML = '';
-        allRows = [];
-
-        try {
-          const res = await fetch(sheetUrl);
-          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
-          
-          const text = await res.text();
-          const rows = text.trim().split('\n').map(r => r.split(','));
-          headers = rows.shift();
-          allRows = rows;
-
-          // Tablo başlıkları
-          theadEl.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
-          
-          // Tablo gövdesi (durum renklendirmesi ile)
-          tbodyEl.innerHTML = allRows.map(row => {
-            // Index 8: Durum sütunu (I sütunu)
-            // Lütfen bu indeksi, sizin e-tablonuzdaki "Durum" sütununun gerçek indeksine göre güncelleyin.
-            // Örnek olarak, siz daha önce "Durum" için I sütununu (index 8) belirtmiştiniz.
-            const statusClass = getStatusClass(row[8]); 
-            return `
-              <tr>
-                ${row.map((cell, i) => 
-                  // Index 8 (Durum sütunu) için özel stil
-                  i === 8 ? `<td><span class="status-badge ${statusClass}">${cell}</span></td>` 
-                          : `<td>${cell}</td>`
-                ).join('')}
-              </tr>
-            `;
-          }).join('');
-
-          document.getElementById('record-count').textContent = `${allRows.length} kayıt`;
-          // Sütun indekslerini kendi e-tablonuzdaki karşılıklarına göre ayarlayın:
-          // Sorumlu: D sütunu (index 3)
-          populate(selResp, 3);
-          // Durum: I sütunu (index 8)
-          populate(selStat, 8);
-          // Öncelik: G sütunu (index 6)
-          populate(selPrio, 6);
-          qHead.innerHTML = '<tr>' + headers.map(h => `<th>${h}</th>`).join('');
-
-        } catch (error) {
-          console.error('Hata:', error);
-          document.getElementById('record-count').textContent = `Hata: ${error.message}`;
-          document.getElementById('record-count').style.color = '#e53e3e';
-        } finally {
-          loadingEl.style.display = 'none';
-        }
-      }
-
-      function getStatusClass(statusText) {
-        const status = (statusText || '').toLowerCase();
-        if (status.includes('tamam')) return 'status-completed';
-        if (status.includes('devam')) return 'status-inprogress';
-        return 'status-pending';
-      }
-
-      function populate(sel, idx){
-        // Sadece geçerli (boş olmayan) değerleri al ve benzersiz yap
-        Array.from(new Set(allRows.map(r=>r[idx]).filter(v => v !== null && v !== ''))).sort()
-             .forEach(v=>{
-               const o=document.createElement('option');
-               o.value=o.textContent=v;
-               sel.appendChild(o);
-             });
-      }
-
-      function applyFilter() {
-        let f = allRows.slice();
-        
-        // Sorumlu: D sütunu (index 3)
-        if (selResp.value) f = f.filter(r => r[3] === selResp.value);
-        // Durum: I sütunu (index 8)
-        if (selStat.value) f = f.filter(r => r[8] === selStat.value);
-        // Öncelik: G sütunu (index 6)
-        if (selPrio.value) f = f.filter(r => r[6] === selPrio.value);
-        
-        // Başlangıç Tarihi: E sütunu (index 4)
-        if (dateFrom.value) {
-          f = f.filter(r => {
-            const rowDate = new Date(r[4]);
-            const filterDate = new Date(dateFrom.value);
-            return rowDate >= filterDate;
-          });
-        }
-        
-        // Başlangıç Tarihi: E sütunu (index 4)
-        if (dateTo.value) {
-          f = f.filter(r => {
-            const rowDate = new Date(r[4]);
-            const filterDate = new Date(dateTo.value);
-            return rowDate <= filterDate;
-          });
-        }
-        
-        if (txtFilter.value) {
-          const t = txtFilter.value.toLowerCase();
-          // Tüm hücrelerde arama yapar
-          f = f.filter(r => r.some(c => c && String(c).toLowerCase().includes(t)));
-        }
-        
-        // Sonuç bilgisini güncelle
-        document.getElementById('results-info').textContent = 
-          `${f.length} sonuç bulundu (Toplam ${allRows.length} kayıt)`;
-        
-        // Tabloyu güncelle
-        qBody.innerHTML = f.map(r =>
-          '<tr>' + r.map(c => `<td>${c || ''}</td>`).join('') + '</tr>'
-        ).join('');
-      }
-
-      function resetFilter(){
-        selResp.value=selStat.value=selPrio.value='';
-        dateFrom.value=dateTo.value=txtFilter.value='';
-        qBody.innerHTML='';
-        document.getElementById('results-info').textContent = '';
-      }
-
-      // Grafik Yenileme ve Otomatik Boyutlandırma Fonksiyonları
-      const autoFitToggle = document.getElementById('auto-fit-toggle');
-      const chartContainers = document.querySelectorAll('.chart-container');
-      
-      // Ekrana sığdırma fonksiyonu
-      function adjustChartSizes() {
-        const isAutoFit = autoFitToggle.checked;
-        chartContainers.forEach(container => {
-          const iframe = container.querySelector('iframe');
-          if (isAutoFit) {
-            // Ekrana sığdır modunda iframe'in kapsayıcıya tamamen yayılmasını sağla
-            // CSS zaten bunu yapıyor, bu JavaScript kısmı artık boyut hesaplaması yapmayacak
-            // Eğer iframe'lerin height veya width özelliklerinde inline style varsa kaldırır.
-            iframe.style.height = '100%'; 
-            iframe.style.width = '100%';
-          } else {
-            // Auto-fit kapalıyken varsayılan yüksekliğe geri dön
-            container.style.paddingBottom = 'initial'; // Responsive padding'i kaldır
-            iframe.style.height = '400px'; 
-            iframe.style.width = '100%';
-          }
+            // Sayfa yüklendiğinde varsayılan olarak Giriş sekmesini göster
+            showTab('tab-entry');
         });
-      }
-      
-      // Ekrana sığdırma toggle'ı
-      autoFitToggle.addEventListener('change', () => {
-          adjustChartSizes();
-          // Toggle durum değiştirdiğinde, grafiklerin yeniden yüklenmesini tetikleyebiliriz
-          refreshCharts(); 
-      });
-      
-      // Pencere boyutu değiştiğinde ayarlamaları yap (chart-container'ın genişliği değiştiği için padding-bottom'ı etkiler)
-      window.addEventListener('resize', () => {
-          // Eğer "Ekrana Sığdır" açıksa, responsive padding zaten işini yapacaktır.
-          // Bu yüzden burada sadece gerektiğinde refreshCharts çağırılabilir.
-          // Şimdilik sadece ayarlamaları yapsın.
-          if (autoFitToggle.checked) {
-              // Eğer grafikler sekmesi açıksa ve responsive mod aktifse,
-              // iframe'lerin kendi içlerinde yeniden boyutlanmasını sağlamak için
-              // iframe.src = iframe.src; çağrısı gerekebilir.
-              // Ancak CSS'in padding-bottom çözümü çoğu durumda yeterli olacaktır.
-          }
-      });
-      
-      // Grafik Yenileme Fonksiyonu (1 saatte bir)
-      function refreshCharts() {
-        const iframes = document.querySelectorAll('.chart-container iframe');
-        iframes.forEach(iframe => {
-          const originalSrc = iframe.src;
-          // SRC'yi değiştirip eski haline getirerek yeniden yüklemeyi zorla
-          // Bu, Google Charts'ın kendi içindeki yeniden render mekanizmasını tetikleyebilir.
-          iframe.src = 'about:blank'; // Geçici olarak boş bir sayfa yükle
-          setTimeout(() => {
-              iframe.src = originalSrc; // Orijinal SRC'yi geri yükle
-          }, 10); // Çok kısa bir gecikme
-        });
-        
-        // Kullanıcıya görsel feedback
-        const btn = document.getElementById('refresh-charts');
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<span class="refresh-icon">✓</span> Yenilendi';
-        btn.disabled = true;
-        
-        setTimeout(() => {
-          btn.innerHTML = originalHTML;
-          btn.disabled = false;
-        }, 2000);
-      }
-      
-      // Manuel yenileme butonu
-      document.getElementById('refresh-charts').addEventListener('click', refreshCharts);
-      
-      // Otomatik yenileme (1 saat = 3600000 ms)
-      setInterval(refreshCharts, 3600000);
-      
-      // İlk yüklemede tabloyu da çek
-      loadData();
-    });
-  </script>
+    </script>
 </body>
 </html>
