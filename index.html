@@ -14,70 +14,70 @@
       line-height: 1.6;
     }
 
-    /* --- YENİ BANNER STİLLERİ BAŞLANGIÇ --- */
-    .banner {
-        background: linear-gradient(135deg, #005f99 0%, #007acc 50%, #00aaff 100%); /* Mavi tonlarında gradient */
-        color: #fff;
-        padding: 30px 20px;
-        text-align: center;
-        position: relative;
-        overflow: hidden; /* Animasyonlar için gizle */
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+    /* --- YENİ BANNER STİLLERİ BAŞLANGIÇ --- */
+    .banner {
+        background: linear-gradient(135deg, #005f99 0%, #007acc 50%, #00aaff 100%); /* Mavi tonlarında gradient */
+        color: #fff;
+        padding: 30px 20px;
+        text-align: center;
+        position: relative;
+        overflow: hidden; /* Animasyonlar için gizle */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-    .banner::before,
-    .banner::after {
-        content: '';
-        position: absolute;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 50%;
-        opacity: 0.5;
-        animation: pulse 4s infinite ease-in-out;
-        z-index: 0; /* Arka planda kalmasını sağlar */
-    }
+    .banner::before,
+    .banner::after {
+        content: '';
+        position: absolute;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        opacity: 0.5;
+        animation: pulse 4s infinite ease-in-out;
+        z-index: 0; /* Arka planda kalmasını sağlar */
+    }
 
-    .banner::before {
-        width: 150px;
-        height: 150px;
-        top: -50px;
-        left: -50px;
-        animation-delay: 0s;
-    }
+    .banner::before {
+        width: 150px;
+        height: 150px;
+        top: -50px;
+        left: -50px;
+        animation-delay: 0s;
+    }
 
-    .banner::after {
-        width: 100px;
-        height: 100px;
-        bottom: -30px;
-        right: -30px;
-        animation-delay: 2s;
-    }
+    .banner::after {
+        width: 100px;
+        height: 100px;
+        bottom: -30px;
+        right: -30px;
+        animation-delay: 2s;
+    }
 
-    @keyframes pulse {
-        0% { transform: scale(0.8); opacity: 0.5; }
-        50% { transform: scale(1.1); opacity: 0.7; }
-        100% { transform: scale(0.8); opacity: 0.5; }
-    }
+    @keyframes pulse {
+        0% { transform: scale(0.8); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.7; }
+        100% { transform: scale(0.8); opacity: 0.5; }
+    }
 
-    .banner-content {
-        position: relative;
-        z-index: 1; /* İçeriğin önde olmasını sağlar */
-    }
+    .banner-content {
+        position: relative;
+        z-index: 1; /* İçeriğin önde olmasını sağlar */
+    }
 
-    .banner-title {
-        font-size: 3em; /* Daha büyük başlık */
-        margin: 0 0 10px 0;
-        font-weight: 700;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* Hafif gölge */
-    }
+    .banner-title {
+        font-size: 3em; /* Daha büyük başlık */
+        margin: 0 0 10px 0;
+        font-weight: 700;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* Hafif gölge */
+    }
 
-    .banner-subtitle {
-        font-size: 1.2em;
-        opacity: 0.9;
-    }
-    /* --- YENİ BANNER STİLLERİ BİTİŞ --- */
+    .banner-subtitle {
+        font-size: 1.2em;
+        opacity: 0.9;
+    }
+    /* --- YENİ BANNER STİLLERİ BİTİŞ --- */
 
     /* YENİ TAKİP SEKMESİ STİLLERİ */
 .table-container {
@@ -452,13 +452,13 @@
         grid-column: span 2;
       }
 
-        /* Banner için mobil ayarlamalar */
-        .banner-title {
-            font-size: 2em; /* Daha küçük mobil başlık */
-        }
-        .banner-subtitle {
-            font-size: 1em;
-        }
+        /* Banner için mobil ayarlamalar */
+        .banner-title {
+            font-size: 2em; /* Daha küçük mobil başlık */
+        }
+        .banner-subtitle {
+            font-size: 1em;
+        }
     }
     /* Sorgu Sekmesi Stilleri */
 .query-container {
@@ -513,6 +513,14 @@
   font-size: 0.95rem;
 }
 
+/* YENİ BUTON STİLLERİ ARTIK BURADA OLACAK */
+.filter-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: flex-end;
+}
+
 .filter-btn {
   padding: 0.7rem 1.2rem;
   border: none;
@@ -533,9 +541,21 @@
 }
 
 .filter-btn:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
+
+/* MOBİL UYUMLULUK */
+@media (max-width: 768px) {
+  .filter-actions {
+    justify-content: center;
+  }
+  .filter-btn {
+    width: 48%;
+    padding: 0.8rem;
+  }
+}
+
 
 .results-info {
   margin: 1rem 0;
@@ -597,12 +617,12 @@
   </style>
 </head>
 <body>
-    <div class="banner">
-        <div class="banner-content">
-            <h1 class="banner-title">İş Takip Sistemi</h1>
-            <p class="banner-subtitle">Verimliliği Artırın, İşlerinizi Takip Edin</p>
-        </div>
-    </div>
+    <div class="banner">
+        <div class="banner-content">
+            <h1 class="banner-title">İş Takip Sistemi</h1>
+            <p class="banner-subtitle">Verimliliği Artırın, İşlerinizi Takip Edin</p>
+        </div>
+    </div>
 
   <nav>
     <button id="btn-entry" class="active">Giriş</button>
@@ -726,48 +746,6 @@
     <button id="reset-btn" class="filter-btn danger">Temizle</button>
   </div>
 </div>
-      /* YENİ BUTON STİLLERİ */
-.filter-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
-  justify-content: flex-end;
-}
-
-.filter-btn {
-  padding: 0.7rem 1.2rem;
-  border: none;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.filter-btn.primary {
-  background: #4299e1;
-  color: white;
-}
-
-.filter-btn.danger {
-  background: #f56565;
-  color: white;
-}
-
-.filter-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-/* MOBİL UYUMLULUK */
-@media (max-width: 768px) {
-  .filter-actions {
-    justify-content: center;
-  }
-  .filter-btn {
-    width: 48%;
-    padding: 0.8rem;
-  }
-}
     </div>
     
     <div class="results-info" id="results-info"></div>
