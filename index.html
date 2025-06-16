@@ -258,14 +258,15 @@
       border-radius: 4px;
     }
     
-/* --- Grafikler Sekmesi --- */
-.charts-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-/* Diğer CSS kuralları... */
+    /* --- GÜNCELLENMİŞ Grafikler Sekmesi --- */
+    .charts-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
 
     .chart-controls {
       display: flex;
@@ -274,9 +275,15 @@
 
     .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
       gap: 1.5rem;
       margin-top: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .chart-card {
@@ -293,42 +300,49 @@
     }
 
     .chart-header {
-      padding: 1.2rem 1.5rem;
+      padding: 1rem;
       border-bottom: 1px solid #f0f0f0;
     }
 
     .chart-header h3 {
       margin: 0;
       color: #2d3748;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
     .chart-icon {
-      font-size: 1.3em;
+      font-size: 1.2em;
     }
 
     .chart-info {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       color: #718096;
       margin-top: 0.3rem;
     }
 
     .chart-container {
-      padding: 1rem;
-      min-height: 300px;
+      padding: 0.8rem;
+      min-height: 280px;
+      width: 100%;
+      overflow: auto;
     }
 
     .chart-container iframe {
       width: 100%;
+      min-height: 280px;
       border: none;
       border-radius: 8px;
     }
 
     .full-width {
       grid-column: 1 / -1;
+    }
+
+    .full-width .chart-container {
+      min-height: 380px;
     }
 
     /* --- Linkler --- */
@@ -521,16 +535,6 @@
         width: 48%;
         padding: 0.8rem;
       }
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-      .chart-header {
-        padding: 1rem;
-      }
-      .chart-container {
-        padding: 0.5rem;
-        min-height: 250px;
-      }
     }
   </style>
 </head>
@@ -688,7 +692,7 @@
     </p>
   </div>
 
-  <!-- 6. Grafikler (GÜNCELLENMİŞ) -->
+  <!-- 6. GÜNCELLENMİŞ Grafikler Sekmesi -->
   <div id="tab-charts" class="tab">
     <div class="charts-header">
       <h1>İş Takip Analizleri</h1>
@@ -708,7 +712,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
-            height="300"></iframe>
+            style="height: 100%;"></iframe>
         </div>
       </div>
 
@@ -720,7 +724,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
-            height="300"></iframe>
+            style="height: 100%;"></iframe>
         </div>
       </div>
 
@@ -732,7 +736,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
-            height="300"></iframe>
+            style="height: 100%;"></iframe>
         </div>
       </div>
 
@@ -744,7 +748,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubhtml?gid=729938623&single=true"
-            height="350"></iframe>
+            style="height: 380px;"></iframe>
         </div>
       </div>
     </div>
@@ -900,20 +904,22 @@
         document.getElementById('results-info').textContent = '';
       }
 
-      // Grafikleri yenileme butonu
+      // GÜNCELLENMİŞ Grafik Yenileme Fonksiyonu
       document.getElementById('refresh-charts').addEventListener('click', function() {
         const iframes = document.querySelectorAll('.chart-container iframe');
         iframes.forEach(iframe => {
-          const src = iframe.src;
-          iframe.src = '';
-          setTimeout(() => { iframe.src = src; }, 100);
+          iframe.src = iframe.src; // Force refresh
         });
         
-        // Kullanıcıya bildirim
-        const originalText = this.innerHTML;
-        this.innerHTML = '<span class="refresh-icon">✓</span> Grafikler Yenilendi';
+        // Kullanıcıya görsel feedback
+        const btn = this;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="refresh-icon">✓</span> Yenilendi';
+        btn.disabled = true;
+        
         setTimeout(() => {
-          this.innerHTML = originalText;
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
         }, 2000);
       });
 
