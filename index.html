@@ -284,15 +284,9 @@
 
     .charts-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      grid-template-columns: 1fr;
       gap: 1.5rem;
       margin-top: 1rem;
-    }
-
-    @media (max-width: 768px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
     }
 
     .chart-card {
@@ -301,6 +295,7 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.08);
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      width: 100%;
     }
 
     .chart-card:hover {
@@ -334,7 +329,7 @@
 
     .chart-container {
       padding: 0.8rem;
-      min-height: 280px;
+      height: 400px;
       width: 100%;
       overflow: hidden;
       position: relative;
@@ -345,14 +340,6 @@
       height: 100%;
       border: none;
       border-radius: 8px;
-    }
-
-    .full-width {
-      grid-column: 1 / -1;
-    }
-
-    .full-width .chart-container {
-      min-height: 400px;
     }
 
     /* Auto-fit toggle switch */
@@ -727,7 +714,7 @@
     </p>
   </div>
 
-  <!-- 6. GÜNCELLENMİŞ Grafikler Sekmesi -->
+  <!-- 6. GÜNCELLENMİŞ Grafikler Sekmesi (Tüm grafikler aynı formatta) -->
   <div id="tab-charts" class="tab">
     <div class="charts-header">
       <h1>İş Takip Analizleri</h1>
@@ -746,6 +733,7 @@
     </div>
 
     <div class="charts-grid">
+      <!-- 1. Grafik -->
       <div class="chart-card">
         <div class="chart-header">
           <h3><span class="chart-icon">📊</span> Sorumlulara Göre Dağılım</h3>
@@ -754,10 +742,11 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
-            style="height: 280px;"></iframe>
+            style="height: 400px;"></iframe>
         </div>
       </div>
 
+      <!-- 2. Grafik -->
       <div class="chart-card">
         <div class="chart-header">
           <h3><span class="chart-icon">📈</span> Durum Dağılımı</h3>
@@ -766,10 +755,11 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
-            style="height: 280px;"></iframe>
+            style="height: 400px;"></iframe>
         </div>
       </div>
 
+      <!-- 3. Grafik -->
       <div class="chart-card">
         <div class="chart-header">
           <h3><span class="chart-icon">🔝</span> Öncelik Dağılımı</h3>
@@ -778,11 +768,12 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
-            style="height: 280px;"></iframe>
+            style="height: 400px;"></iframe>
         </div>
       </div>
 
-      <div class="chart-card full-width">
+      <!-- 4. Grafik -->
+      <div class="chart-card">
         <div class="chart-header">
           <h3><span class="chart-icon">🗓️</span> Zaman Çizelgesi</h3>
           <div class="chart-info">Görevlerin zaman içindeki dağılımı</div>
@@ -960,12 +951,7 @@
             const newHeight = container.offsetWidth / aspectRatio;
             iframe.style.height = `${newHeight}px`;
           } else {
-            // Varsayılan boyutlara dön
-            if (container.parentElement.classList.contains('full-width')) {
-              iframe.style.height = '400px';
-            } else {
-              iframe.style.height = '280px';
-            }
+            iframe.style.height = '400px';
           }
         });
       }
