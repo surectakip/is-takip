@@ -16,24 +16,69 @@
             min-height: 100vh;
         }
 
+        /* --- Yeni Banner Stilleri --- */
+        .banner {
+            background: linear-gradient(135deg, #005f99 0%, #007acc 50%, #00aaff 100%); /* Mavi tonlarında gradient */
+            color: #fff;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden; /* Animasyonlar için gizle */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .banner::before,
+        .banner::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: pulse 4s infinite ease-in-out;
+        }
+
+        .banner::before {
+            width: 150px;
+            height: 150px;
+            top: -50px;
+            left: -50px;
+            animation-delay: 0s;
+        }
+
+        .banner::after {
+            width: 100px;
+            height: 100px;
+            bottom: -30px;
+            right: -30px;
+            animation-delay: 2s;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(0.8); opacity: 0.5; }
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 1; /* İçeriğin önde olmasını sağlar */
+        }
+
+        .banner-title {
+            font-size: 3em; /* Daha büyük başlık */
+            margin: 0 0 10px 0;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* Hafif gölge */
+        }
+
+        .banner-subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        /* Eski header stilini kaldırıyoruz veya banner ile değiştiriyoruz */
         header {
-            background-color: #fff;
-            padding: 15px 20px;
-            border-bottom: 1px solid #eee;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            height: 40px; /* Adjust as needed */
-        }
-
-        .header-title {
-            font-size: 24px;
-            color: #007acc; /* Mavi renk */
-            margin-left: 15px;
+            display: none; /* Artık banner kullanıldığı için gizli */
         }
 
         .tabs {
@@ -102,7 +147,7 @@
         .chart-container {
             position: relative;
             width: 100%;
-            padding-bottom: 75%; /* 4:3 en boy oranı için. Grafikleriniz 16:9 ise %56.25 yapın. */
+            padding-bottom: 56.25%; /* 16:9 en boy oranı için. Eğer grafikleriniz 4:3 ise %75 yapın. */
             height: 0;
             overflow: hidden;
             border-radius: 8px; /* Chart iframe kapsayıcısına da border-radius ekle */
@@ -120,12 +165,12 @@
         }
 
         /* --- Grafikler Sekmesi CSS (Grid Düzeni) --- */
-        #tab-charts {
+        #tab-charts #charts-grid { /* toggle-container'ı dışarıda tutmak için id'yi de ekledim */
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 300px min genişlik */
             gap: 20px; /* Grafikler arası boşluk */
-            align-items: start; /* Content aligns to the top of the grid cell */
-            padding: 20px;
+            align-items: stretch; /* Content aligns to stretch (equal height) */
+            padding: 0 20px 20px 20px; /* Üst padding'i kaldırıp toggle container'a bıraktım */
         }
 
         #charts-grid.auto-fit-on {
@@ -161,28 +206,46 @@
 
         /* Responsive Ayarlamalar */
         @media (max-width: 1024px) {
-            #tab-charts {
+            .banner-title {
+                font-size: 2.5em;
+            }
+            .banner-subtitle {
+                font-size: 1.1em;
+            }
+            #tab-charts #charts-grid {
                 grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             }
         }
 
         @media (max-width: 768px) {
+            .banner-title {
+                font-size: 2em;
+            }
+            .banner-subtitle {
+                font-size: 1em;
+            }
             .tab-button {
                 padding: 12px 15px;
                 font-size: 14px;
             }
-            #tab-charts {
-                grid-template-columns: 1fr; /* Küçük ekranlarda tek sütun */
+            /* Küçük ekranlarda her zaman tek sütun */
+            #tab-charts #charts-grid {
+                grid-template-columns: 1fr;
             }
             .chart-container {
-                padding-bottom: 70%; /* Daha küçük ekranlar için oranı ayarla */
+                padding-bottom: 65%; /* Daha küçük ekranlar için oranı ayarla */
             }
         }
 
         @media (max-width: 480px) {
-            header {
-                flex-direction: column;
-                align-items: flex-start;
+            .banner {
+                padding: 20px 10px;
+            }
+            .banner-title {
+                font-size: 1.8em;
+            }
+            .banner-subtitle {
+                font-size: 0.9em;
             }
             .tabs {
                 flex-wrap: wrap;
@@ -201,6 +264,12 @@
             .tab-content {
                 margin: 10px;
                 padding: 15px;
+            }
+             #tab-charts #charts-grid { /* Tekrar emin olalım */
+                grid-template-columns: 1fr;
+            }
+            .chart-container {
+                padding-bottom: 75%; /* Mobil dikeyde daha iyi görünsün diye */
             }
         }
 
@@ -225,10 +294,12 @@
     </style>
 </head>
 <body>
-    <header>
-        <img src="https://lh3.googleusercontent.com/u/0/d/1Bf2h7Rk5Q_d_f8W7p5Q_Z9y7Q0m_L-w=w1280-h720-iv1" alt="Logo" class="logo">
-        <h1 class="header-title">İş Takip Sistemi</h1>
-    </header>
+    <div class="banner">
+        <div class="banner-content">
+            <h1 class="banner-title">İş Takip Sistemi</h1>
+            <p class="banner-subtitle">Verimliliği Artırın, İşlerinizi Takip Edin</p>
+        </div>
+    </div>
 
     <nav class="tabs">
         <div class="tab-button active" data-tab="tab-entry">Giriş</div>
@@ -254,7 +325,7 @@
 
         <div id="tab-data" class="tab">
             <iframe
-                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649&amp;single=true&amp;widget=true&amp;headers=false"
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649&single=true&widget=true&headers=false"
                 class="form-iframe" title="Veri Tablosu"></iframe>
             <p class="link-bottom">
                 <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649"
@@ -266,7 +337,7 @@
 
         <div id="tab-query" class="tab">
             <iframe
-                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650&amp;single=true&amp;widget=true&amp;headers=false"
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650&single=true&widget=true&headers=false"
                 class="form-iframe" title="Sorgu Tablosu"></iframe>
             <p class="link-bottom">
                 <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650"
@@ -278,7 +349,7 @@
 
         <div id="tab-edit" class="tab">
              <iframe
-                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1815124976&amp;single=true&amp;widget=true&amp;headers=false"
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1815124976&single=true&widget=true&headers=false"
                 class="form-iframe" title="Düzenleme Tablosu"></iframe>
             <p class="link-bottom">
                 <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1815124976"
@@ -295,34 +366,34 @@
 
             <div id="charts-grid">
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1109927702&amp;format=interactive" title="İş Durumu Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1109927702&format=interactive" title="İş Durumu Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1943890288&amp;format=interactive" title="Öncelik Dağılımı Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1943890288&format=interactive" title="Öncelik Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=735492472&amp;format=interactive" title="Sorumlu Dağılımı Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=735492472&format=interactive" title="Sorumlu Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1659795098&amp;format=interactive" title="Geçen Süre Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1659795098&format=interactive" title="Geçen Süre Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1375971439&amp;format=interactive" title="İş Türü Dağılımı Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1375971439&format=interactive" title="İş Türü Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1903496338&amp;format=interactive" title="Son Durum ve Geçen Süre İlişkisi Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1903496338&format=interactive" title="Son Durum ve Geçen Süre İlişkisi Grafiği"></iframe>
                 </div>
             </div>
         </div>
     </main>
 
     <footer>
-        <p>&copy; 2025 İş Takip Sistemi. Tüm hakları saklıdır.</p>
+        <p>© 2025 İş Takip Sistemi. Tüm hakları saklıdır.</p>
     </footer>
 
     <script>
@@ -355,6 +426,7 @@
                 chartIframes.forEach(iframe => {
                     const currentSrc = iframe.src;
                     // iframe'i önce boş yapıp sonra tekrar yükleyerek içeriği zorla yenile
+                    // Bu, Google Sheets iframe'lerinin bazen takılı kalmasını önleyebilir
                     iframe.src = 'about:blank';
                     iframe.src = currentSrc;
                 });
