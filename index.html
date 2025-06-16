@@ -25,6 +25,10 @@
             position: relative;
             overflow: hidden; /* Animasyonlar için gizle */
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            /* min-height: 120px; /* Banner minimum yüksekliği */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .banner::before,
@@ -35,6 +39,7 @@
             border-radius: 50%;
             opacity: 0.5;
             animation: pulse 4s infinite ease-in-out;
+            z-index: 0; /* Arka planda kalmasını sağlar */
         }
 
         .banner::before {
@@ -77,6 +82,7 @@
         }
 
         /* Eski header stilini kaldırıyoruz veya banner ile değiştiriyoruz */
+        /* Eğer isterseniz .header-title yerine .banner-title'ı kullanabilirsiniz. */
         header {
             display: none; /* Artık banner kullanıldığı için gizli */
         }
@@ -133,12 +139,12 @@
         }
 
         /* --- Genel Iframe Stilleri --- */
-        /* Form girişi için kullanılacak varsayılan iframe stili */
+        /* Formlar ve tablolar için kullanılacak varsayılan iframe stili */
         .form-iframe {
             width: 100%;
             border: none;
             border-radius: 8px;
-            min-height: 80vh; /* Form iframe'i için varsayılan minimum yükseklik */
+            min-height: 80vh; /* Form ve Tablo iframe'i için varsayılan minimum yükseklik */
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             background: white;
         }
@@ -147,11 +153,12 @@
         .chart-container {
             position: relative;
             width: 100%;
-            padding-bottom: 56.25%; /* 16:9 en boy oranı için. Eğer grafikleriniz 4:3 ise %75 yapın. */
+            padding-bottom: 56.25%; /* 16:9 en boy oranı için (Çoğu Google Chart bu oranı kullanır) */
             height: 0;
             overflow: hidden;
             border-radius: 8px; /* Chart iframe kapsayıcısına da border-radius ekle */
             box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Chart iframe kapsayıcısına da gölge ekle */
+            background: white; /* Grafiğin arkası boş kalmasın */
         }
 
         .chart-container iframe {
@@ -161,16 +168,15 @@
             width: 100%;
             height: 100%;
             border: none;
-            /* Chart iframe'leri için min-height veya sabit height olmayacak, responsive olacak */
         }
 
         /* --- Grafikler Sekmesi CSS (Grid Düzeni) --- */
-        #tab-charts #charts-grid { /* toggle-container'ı dışarıda tutmak için id'yi de ekledim */
+        #tab-charts #charts-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 300px min genişlik */
             gap: 20px; /* Grafikler arası boşluk */
             align-items: stretch; /* Content aligns to stretch (equal height) */
-            padding: 0 20px 20px 20px; /* Üst padding'i kaldırıp toggle container'a bıraktım */
+            padding: 0 0 20px 0; /* Toggle container'a üst boşluk bıraktık */
         }
 
         #charts-grid.auto-fit-on {
@@ -186,7 +192,8 @@
             display: flex;
             justify-content: flex-end;
             margin-bottom: 20px;
-            padding: 0 20px;
+            padding: 0 0 0 0; /* padding: 0 20px 20px 20px; yerine bu daha iyi */
+            width: 100%; /* Kapsayıcı genişliği */
         }
 
         .toggle-button {
@@ -234,6 +241,10 @@
             }
             .chart-container {
                 padding-bottom: 65%; /* Daha küçük ekranlar için oranı ayarla */
+            }
+            .tab-content {
+                margin: 15px;
+                padding: 15px;
             }
         }
 
@@ -303,9 +314,7 @@
 
     <nav class="tabs">
         <div class="tab-button active" data-tab="tab-entry">Giriş</div>
-        <div class="tab-button" data-tab="tab-data">Sonuçlar</div>
-        <div class="tab-button" data-tab="tab-query">Sorgu</div>
-        <div class="tab-button" data-tab="tab-edit">Düzenle</div>
+        <div class="tab-button" data-tab="tab-responses">Sonuçlar</div> <div class="tab-button" data-tab="tab-main-table">Ana Tablo</div> <div class="tab-button" data-tab="tab-edit">Düzenle</div>
         <div class="tab-button" data-tab="tab-charts">Grafikler</div>
     </nav>
 
@@ -313,34 +322,36 @@
         <div id="tab-entry" class="tab active">
             <iframe
                 class="form-iframe"
-                src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform?embedded=true"
-                title="Form Girişi"></iframe>
+                src="YOUR_GOOGLE_FORM_EMBED_URL_HERE"
+                title="Google Form Girişi"></iframe>
             <p class="link-bottom">
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform"
+                <a href="YOUR_GOOGLE_FORM_VIEW_URL_HERE"
                     target="_blank" rel="noopener" style="color:#007acc;">
                     ➤ Yeni Pencerede Aç
                 </a>
             </p>
         </div>
 
-        <div id="tab-data" class="tab">
+        <div id="tab-responses" class="tab">
             <iframe
-                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649&single=true&widget=true&headers=false"
-                class="form-iframe" title="Veri Tablosu"></iframe>
+                class="form-iframe"
+                src="YOUR_GOOGLE_FORM_RESPONSES_URL_HERE_OR_SHEETS_SUMMARY"
+                title="Form Sonuçları Analizi"></iframe>
             <p class="link-bottom">
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649"
+                <a href="YOUR_GOOGLE_FORM_RESPONSES_VIEW_URL_HERE_OR_SHEETS_SUMMARY"
                     target="_blank" rel="noopener" style="color:#007acc;">
                     ➤ Yeni Pencerede Aç
                 </a>
             </p>
         </div>
 
-        <div id="tab-query" class="tab">
+        <div id="tab-main-table" class="tab">
             <iframe
-                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650&single=true&widget=true&headers=false"
-                class="form-iframe" title="Sorgu Tablosu"></iframe>
+                class="form-iframe"
+                src="YOUR_MAIN_GOOGLE_SHEETS_PUBLISHED_URL_HERE"
+                title="Ana Veri Tablosu"></iframe>
             <p class="link-bottom">
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650"
+                <a href="YOUR_MAIN_GOOGLE_SHEETS_VIEW_URL_HERE"
                     target="_blank" rel="noopener" style="color:#007acc;">
                     ➤ Yeni Pencerede Aç
                 </a>
@@ -349,12 +360,13 @@
 
         <div id="tab-edit" class="tab">
              <iframe
-                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1815124976&single=true&widget=true&headers=false"
-                class="form-iframe" title="Düzenleme Tablosu"></iframe>
+                class="form-iframe"
+                src="YOUR_GOOGLE_SHEETS_EDIT_URL_HERE"
+                title="Veri Düzenleme"></iframe>
             <p class="link-bottom">
-                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1815124976"
+                <a href="YOUR_GOOGLE_SHEETS_EDIT_URL_HERE"
                     target="_blank" rel="noopener" style="color:#007acc;">
-                    ➤ Yeni Pencerede Aç
+                    ➤ Yeni Pencerede Aç (Düzenleme Modu)
                 </a>
             </p>
         </div>
@@ -366,27 +378,27 @@
 
             <div id="charts-grid">
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1109927702&format=interactive" title="İş Durumu Grafiği"></iframe>
+                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_1_EMBED_URL_HERE" title="İş Durumu Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1943890288&format=interactive" title="Öncelik Dağılımı Grafiği"></iframe>
+                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_2_EMBED_URL_HERE" title="Öncelik Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=735492472&format=interactive" title="Sorumlu Dağılımı Grafiği"></iframe>
+                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_3_EMBED_URL_HERE" title="Sorumlu Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1659795098&format=interactive" title="Geçen Süre Grafiği"></iframe>
+                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_4_EMBED_URL_HERE" title="Geçen Süre Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1375971439&format=interactive" title="İş Türü Dağılımı Grafiği"></iframe>
+                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_5_EMBED_URL_HERE" title="İş Türü Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1903496338&format=interactive" title="Son Durum ve Geçen Süre İlişkisi Grafiği"></iframe>
+                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_6_EMBED_URL_HERE" title="Son Durum ve Geçen Süre İlişkisi Grafiği"></iframe>
                 </div>
             </div>
         </div>
@@ -416,6 +428,15 @@
                 document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
 
                 // Grafikler sekmesine geçildiğinde grafik boyutlarını ayarla/yenile
+                // Diğer sekmelere geçişte de iframe'lerin yüklenmesini tetikleyebiliriz
+                // Amaç, her sekme aktif olduğunda iframe'in doğru şekilde yüklenmesini sağlamak
+                const activeIframe = document.getElementById(tabId).querySelector('iframe');
+                if (activeIframe) {
+                    const currentSrc = activeIframe.src;
+                    activeIframe.src = 'about:blank'; // Önce boşalt
+                    activeIframe.src = currentSrc;     // Sonra tekrar yükle
+                }
+
                 if (tabId === 'tab-charts') {
                     refreshCharts();
                 }
@@ -425,10 +446,8 @@
                 const chartIframes = document.querySelectorAll('#tab-charts .chart-container iframe');
                 chartIframes.forEach(iframe => {
                     const currentSrc = iframe.src;
-                    // iframe'i önce boş yapıp sonra tekrar yükleyerek içeriği zorla yenile
-                    // Bu, Google Sheets iframe'lerinin bazen takılı kalmasını önleyebilir
-                    iframe.src = 'about:blank';
-                    iframe.src = currentSrc;
+                    iframe.src = 'about:blank'; // Önce boşalt
+                    iframe.src = currentSrc;     // Sonra tekrar yükle
                 });
             }
 
