@@ -25,7 +25,6 @@
             position: relative;
             overflow: hidden; /* Animasyonlar için gizle */
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            /* min-height: 120px; /* Banner minimum yüksekliği */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -81,8 +80,6 @@
             opacity: 0.9;
         }
 
-        /* Eski header stilini kaldırıyoruz veya banner ile değiştiriyoruz */
-        /* Eğer isterseniz .header-title yerine .banner-title'ı kullanabilirsiniz. */
         header {
             display: none; /* Artık banner kullanıldığı için gizli */
         }
@@ -139,7 +136,6 @@
         }
 
         /* --- Genel Iframe Stilleri --- */
-        /* Formlar ve tablolar için kullanılacak varsayılan iframe stili */
         .form-iframe {
             width: 100%;
             border: none;
@@ -149,16 +145,15 @@
             background: white;
         }
 
-        /* Chart iframe'leri için responsive kapsayıcı */
         .chart-container {
             position: relative;
             width: 100%;
             padding-bottom: 56.25%; /* 16:9 en boy oranı için (Çoğu Google Chart bu oranı kullanır) */
             height: 0;
             overflow: hidden;
-            border-radius: 8px; /* Chart iframe kapsayıcısına da border-radius ekle */
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Chart iframe kapsayıcısına da gölge ekle */
-            background: white; /* Grafiğin arkası boş kalmasın */
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background: white;
         }
 
         .chart-container iframe {
@@ -173,10 +168,10 @@
         /* --- Grafikler Sekmesi CSS (Grid Düzeni) --- */
         #tab-charts #charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* 300px min genişlik */
-            gap: 20px; /* Grafikler arası boşluk */
-            align-items: stretch; /* Content aligns to stretch (equal height) */
-            padding: 0 0 20px 0; /* Toggle container'a üst boşluk bıraktık */
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            align-items: stretch;
+            padding: 0 0 20px 0;
         }
 
         #charts-grid.auto-fit-on {
@@ -184,16 +179,15 @@
         }
 
         #charts-grid.auto-fit-off {
-            grid-template-columns: 1fr; /* Tek sütun */
+            grid-template-columns: 1fr;
         }
 
-        /* Toggle Button Styling */
         .toggle-container {
             display: flex;
             justify-content: flex-end;
             margin-bottom: 20px;
-            padding: 0 0 0 0; /* padding: 0 20px 20px 20px; yerine bu daha iyi */
-            width: 100%; /* Kapsayıcı genişliği */
+            padding: 0;
+            width: 100%;
         }
 
         .toggle-button {
@@ -235,12 +229,11 @@
                 padding: 12px 15px;
                 font-size: 14px;
             }
-            /* Küçük ekranlarda her zaman tek sütun */
             #tab-charts #charts-grid {
                 grid-template-columns: 1fr;
             }
             .chart-container {
-                padding-bottom: 65%; /* Daha küçük ekranlar için oranı ayarla */
+                padding-bottom: 65%;
             }
             .tab-content {
                 margin: 15px;
@@ -262,7 +255,7 @@
                 flex-wrap: wrap;
             }
             .tab-button {
-                flex-basis: 50%; /* İkişerli sıralanır */
+                flex-basis: 50%;
                 border-right: none;
                 border-bottom: 1px solid rgba(255,255,255,0.1);
             }
@@ -276,11 +269,11 @@
                 margin: 10px;
                 padding: 15px;
             }
-             #tab-charts #charts-grid { /* Tekrar emin olalım */
+             #tab-charts #charts-grid {
                 grid-template-columns: 1fr;
             }
             .chart-container {
-                padding-bottom: 75%; /* Mobil dikeyde daha iyi görünsün diye */
+                padding-bottom: 75%;
             }
         }
 
@@ -300,7 +293,7 @@
             background-color: #eee;
             color: #777;
             font-size: 14px;
-            margin-top: auto; /* Pushes footer to the bottom */
+            margin-top: auto;
         }
     </style>
 </head>
@@ -314,7 +307,9 @@
 
     <nav class="tabs">
         <div class="tab-button active" data-tab="tab-entry">Giriş</div>
-        <div class="tab-button" data-tab="tab-responses">Sonuçlar</div> <div class="tab-button" data-tab="tab-main-table">Ana Tablo</div> <div class="tab-button" data-tab="tab-edit">Düzenle</div>
+        <div class="tab-button" data-tab="tab-responses">Sonuçlar</div>
+        <div class="tab-button" data-tab="tab-main-table">Ana Tablo</div>
+        <div class="tab-button" data-tab="tab-edit">Düzenle</div>
         <div class="tab-button" data-tab="tab-charts">Grafikler</div>
     </nav>
 
@@ -322,10 +317,10 @@
         <div id="tab-entry" class="tab active">
             <iframe
                 class="form-iframe"
-                src="YOUR_GOOGLE_FORM_EMBED_URL_HERE"
+                src="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform?embedded=true"
                 title="Google Form Girişi"></iframe>
             <p class="link-bottom">
-                <a href="YOUR_GOOGLE_FORM_VIEW_URL_HERE"
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeJKX_gC97V-7-iNw/viewform"
                     target="_blank" rel="noopener" style="color:#007acc;">
                     ➤ Yeni Pencerede Aç
                 </a>
@@ -335,10 +330,10 @@
         <div id="tab-responses" class="tab">
             <iframe
                 class="form-iframe"
-                src="YOUR_GOOGLE_FORM_RESPONSES_URL_HERE_OR_SHEETS_SUMMARY"
-                title="Form Sonuçları Analizi"></iframe>
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649&single=true&widget=true&headers=false"
+                title="Form Yanıtları Özeti"></iframe>
             <p class="link-bottom">
-                <a href="YOUR_GOOGLE_FORM_RESPONSES_VIEW_URL_HERE_OR_SHEETS_SUMMARY"
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=2121703649"
                     target="_blank" rel="noopener" style="color:#007acc;">
                     ➤ Yeni Pencerede Aç
                 </a>
@@ -348,10 +343,10 @@
         <div id="tab-main-table" class="tab">
             <iframe
                 class="form-iframe"
-                src="YOUR_MAIN_GOOGLE_SHEETS_PUBLISHED_URL_HERE"
+                src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650&single=true&widget=true&headers=false"
                 title="Ana Veri Tablosu"></iframe>
             <p class="link-bottom">
-                <a href="YOUR_MAIN_GOOGLE_SHEETS_VIEW_URL_HERE"
+                <a href="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubhtml?gid=1506509650"
                     target="_blank" rel="noopener" style="color:#007acc;">
                     ➤ Yeni Pencerede Aç
                 </a>
@@ -378,27 +373,27 @@
 
             <div id="charts-grid">
                 <div class="chart-container">
-                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_1_EMBED_URL_HERE" title="İş Durumu Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1109927702&format=interactive" title="İş Durumu Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_2_EMBED_URL_HERE" title="Öncelik Dağılımı Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1943890288&format=interactive" title="Öncelik Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_3_EMBED_URL_HERE" title="Sorumlu Dağılımı Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=735492472&format=interactive" title="Sorumlu Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_4_EMBED_URL_HERE" title="Geçen Süre Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1659795098&format=interactive" title="Geçen Süre Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_5_EMBED_URL_HERE" title="İş Türü Dağılımı Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1375971439&format=interactive" title="İş Türü Dağılımı Grafiği"></iframe>
                 </div>
 
                 <div class="chart-container">
-                    <iframe src="YOUR_GOOGLE_SHEETS_CHART_6_EMBED_URL_HERE" title="Son Durum ve Geçen Süre İlişkisi Grafiği"></iframe>
+                    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vT5K7Q1Z7D_k8m_E5J7N7o5L7x8D2V_J0S2Y6X0Z9M7Y3Z4X5C6V7B8A9/pubchart?oid=1903496338&format=interactive" title="Son Durum ve Geçen Süre İlişkisi Grafiği"></iframe>
                 </div>
             </div>
         </div>
@@ -427,17 +422,21 @@
                 });
                 document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
 
-                // Grafikler sekmesine geçildiğinde grafik boyutlarını ayarla/yenile
-                // Diğer sekmelere geçişte de iframe'lerin yüklenmesini tetikleyebiliriz
-                // Amaç, her sekme aktif olduğunda iframe'in doğru şekilde yüklenmesini sağlamak
-                const activeIframe = document.getElementById(tabId).querySelector('iframe');
-                if (activeIframe) {
-                    const currentSrc = activeIframe.src;
-                    activeIframe.src = 'about:blank'; // Önce boşalt
-                    activeIframe.src = currentSrc;     // Sonra tekrar yükle
+                // Aktif olan iframe'i yeniden yükleme işlevi
+                const activeTabElement = document.getElementById(tabId);
+                if (activeTabElement) {
+                    const activeIframe = activeTabElement.querySelector('iframe');
+                    if (activeIframe) {
+                        const currentSrc = activeIframe.src;
+                        // iframe'i önce boş yapıp sonra tekrar yükleyerek içeriği zorla yenile
+                        // Bu, Google Sheets iframe'lerinin bazen takılı kalmasını önleyebilir
+                        activeIframe.src = 'about:blank';
+                        activeIframe.src = currentSrc;
+                    }
                 }
 
                 if (tabId === 'tab-charts') {
+                    // Grafikler sekmesi için tüm grafikleri yenile
                     refreshCharts();
                 }
             }
@@ -446,8 +445,8 @@
                 const chartIframes = document.querySelectorAll('#tab-charts .chart-container iframe');
                 chartIframes.forEach(iframe => {
                     const currentSrc = iframe.src;
-                    iframe.src = 'about:blank'; // Önce boşalt
-                    iframe.src = currentSrc;     // Sonra tekrar yükle
+                    iframe.src = 'about:blank';
+                    iframe.src = currentSrc;
                 });
             }
 
