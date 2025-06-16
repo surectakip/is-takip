@@ -271,6 +271,15 @@
     .chart-controls {
       display: flex;
       gap: 1rem;
+      align-items: center;
+    }
+
+    .auto-fit-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: #4a5568;
     }
 
     .charts-grid {
@@ -327,12 +336,13 @@
       padding: 0.8rem;
       min-height: 280px;
       width: 100%;
-      overflow: auto;
+      overflow: hidden;
+      position: relative;
     }
 
     .chart-container iframe {
       width: 100%;
-      min-height: 280px;
+      height: 100%;
       border: none;
       border-radius: 8px;
     }
@@ -342,7 +352,53 @@
     }
 
     .full-width .chart-container {
-      min-height: 380px;
+      min-height: 400px;
+    }
+
+    /* Auto-fit toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #007acc;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
     }
 
     /* --- Linkler --- */
@@ -366,9 +422,9 @@
       transform: translateY(-2px);
     }
 
-    /* --- Analiz Sekmesi Özel Stil --- */
+    /* --- GÜNCELLENMİŞ Analiz Sekmesi Stilleri (Basitleştirilmiş) --- */
     .analiz-container {
-      max-width: 800px;
+      max-width: 600px;
       margin: 2rem auto;
       padding: 2rem;
       background: white;
@@ -397,14 +453,6 @@
       background: #005fa3;
       transform: translateY(-2px);
       box-shadow: 0 6px 10px rgba(0,0,0,0.15);
-    }
-    .qr-code {
-      margin: 1.5rem auto;
-      padding: 1rem;
-      background: white;
-      border-radius: 8px;
-      display: inline-block;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
 
     /* Sorgu Sekmesi Stilleri */
@@ -561,28 +609,15 @@
     </p>
   </div>
 
-  <!-- 2. Sonuçlar -->
+  <!-- 2. GÜNCELLENMİŞ Sonuçlar Sekmesi (Basitleştirilmiş) -->
   <div id="tab-results" class="tab">
     <div class="analiz-container">
       <h2>Form Analiz Sonuçları</h2>
-      <p>Google Forms analiz sayfası tarayıcınızda yeni bir sekmede açılacaktır. Aşağıdaki butona tıklayarak analiz sayfasına ulaşabilirsiniz.</p>
-      
+      <p>Google Forms analiz sayfasını görüntülemek için:</p>
       <a href="https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics"
          target="_blank" rel="noopener" class="analiz-btn">
         Analiz Sayfasını Aç
       </a>
-      
-      <p>Mobil cihazınızdan erişmek için QR kodu tarayabilirsiniz:</p>
-      
-      <div class="qr-code">
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://docs.google.com/forms/d/e/1FAIpQLSeWCzjSbJvwt-aK2r76ksmUjZNKzfmmeMeJKX_gC97V-7-iNw/viewanalytics" 
-             alt="QR Code">
-      </div>
-      
-      <p style="font-size:0.9em; color:#666;">
-        Not: Analiz sayfası doğrudan bu pencerede gösterilememektedir. 
-        Google tarafından bu özellik kısıtlanmıştır.
-      </p>
     </div>
   </div>
 
@@ -697,6 +732,13 @@
     <div class="charts-header">
       <h1>İş Takip Analizleri</h1>
       <div class="chart-controls">
+        <div class="auto-fit-toggle">
+          <label class="switch">
+            <input type="checkbox" id="auto-fit-toggle" checked>
+            <span class="slider"></span>
+          </label>
+          <span>Ekrana Sığdır</span>
+        </div>
         <button id="refresh-charts" class="refresh-button">
           <span class="refresh-icon">🔄</span> Grafikleri Yenile
         </button>
@@ -712,7 +754,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1960847737&format=interactive"
-            style="height: 100%;"></iframe>
+            style="height: 280px;"></iframe>
         </div>
       </div>
 
@@ -724,7 +766,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1533843598&format=interactive"
-            style="height: 100%;"></iframe>
+            style="height: 280px;"></iframe>
         </div>
       </div>
 
@@ -736,7 +778,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubchart?oid=1650909334&format=interactive"
-            style="height: 100%;"></iframe>
+            style="height: 280px;"></iframe>
         </div>
       </div>
 
@@ -748,7 +790,7 @@
         <div class="chart-container">
           <iframe
             src="https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pubhtml?gid=729938623&single=true"
-            style="height: 380px;"></iframe>
+            style="height: 400px;"></iframe>
         </div>
       </div>
     </div>
@@ -904,15 +946,45 @@
         document.getElementById('results-info').textContent = '';
       }
 
-      // GÜNCELLENMİŞ Grafik Yenileme Fonksiyonu
-      document.getElementById('refresh-charts').addEventListener('click', function() {
+      // Grafik Yenileme ve Otomatik Boyutlandırma Fonksiyonları
+      const autoFitToggle = document.getElementById('auto-fit-toggle');
+      const chartContainers = document.querySelectorAll('.chart-container');
+      
+      // Ekrana sığdırma fonksiyonu
+      function adjustChartSizes() {
+        const isAutoFit = autoFitToggle.checked;
+        chartContainers.forEach(container => {
+          const iframe = container.querySelector('iframe');
+          if (isAutoFit) {
+            const aspectRatio = iframe.offsetWidth / iframe.offsetHeight;
+            const newHeight = container.offsetWidth / aspectRatio;
+            iframe.style.height = `${newHeight}px`;
+          } else {
+            // Varsayılan boyutlara dön
+            if (container.parentElement.classList.contains('full-width')) {
+              iframe.style.height = '400px';
+            } else {
+              iframe.style.height = '280px';
+            }
+          }
+        });
+      }
+      
+      // Ekrana sığdırma toggle'ı
+      autoFitToggle.addEventListener('change', adjustChartSizes);
+      
+      // Pencere boyutu değiştiğinde ayarlamaları yap
+      window.addEventListener('resize', adjustChartSizes);
+      
+      // Grafik Yenileme Fonksiyonu (1 saatte bir)
+      function refreshCharts() {
         const iframes = document.querySelectorAll('.chart-container iframe');
         iframes.forEach(iframe => {
           iframe.src = iframe.src; // Force refresh
         });
         
         // Kullanıcıya görsel feedback
-        const btn = this;
+        const btn = document.getElementById('refresh-charts');
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<span class="refresh-icon">✓</span> Yenilendi';
         btn.disabled = true;
@@ -921,7 +993,16 @@
           btn.innerHTML = originalHTML;
           btn.disabled = false;
         }, 2000);
-      });
+      }
+      
+      // Manuel yenileme butonu
+      document.getElementById('refresh-charts').addEventListener('click', refreshCharts);
+      
+      // Otomatik yenileme (1 saat = 3600000 ms)
+      setInterval(refreshCharts, 3600000);
+      
+      // İlk yüklemede boyutları ayarla
+      setTimeout(adjustChartSizes, 1000);
 
       refreshBtn.onclick = loadData;
       applyBtn.onclick   = applyFilter;
