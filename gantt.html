@@ -8,129 +8,66 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: sans-serif;
+      background: #f5f5f5;
       margin: 0;
-      background: #f8f9fa;
-      padding: 1rem;
+      padding: 2rem;
     }
-    h2 {
+
+    h1 {
       text-align: center;
-      margin-bottom: 1rem;
+      margin-bottom: 2rem;
     }
-    #controls {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 1.5rem;
-    }
-    button, select {
-      padding: 8px 14px;
-      font-size: 14px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background-color: white;
-      cursor: pointer;
-    }
-    #gantt {
-      overflow-x: auto;
-      border-radius: 12px;
+
+    svg {
       background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       padding: 1rem;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 100%;
     }
-    .bar-complete { fill: #16a34a !important; }  /* yeşil */
-    .bar-progress { fill: #3b82f6 !important; }  /* mavi */
-    .bar-pending  { fill: #facc15 !important; }  /* sarı */
+
+    .bar-complete { fill: #22c55e !important; }
+    .bar-progress { fill: #3b82f6 !important; }
+    .bar-pending  { fill: #f59e0b !important; }
+
+    .gantt .bar-label {
+      fill: #111 !important;
+      font-weight: 600;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
-  <h2>Gantt Takvimi</h2>
-  <div id="controls">
-    <button onclick="changeView('Day')">Günlük</button>
-    <button onclick="changeView('Week')">Haftalık</button>
-    <button onclick="changeView('Month')">Aylık</button>
-    <select id="filter" onchange="filterTasks(this.value)">
-      <option value="Tümü">Sorumlu: Tümü</option>
-    </select>
-  </div>
-  <div id="gantt"></div>
+  <h1>Gantt Takvimi</h1>
+  <svg id="gantt-target"></svg>
 
   <script>
-    let allTasks = [];
-    let gantt;
-    let currentView = 'Month';
-
     async function fetchData() {
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?gid=0&single=true&output=csv";
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
       const res = await fetch(url);
       const text = await res.text();
-      const rows = text.trim().split("\n").map(r => r.split(","));
-      rows.shift(); // başlık satırını kaldır
+      const rows = text.trim().split('\n').map(r => r.split(','));
 
-      allTasks = rows.map((r, i) => ({
-        id: "T" + (i + 1),
-        name: r[1], // İş Başlığı
-        start: formatDate(r[4]),
-        end: formatDate(r[5]),
-        progress: r[8].toLowerCase().includes("tamam") ? 100 :
-                  r[8].toLowerCase().includes("devam") ? 50 : 0,
-        custom_class: r[8].toLowerCase().includes("tamam") ? 'bar-complete' :
-                      r[8].toLowerCase().includes("devam") ? 'bar-progress' : 'bar-pending',
-        sorumlu: r[3],
-        note: r[7] || ''
-      }));
+      rows.shift(); // başlıkları kaldır
 
-      populateFilterOptions();
-      renderGantt(allTasks);
-    }
-
-    function formatDate(d) {
-      if (!d) return null;
-      const [day, month, year] = d.split(".");
-      return `${year}-${month}-${day}`;
-    }
-
-    function renderGantt(tasks) {
-      document.getElementById("gantt").innerHTML = "";
-      gantt = new Gantt("#gantt", tasks, {
-        view_mode: currentView,
-        language: 'tr',
-        bar_height: 28,
-        padding: 22,
-        custom_popup_html: task => `
-          <div style="padding:10px;">
-            <strong>${task.name}</strong><br/>
-            <small>${task.start} → ${task.end}</small><br/>
-            <em>${task.note || "Not bulunamadı"}</em>
-          </div>
-        `
+      const tasks = rows.map((r, i) => {
+        const start = r[4]?.trim().split('.').reverse().join('-');
+        const end = r[5]?.trim().split('.').reverse().join('-');
+        return {
+          id: 'T' + (i + 1),
+          name: r[1],
+          start: start,
+          end: end,
+          progress: 100,
+          custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
+                        r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
+        };
       });
-    }
 
-    function changeView(view) {
-      currentView = view;
-      renderGantt(allTasks);
-    }
-
-    function filterTasks(sorumlu) {
-      if (sorumlu === "Tümü") {
-        renderGantt(allTasks);
-      } else {
-        const filtered = allTasks.filter(t => t.sorumlu === sorumlu);
-        renderGantt(filtered);
-      }
-    }
-
-    function populateFilterOptions() {
-      const select = document.getElementById("filter");
-      const unique = [...new Set(allTasks.map(t => t.sorumlu))];
-      unique.forEach(sorumlu => {
-        const opt = document.createElement("option");
-        opt.value = sorumlu;
-        opt.textContent = `Sorumlu: ${sorumlu}`;
-        select.appendChild(opt);
+      new Gantt("#gantt-target", tasks, {
+        view_mode: 'Week',
+        language: 'tr'
       });
     }
 
