@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Grafikler</title>
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2rem;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .chart-container {
+      margin-bottom: 3rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>İş Takip Grafik Analizi</h1>
+
+  <div class="chart-container" id="chart-sorumlu" style="width:100%; height:400px;"></div>
+  <div class="chart-container" id="chart-durum" style="width:100%; height:400px;"></div>
+  <div class="chart-container" id="chart-oncelik" style="width:100%; height:400px;"></div>
+  <div class="chart-container" id="chart-sure" style="width:100%; height:400px;"></div>
+
+  <script>
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(drawCharts);
+
+    async function drawCharts() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
+      const res = await fetch(url);
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      const header = rows.shift();
+      
+      const getIndex = (name) => header.findIndex(h => h.trim().toLowerCase() === name.trim().toLowerCase());
+      const idxSorumlu = getIndex('Sorumlu');
+      const idxDurum = getIndex('Durum');
+      const idxOncelik = getIndex('Öncelik');
+      const idxBas = getIndex('Başlangıç Tarihi');
+      const idxBit = getIndex('Bitiş Tarihi');
+
+      const data = rows.map(r => ({
+        sorumlu: r[idxSorumlu],
+        durum: r[idxDurum],
+        oncelik: r[idxOncelik],
+        baslangic: new Date(r[idxBas]),
+        bitis: new Date(r[idxBit])
+      }));
+
+      // 1. Sorumluya göre iş sayısı
+      const sorumluMap = {};
+      data.forEach(d => {
+        sorumluMap[d.sorumlu] = (sorumluMap[d.sorumlu] || 0) + 1;
+      });
+      const sorumluData = [['Sorumlu', 'İş Sayısı']];
+      for (const s in sorumluMap) sorumluData.push([s, sorumluMap[s]]);
+      drawBarChart('chart-sorumlu', sorumluData, 'Sorumluya Göre İş Sayısı');
+
+      // 2. Durum dağılımı
+      const durumMap = {};
+      data.forEach(d => {
+        durumMap[d.durum] = (durumMap[d.durum] || 0) + 1;
+      });
+      const durumData = [['Durum', 'Adet']];
+      for (const d in durumMap) durumData.push([d, durumMap[d]]);
+      drawPieChart('chart-durum', durumData, 'İşlerin Durum Dağılımı');
+
+      // 3. Öncelik dağılımı
+      const oncelikMap = {};
+      data.forEach(d => {
+        oncelikMap[d.oncelik] = (oncelikMap[d.oncelik] || 0) + 1;
+      });
+      const oncelikData = [['Öncelik', 'Adet']];
+      for (const o in oncelikMap) oncelikData.push([o, oncelikMap[o]]);
+      drawPieChart('chart-oncelik', oncelikData, 'Öncelik Dağılımı');
+
+      // 4. Sürelere göre karşılaştırma
+      const sureData = [['Sorumlu', 'Süre (gün)']];
+      data.forEach(d => {
+        const sure = (d.bitis - d.baslangic) / (1000 * 60 * 60 * 24);
+        if (!isNaN(sure)) sureData.push([d.sorumlu, sure]);
+      });
+      drawColumnChart('chart-sure', sureData, 'Görev Süreleri (Gün)');
+    }
+
+    function drawBarChart(id, dataArr, title) {
+      const data = google.visualization.arrayToDataTable(dataArr);
+      const chart = new google.visualization.BarChart(document.getElementById(id));
+      chart.draw(data, { title });
+    }
+
+    function drawPieChart(id, dataArr, title) {
+      const data = google.visualization.arrayToDataTable(dataArr);
+      const chart = new google.visualization.PieChart(document.getElementById(id));
+      chart.draw(data, { title, is3D: true });
+    }
+
+    function drawColumnChart(id, dataArr, title) {
+      const data = google.visualization.arrayToDataTable(dataArr);
+      const chart = new google.visualization.ColumnChart(document.getElementById(id));
+      chart.draw(data, { title });
+    }
+  </script>
+</body>
+</html>
