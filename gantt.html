@@ -1,44 +1,59 @@
+<!-- GANTT grafik sayfası - Form Yanıtları 1 sekmesine bağlı -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Gantt Takvimi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
-  <style>/* stil buraya */</style>
-</head>
-<body>
-  <h1 style="text-align:center;">Gantt Takvimi</h1>
-  <svg id="gantt-target"></svg>
-  <script>
-    async function fetchData() {
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?gid=729938623&single=true&output=csv";
-      const res = await fetch(url);
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      rows.shift(); // başlıkları kaldır
-      const tasks = rows.map((r, i) => ({
-        id: 'T'+(i+1),
-        name: r[0],
-        start: r[1],
-        end: r[2],
-        progress: 100,
-        custom_class: r[3]?.toLowerCase().includes('tamam') ? 'bar-complete' :
-                      r[3]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
-      }));
-      new Gantt("#gantt-target", tasks, {
-        view_mode: 'Week',
-        language: 'tr'
-      });
-    }
-    fetchData();
-  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
   <style>
-    body { font-family: sans-serif; background: #f9f9f9; padding: 2rem; }
+    body {
+      font-family: sans-serif;
+      background: #f9f9f9;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
     .bar-complete { fill: #22c55e !important; }
     .bar-progress { fill: #3b82f6 !important; }
     .bar-pending  { fill: #f59e0b !important; }
   </style>
+</head>
+<body>
+  <h1>Gantt Takvimi</h1>
+  <svg id="gantt-target"></svg>
+  <script>
+    async function fetchData() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?gid=0&single=true&output=csv";
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const rows = text.trim().split('\n').map(r => r.split(','));
+        rows.shift(); // başlıkları kaldır
+
+        const tasks = rows.map((r, i) => ({
+          id: 'T' + (i+1),
+          name: r[1], // İş Başlığı
+          start: r[4], // Başlangıç Tarihi
+          end: r[5],   // Bitiş Tarihi
+          progress: 100,
+          custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
+                        r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
+        }));
+
+        new Gantt("#gantt-target", tasks, {
+          view_mode: 'Week',
+          language: 'tr'
+        });
+      } catch (err) {
+        document.getElementById("gantt-target").insertAdjacentHTML('afterend', '<p style="color:red">Veri alınamadı: ' + err.message + '</p>');
+        console.error(err);
+      }
+    }
+    fetchData();
+  </script>
 </body>
 </html>
