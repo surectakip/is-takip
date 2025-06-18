@@ -4,121 +4,157 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gantt Takvimi</title>
-  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
+      background: #f5f5f5;
       padding: 2rem;
+      margin: 0;
     }
     h1 {
       text-align: center;
-      margin-bottom: 1rem;
     }
     .controls {
-      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
       margin-bottom: 1rem;
+      flex-wrap: wrap;
     }
     .controls button, .controls select {
-      margin: 0 0.25rem;
-      padding: 0.4rem 1rem;
-      font-size: 1rem;
+      padding: 0.6rem 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      background: #007acc;
+      color: white;
+      cursor: pointer;
     }
-    #gantt-container {
+    .controls select {
+      background: #fff;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+    .gantt-container {
       background: white;
       padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
       overflow-x: auto;
+      width: 100%;
+    }
+    svg {
+      width: 100% !important;
+      height: auto;
     }
     .bar-complete { fill: #22c55e !important; }
     .bar-progress { fill: #3b82f6 !important; }
-    .bar-pending  { fill: #f59e0b !important; }
+    .bar-pending  { fill: #fbbf24 !important; }
+    .bar-label { fill: white !important; font-weight: bold; }
+    .today-line {
+      stroke: red;
+      stroke-width: 2px;
+    }
   </style>
 </head>
 <body>
   <h1>Gantt Takvimi</h1>
-
   <div class="controls">
     <button onclick="changeView('Day')">Günlük</button>
     <button onclick="changeView('Week')">Haftalık</button>
     <button onclick="changeView('Month')">Aylık</button>
-    <select id="filter-select" onchange="fetchAndDraw()">
+    <select id="filter-select" onchange="filterTasks()">
       <option value="">Sorumlu: Tümü</option>
     </select>
   </div>
-
-  <div id="gantt-container">
+  <div class="gantt-container">
     <svg id="gantt-target"></svg>
   </div>
 
   <script>
     let gantt;
-    let viewMode = 'Week';
+    let allTasks = [];
+    let currentView = 'Month';
 
-    const cevirTarih = (str) => {
-      if (!str || !str.includes('.')) return str;
-      const [gun, ay, yil] = str.split('.')
-      return `${yil}-${ay}-${gun}`;
-    };
-
-    async function fetchAndDraw() {
-      const res = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv');
+    async function fetchData() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
+      const res = await fetch(url);
       const text = await res.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
       const headers = rows.shift();
 
-      const sorumluIndex = headers.indexOf("Sorumlu");
-      const titleIndex = headers.indexOf("İş Başlığı");
-      const startIndex = headers.indexOf("Başlangıç Tarihi");
-      const endIndex = headers.indexOf("Bitiş Tarihi");
-      const durumIndex = headers.indexOf("Durum");
-      const notIndex = headers.indexOf("Not");
+      const baslikIdx = headers.indexOf("İş Başlığı");
+      const baslangicIdx = headers.indexOf("Başlangıç Tarihi");
+      const bitisIdx = headers.indexOf("Bitiş Tarihi");
+      const sorumluIdx = headers.indexOf("Sorumlu");
+      const notIdx = headers.indexOf("Not");
+      const durumIdx = headers.indexOf("Durum");
 
-      const tasks = rows.map((r, i) => ({
-        id: "G"+(i+1),
-        name: r[titleIndex],
-        start: cevirTarih(r[startIndex]),
-        end: cevirTarih(r[endIndex]),
-        progress: r[durumIndex]?.toLowerCase().includes('tamam') ? 100 : (r[durumIndex]?.toLowerCase().includes('devam') ? 60 : 0),
-        custom_class: r[durumIndex]?.toLowerCase().includes('tamam') ? 'bar-complete' : (r[durumIndex]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'),
-        sorumlu: r[sorumluIndex],
-        not: r[notIndex] || ''
+      allTasks = rows.map((r, i) => ({
+        id: 'G' + (i+1),
+        name: r[baslikIdx],
+        start: toISO(r[baslangicIdx]),
+        end: toISO(r[bitisIdx]),
+        progress: r[durumIdx]?.toLowerCase().includes('tamam') ? 100 : r[durumIdx]?.toLowerCase().includes('devam') ? 50 : 0,
+        custom_class: r[durumIdx]?.toLowerCase().includes('tamam') ? 'bar-complete'
+                      : r[durumIdx]?.toLowerCase().includes('devam') ? 'bar-progress'
+                      : 'bar-pending',
+        sorumlu: r[sorumluIdx],
+        tip: r[notIdx] || ""
       }));
 
       const select = document.getElementById('filter-select');
-      const selected = select.value;
+      const unique = [...new Set(allTasks.map(t => t.sorumlu).filter(Boolean))];
+      unique.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        select.appendChild(opt);
+      });
 
-      if (select.options.length === 1) {
-        const unique = [...new Set(tasks.map(t => t.sorumlu))];
-        unique.forEach(name => {
-          const opt = document.createElement('option');
-          opt.value = name;
-          opt.textContent = name;
-          select.appendChild(opt);
-        });
-      }
+      renderGantt(allTasks);
+    }
 
-      const filtered = selected ? tasks.filter(t => t.sorumlu === selected) : tasks;
+    function renderGantt(tasks) {
+      document.getElementById('gantt-target').innerHTML = '';
 
-      document.getElementById('gantt-container').innerHTML = '<svg id="gantt-target"></svg>';
-
-      gantt = new Gantt("#gantt-target", filtered, {
-        view_mode: viewMode,
+      gantt = new Gantt("#gantt-target", tasks, {
+        view_mode: currentView,
         language: 'tr',
-        bar_height: 25,
-        padding: 50,
-        custom_popup_html: task => `<div style='padding:1rem;'><b>${task.name}</b><br>${task.start} → ${task.end}<br>${task.not}</div>`
+        custom_popup_html: task => `<b>${task.name}</b><br><small>${task.tip}</small>`,
+        on_click: () => {},
+        on_date_change: () => {},
+        on_progress_change: () => {},
+        on_view_change: () => {},
+        bar_height: 24,
+        padding: 38,
+        step: 24,
+        show_today_line: true
       });
     }
 
-    function changeView(mode) {
-      viewMode = mode;
-      fetchAndDraw();
+    function toISO(str) {
+      const parts = str.split(".");
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return str;
     }
 
-    fetchAndDraw();
+    function changeView(mode) {
+      currentView = mode;
+      renderGantt(filterList());
+    }
+
+    function filterList() {
+      const val = document.getElementById('filter-select').value;
+      return val ? allTasks.filter(t => t.sorumlu === val) : allTasks;
+    }
+
+    function filterTasks() {
+      renderGantt(filterList());
+    }
+
+    fetchData();
   </script>
 </body>
 </html>
