@@ -8,69 +8,81 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f9f9f9;
+      font-family: sans-serif;
+      background: #f5f5f5;
+      margin: 0;
       padding: 2rem;
     }
-    .gantt-container {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    #gantt-wrapper {
+      max-width: 100%;
       overflow-x: auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+      padding: 1rem;
     }
+
     svg {
-      width: 100% !important;
+      width: 100%;
     }
+
     .bar-complete { fill: #22c55e !important; }
     .bar-progress { fill: #3b82f6 !important; }
     .bar-pending  { fill: #f59e0b !important; }
+
+    .gantt .bar-label {
+      fill: #111 !important;
+      font-weight: 600;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Gantt Takvimi</h1>
-  <div class="gantt-container">
+  <h1>Gantt Takvimi</h1>
+  <div id="gantt-wrapper">
     <svg id="gantt-target"></svg>
   </div>
+
   <script>
     async function fetchData() {
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?gid=0&single=true&output=csv";
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
       const res = await fetch(url);
       const text = await res.text();
       const rows = text.trim().split('\n').map(r => r.split(','));
-      const headers = rows.shift();
 
-      const taskIdx = headers.findIndex(h => h.toLowerCase().includes('iş başlığı'));
-      const startIdx = headers.findIndex(h => h.toLowerCase().includes('başlangıç'));
-      const endIdx = headers.findIndex(h => h.toLowerCase().includes('bitiş'));
-      const statusIdx = headers.findIndex(h => h.toLowerCase().includes('durum'));
+      rows.shift(); // başlıkları kaldır
 
-      const tasks = rows.map((r, i) => ({
-        id: 'T' + (i+1),
-        name: r[taskIdx],
-        start: formatDate(r[startIdx]),
-        end: formatDate(r[endIdx]),
-        progress: 100,
-        custom_class: (r[statusIdx] || '').toLowerCase().includes('tamam') ? 'bar-complete'
-                      : (r[statusIdx] || '').toLowerCase().includes('devam') ? 'bar-progress'
-                      : 'bar-pending'
-      })).filter(t => t.name && t.start && t.end);
-
-      const chartHeight = tasks.length * 50 + 100;
-      document.querySelector("svg").setAttribute("height", chartHeight);
-
-      new Gantt("#gantt-target", tasks, {
-        view_mode: 'Month',
-        language: 'tr',
-        bar_height: 25,
-        padding: 60,
-        custom_popup_html: null,
+      const tasks = rows.map((r, i) => {
+        const start = r[4]?.trim().split('.').reverse().join('-');
+        const end = r[5]?.trim().split('.').reverse().join('-');
+        return {
+          id: 'T' + (i + 1),
+          name: r[1],
+          start: start,
+          end: end,
+          progress: 100,
+          custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
+                        r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
+        };
       });
-    }
 
-    function formatDate(d) {
-      const parts = d.split(".");
-      return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : null;
+      const gantt = new Gantt("#gantt-target", tasks, {
+        view_mode: 'Week',
+        language: 'tr'
+      });
+
+      // Sayfa genişliğine göre sığdır
+      const scaleFactor = document.body.clientWidth / document.querySelector('svg').clientWidth;
+      if (scaleFactor < 1) {
+        document.querySelector('svg').style.transform = `scale(${scaleFactor})`;
+        document.querySelector('svg').style.transformOrigin = 'top left';
+      }
     }
 
     fetchData();
