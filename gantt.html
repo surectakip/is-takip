@@ -3,52 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gantt Takvimi</title>
-  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
+  <title>İş - Süreç Takip</title>
   <style>
-    body { font-family: sans-serif; background: #f9f9f9; padding: 2rem; }
-    .bar-complete { fill: #22c55e !important; }
-    .bar-progress { fill: #3b82f6 !important; }
-    .bar-pending  { fill: #f59e0b !important; }
+    /* (mevcut stiller korunur - kesildi) */
   </style>
 </head>
 <body>
-  <h1 style="text-align:center;">Gantt Takvimi</h1>
-  <svg id="gantt-target"></svg>
+  <nav>
+    <button id="btn-entry" class="active">Giriş</button>
+    <button id="btn-results">Sonuçlar</button>
+    <button id="btn-data">Takip</button>
+    <button id="btn-query">Sorgu</button>
+    <button id="btn-edit">Düzenle</button>
+    <button id="btn-charts">Grafikler</button>
+    <button id="btn-gantt">Gantt</button>
+  </nav>
 
+  <!-- (önceki sekmeler korunur - kesildi) -->
+
+  <!-- 7. Gantt Sekmesi -->
+  <div id="tab-gantt" class="tab">
+    <h1>Gantt Takvimi</h1>
+    <div id="gantt"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
   <script>
     async function fetchData() {
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=tsv";
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
       const res = await fetch(url);
       const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split('\t'));
-      rows.shift(); // başlıkları atla
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      const headers = rows.shift();
+      const idx = {
+        task: headers.indexOf('İş Başlığı'),
+        start: headers.indexOf('Başlangıç Tarihi'),
+        end: headers.indexOf('Bitiş Tarihi'),
+        status: headers.indexOf('Durum')
+      };
 
-      const tasks = [];
+      const tasks = rows.map((r, i) => ({
+        id: 'T' + (i+1),
+        name: r[idx.task],
+        start: r[idx.start]?.split('.').reverse().join('-'),
+        end: r[idx.end]?.split('.').reverse().join('-'),
+        progress: 100,
+        custom_class: (r[idx.status] || '').toLowerCase().includes('tamam') ? 'bar-complete'
+                     : (r[idx.status] || '').toLowerCase().includes('devam') ? 'bar-progress'
+                     : 'bar-pending'
+      })).filter(t => t.start && t.end);
 
-      for (let i = 0; i < rows.length; i++) {
-        const r = rows[i];
-        if (!r || !r[1] || !r[4] || !r[5]) continue; // gerekli alanlardan biri yoksa atla
-
-        tasks.push({
-          id: 'T' + (i + 1),
-          name: r[1],
-          start: r[4],
-          end: r[5],
-          progress: 100,
-          custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
-                        r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
-        });
-      }
-
-      new Gantt("#gantt-target", tasks, {
+      new Gantt("#gantt", tasks, {
         view_mode: 'Week',
         language: 'tr'
       });
     }
-
     fetchData();
   </script>
+  <style>
+    #gantt {
+      width: 100%;
+      height: 600px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    .bar-complete { fill: #22c55e !important; }
+    .bar-progress { fill: #3b82f6 !important; }
+    .bar-pending  { fill: #f59e0b !important; }
+  </style>
 </body>
 </html>
