@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gantt Takvimi</title>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
+  <style>/* stil buraya */</style>
+</head>
+<body>
+  <h1 style="text-align:center;">Gantt Takvimi</h1>
+  <svg id="gantt-target"></svg>
+  <script>
+    async function fetchData() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?gid=729938623&single=true&output=csv";
+      const res = await fetch(url);
+      const text = await res.text();
+      const rows = text.trim().split('\n').map(r => r.split(','));
+      rows.shift(); // başlıkları kaldır
+      const tasks = rows.map((r, i) => ({
+        id: 'T'+(i+1),
+        name: r[0],
+        start: r[1],
+        end: r[2],
+        progress: 100,
+        custom_class: r[3]?.toLowerCase().includes('tamam') ? 'bar-complete' :
+                      r[3]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
+      }));
+      new Gantt("#gantt-target", tasks, {
+        view_mode: 'Week',
+        language: 'tr'
+      });
+    }
+    fetchData();
+  </script>
+  <style>
+    body { font-family: sans-serif; background: #f9f9f9; padding: 2rem; }
+    .bar-complete { fill: #22c55e !important; }
+    .bar-progress { fill: #3b82f6 !important; }
+    .bar-pending  { fill: #f59e0b !important; }
+  </style>
+</body>
+</html>
