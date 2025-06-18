@@ -3,75 +3,167 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gantt Takvimi</title>
-  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
+  <title>Dinamik Gantt Grafiği</title>
+  <!-- JSGantt Improved kütüphanesi CSS ve JS -->
+  <link rel="stylesheet" href="https://unpkg.com/jsgantt-improved@2.4.6/dist/jsgantt.css" />
+  <script src="https://unpkg.com/jsgantt-improved@2.4.6/dist/jsgantt.js"></script>
+  <!-- Papa Parse kütüphanesi -->
+  <script src="https://unpkg.com/papaparse@5.3.2/papaparse.min.js"></script>
   <style>
-    body {
-      font-family: sans-serif;
-      background: #f5f5f5;
-      margin: 0;
-      padding: 2rem;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    svg {
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-      padding: 1rem;
+    /* Gantt kapsayıcısı tam genişlik ve otomatik yükseklik */
+    #GanttChartDIV {
       width: 100%;
+      /* Yatay taşmayı engelle (gerekirse) */
+      overflow-x: auto;
     }
-
-    .bar-complete { fill: #22c55e !important; }
-    .bar-progress { fill: #3b82f6 !important; }
-    .bar-pending  { fill: #f59e0b !important; }
-
-    .gantt .bar-label {
-      fill: #111 !important;
-      font-weight: 600;
-      font-size: 12px;
-    }
+    /* Durum bazlı renk sınıfları */
+    .gtasktamamlandi { background-color: #22c55e !important; }
+    .gtaskdevamediyor { background-color: #3b82f6 !important; }
+    .gtaskbeklemede { background-color: #facc15 !important; }
   </style>
 </head>
 <body>
-  <h1>Gantt Takvimi</h1>
-  <svg id="gantt-target"></svg>
-
+  
+  <!-- Görünüm geçişi butonları -->
+  <div style="margin-bottom: 1em;">
+    <button onclick="degistirGorunum('day')">Günlük</button>
+    <button onclick="degistirGorunum('week')">Haftalık</button>
+    <button onclick="degistirGorunum('month')">Aylık</button>
+    
+    <!-- Sorumlu filtre dropdown -->
+    <label for="sorumluSec">Sorumlu:</label>
+    <select id="sorumluSec" onchange="filtreleSorumlu()">
+      <option value="ALL">Tümü</option>
+      <!-- JavaScript ile diğer seçenekler eklenecek -->
+    </select>
+  </div>
+  
+  <!-- Gantt grafiği kapsayıcısı -->
+  <div id="GanttChartDIV"></div>
+  
   <script>
-    async function fetchData() {
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
-      const res = await fetch(url);
-      const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-
-      rows.shift(); // başlıkları kaldır
-
-      const tasks = rows.map((r, i) => {
-        const start = r[4]?.trim().split('.').reverse().join('-');
-        const end = r[5]?.trim().split('.').reverse().join('-');
-        return {
-          id: 'T' + (i + 1),
-          name: r[1],
-          start: start,
-          end: end,
-          progress: 100,
-          custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
-                        r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
-        };
+    // Google Sheets CSV URL
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
+    // Tüm görev verilerini tutacak dizi
+    let gorevler = [];
+    // Gantt grafiği nesnesi (global olarak erişilebilir yapıyoruz ki filtrelemede kullanabilelim)
+    let gantt;
+    
+    // CSV verisini çek ve grafiği hazırla
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        gorevler = results.data;
+        // Dropdown'a sorumluları yükle
+        doldurSorumluListesi();
+        // Gantt grafiğini oluştur
+        cizGantt('week'); // Varsayılan görünüm: haftalık
+      }
+    });
+    
+    // Sorumlu dropdown seçeneklerini doldur
+    function doldurSorumluListesi() {
+      const sorumluSec = document.getElementById('sorumluSec');
+      let sorumlular = new Set();
+      gorevler.forEach(gorev => {
+        const sorumlu = gorev["Sorumlu"];
+        if (sorumlu && sorumlu.trim() !== "") {
+          sorumlular.add(sorumlu.trim());
+        }
       });
-
-      new Gantt("#gantt-target", tasks, {
-        view_mode: 'Week',
-        language: 'tr'
+      // Her bir sorumlu için dropdown'a option ekle
+      sorumlular.forEach(isim => {
+        const opt = document.createElement('option');
+        opt.value = isim;
+        opt.textContent = isim;
+        sorumluSec.appendChild(opt);
       });
     }
-
-    fetchData();
+    
+    // Gantt grafiğini belirtilen formatla çizen fonksiyon
+    function cizGantt(format) {
+      // Önce eski grafik içerğini temizleyelim (eğer varsa)
+      document.getElementById('GanttChartDIV').innerHTML = "";
+      // Gantt nesnesini oluştur
+      gantt = new JSGantt.GanttChart(document.getElementById('GanttChartDIV'), format);
+      if (!gantt) {
+        alert("Gantt grafiği init edilemedi!");
+        return;
+      }
+      // İstenen opsiyonlar:
+      gantt.setOptions({
+        vFormatArr: ['Day', 'Week', 'Month'],            // Görünüm geçiş seçenekleri
+        vCaptionType: 'Complete',                       // Görev çubuğunda yüzde gösterimi (opsiyonel)
+        vDateTaskDisplayFormat: 'day dd/mm/yyyy',       // Tooltip tarih formatı
+        vDayMajorDateDisplayFormat: 'yyyy mmmm',        // Günlük görünüm üst başlık formatı
+        vWeekMinorDateDisplayFormat: 'dd/mm',           // Haftalık görünüm alt birim formatı
+        vLang: 'tr',                                    // Dil Türkçe (yerelleştirme desteği)
+        vUseSingleCell: 10000,                          // Büyük grafiklerde performans için
+        vShowRes: 1,   // "Sorumlu" sütununu göster
+        vShowDur: 1,   // "Süre" sütununu göster (hesaplanabilir)
+        vShowComp: 1,  // "% Tamamlanma" sütununu göster
+        vShowStartDate: 1,
+        vShowEndDate: 1,
+      });
+      // Görevleri Gantt grafiğine ekle
+      let filtrelenenGorevler = gorevler; // varsayılan tüm görevler
+      const seciliSorumlu = document.getElementById('sorumluSec').value;
+      if (seciliSorumlu && seciliSorumlu !== "ALL") {
+        // Belirli bir sorumlu seçildiyse, görev listesini filtrele
+        filtrelenenGorevler = gorevler.filter(g => g["Sorumlu"] === seciliSorumlu);
+      }
+      // Her görevi ekle
+      filtrelenenGorevler.forEach((gorev, idx) => {
+        // Gantt beklediği tarih formatı: "YYYY-MM-DD" veya "YYYY-MM-DD HH:MM"
+        // Google Sheets tarihleri uygun formatta gelmeyebilir, gerekiyorsa dönüşüm yapın.
+        let basla = gorev["Başlangıç Tarihi"] || gorev["Baslangıç"] || gorev["Başlangıç"]; 
+        let bitis = gorev["Bitiş Tarihi"] || gorev["Bitiş"]; 
+        // Durum -> sınıf eşleştirme
+        let sinif = "gtask"; // default prefix
+        if (gorev["Durum"] === "Tamamlandı") sinif = "gtasktamamlandi";
+        else if (gorev["Durum"] === "Devam Ediyor") sinif = "gtaskdevamediyor";
+        else if (gorev["Durum"] === "Beklemede") sinif = "gtaskbeklemede";
+        // Görev ekleme
+        gantt.AddTaskItemObject({
+          pID: idx + 1,
+          pName: gorev["Görev"] || gorev["Görev Adı"] || "Görev " + (idx+1),
+          pStart: basla,
+          pEnd: bitis,
+          pClass: sinif,
+          pLink: "",           // (opsiyonel) daha fazla bilgi linki
+          pMile: 0,            // milestone değil
+          pRes: gorev["Sorumlu"] || "",
+          pComp: gorev["Tamamlanma"] ? parseInt(gorev["Tamamlanma"]) : 0, // varsa tamamlanma %
+          pGroup: 0,           // normal görev (grup değil)
+          pParent: 0,          // üst görevi yok (düz seviye)
+          pOpen: 1,            // (grup için) açık/kapalı
+          pDepend: "",         // bağımlılık yok
+          pCaption: "",        // opsiyonel başlık
+          pNotes: gorev["Not"] || ""  // Not sütunu içeriği (tooltipte görünecek)
+        });
+      });
+      // Grafiği çiz
+      gantt.Draw();
+    }
+    
+    // Görünüm değiştir butonlarının çağıracağı fonksiyon
+    function degistirGorunum(format) {
+      if (gantt) {
+        gantt.setFormat(format);
+        gantt.Draw();
+      } else {
+        // Eğer grafik henüz yoksa, doğrudan cizGantt ile oluştur
+        cizGantt(format);
+      }
+    }
+    
+    // Sorumlu filtreleme fonksiyonu
+    function filtreleSorumlu() {
+      // Mevcut görünümü koruyarak grafiği yeniden çiz
+      const mevcutFormat = gantt ? gantt.getFormat() : 'week';
+      cizGantt(mevcutFormat);
+    }
   </script>
 </body>
 </html>
