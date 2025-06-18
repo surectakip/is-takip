@@ -1,94 +1,59 @@
+<!-- GANTT grafik sayfası - Form Yanıtları 1 sekmesine bağlı -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>İş - Süreç Takip</title>
+  <meta charset="UTF-8">
+  <title>Gantt Takvimi</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      background-color: #0d6efd;
-      padding: 10px 0;
-    }
-    nav button {
-      padding: 10px 15px;
-      border: none;
-      background-color: #0d6efd;
-      color: white;
-      cursor: pointer;
-      font-weight: bold;
-    }
-    nav button.active {
-      background-color: #084298;
-    }
-    .tab {
-      display: none;
+      font-family: sans-serif;
+      background: #f9f9f9;
       padding: 2rem;
     }
-    .tab.active {
-      display: block;
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
     }
-    iframe {
-      width: 100%;
-      height: 80vh;
-      border: none;
-    }
+    .bar-complete { fill: #22c55e !important; }
+    .bar-progress { fill: #3b82f6 !important; }
+    .bar-pending  { fill: #f59e0b !important; }
   </style>
 </head>
 <body>
-  <nav>
-    <button id="btn-entry" class="active">Giriş</button>
-    <button id="btn-results">Sonuçlar</button>
-    <button id="btn-data">Takip</button>
-    <button id="btn-query">Sorgu</button>
-    <button id="btn-edit">Düzenle</button>
-    <button id="btn-charts">Grafikler</button>
-    <button id="btn-gantt">Gantt</button>
-  </nav>
-
-  <div id="tab-entry" class="tab active">
-    <h1>Giriş</h1>
-  </div>
-  <div id="tab-results" class="tab">
-    <h1>Sonuçlar</h1>
-  </div>
-  <div id="tab-data" class="tab">
-    <h1>Takip</h1>
-  </div>
-  <div id="tab-query" class="tab">
-    <h1>Sorgu</h1>
-  </div>
-  <div id="tab-edit" class="tab">
-    <h1>Düzenle</h1>
-  </div>
-  <div id="tab-charts" class="tab">
-    <h1>Grafikler</h1>
-  </div>
-  <div id="tab-gantt" class="tab">
-    <h1>Gantt Takvimi</h1>
-    <iframe src="gantt.html" title="Gantt Çizelgesi"></iframe>
-  </div>
-
+  <h1>Gantt Takvimi</h1>
+  <svg id="gantt-target"></svg>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const tabs = ['entry', 'results', 'data', 'query', 'edit', 'charts', 'gantt'];
-      tabs.forEach(t => {
-        document.getElementById('btn-' + t).onclick = () => {
-          tabs.forEach(x => {
-            document.getElementById('btn-' + x).classList.toggle('active', x === t);
-            document.getElementById('tab-' + x).classList.toggle('active', x === t);
-          });
-          if (t === 'data') loadData?.();
-        };
-      });
-    });
+    async function fetchData() {
+      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?gid=0&single=true&output=csv";
+      try {
+        const res = await fetch(url);
+        const text = await res.text();
+        const rows = text.trim().split('\n').map(r => r.split(','));
+        rows.shift(); // başlıkları kaldır
+
+        const tasks = rows.map((r, i) => ({
+          id: 'T' + (i+1),
+          name: r[1], // İş Başlığı
+          start: r[4], // Başlangıç Tarihi
+          end: r[5],   // Bitiş Tarihi
+          progress: 100,
+          custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
+                        r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
+        }));
+
+        new Gantt("#gantt-target", tasks, {
+          view_mode: 'Week',
+          language: 'tr'
+        });
+      } catch (err) {
+        document.getElementById("gantt-target").insertAdjacentHTML('afterend', '<p style="color:red">Veri alınamadı: ' + err.message + '</p>');
+        console.error(err);
+      }
+    }
+    fetchData();
   </script>
 </body>
 </html>
