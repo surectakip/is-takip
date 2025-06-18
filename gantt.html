@@ -19,11 +19,16 @@
       margin-bottom: 2rem;
     }
 
-    svg {
+    #gantt-wrapper {
+      max-width: 100%;
+      overflow-x: auto;
       background: white;
       border-radius: 10px;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       padding: 1rem;
+    }
+
+    svg {
       width: 100%;
     }
 
@@ -40,7 +45,9 @@
 </head>
 <body>
   <h1>Gantt Takvimi</h1>
-  <svg id="gantt-target"></svg>
+  <div id="gantt-wrapper">
+    <svg id="gantt-target"></svg>
+  </div>
 
   <script>
     async function fetchData() {
@@ -65,10 +72,17 @@
         };
       });
 
-      new Gantt("#gantt-target", tasks, {
+      const gantt = new Gantt("#gantt-target", tasks, {
         view_mode: 'Week',
         language: 'tr'
       });
+
+      // Sayfa genişliğine göre sığdır
+      const scaleFactor = document.body.clientWidth / document.querySelector('svg').clientWidth;
+      if (scaleFactor < 1) {
+        document.querySelector('svg').style.transform = `scale(${scaleFactor})`;
+        document.querySelector('svg').style.transformOrigin = 'top left';
+      }
     }
 
     fetchData();
