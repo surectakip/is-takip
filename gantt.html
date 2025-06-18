@@ -23,17 +23,24 @@
       const res = await fetch(url);
       const text = await res.text();
       const rows = text.trim().split('\n').map(r => r.split('\t'));
-      rows.shift(); // Başlık satırını çıkar
+      rows.shift(); // başlıkları atla
 
-      const tasks = rows.map((r, i) => ({
-        id: 'T' + (i + 1),
-        name: r[1],
-        start: r[4],
-        end: r[5],
-        progress: 100,
-        custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
-                      r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
-      }));
+      const tasks = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r || !r[1] || !r[4] || !r[5]) continue; // gerekli alanlardan biri yoksa atla
+
+        tasks.push({
+          id: 'T' + (i + 1),
+          name: r[1],
+          start: r[4],
+          end: r[5],
+          progress: 100,
+          custom_class: r[8]?.toLowerCase().includes('tamam') ? 'bar-complete' :
+                        r[8]?.toLowerCase().includes('devam') ? 'bar-progress' : 'bar-pending'
+        });
+      }
 
       new Gantt("#gantt-target", tasks, {
         view_mode: 'Week',
