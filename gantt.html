@@ -2,9 +2,8 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gantt Takvimi</title>
-  <script type="module" src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css" />
   <style>
     body {
@@ -13,54 +12,54 @@
       padding: 2rem;
       margin: 0;
     }
+
     h1 {
       text-align: center;
+      margin-bottom: 1rem;
     }
+
     .controls {
       display: flex;
+      flex-wrap: wrap;
       justify-content: center;
       gap: 1rem;
       margin-bottom: 1rem;
-      flex-wrap: wrap;
     }
-    .controls button, .controls select {
-      padding: 0.6rem 1rem;
-      font-weight: bold;
-      border: none;
-      border-radius: 4px;
-      background: #007acc;
-      color: white;
-      cursor: pointer;
-    }
-    .controls select {
-      background: #fff;
-      color: #333;
+
+    .controls select,
+    .controls button {
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      border-radius: 5px;
       border: 1px solid #ccc;
     }
-    .gantt-container {
-      background: white;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+    #gantt-container {
       overflow-x: auto;
-      width: 100%;
+      background: white;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      max-width: 100%;
     }
-    svg {
-      width: 100% !important;
-      height: auto;
-    }
+
     .bar-complete { fill: #22c55e !important; }
     .bar-progress { fill: #3b82f6 !important; }
-    .bar-pending  { fill: #fbbf24 !important; }
-    .bar-label { fill: white !important; font-weight: bold; }
-    .today-line {
-      stroke: red;
-      stroke-width: 2px;
+    .bar-pending  { fill: #facc15 !important; }
+    .popup-detail { font-size: 0.9rem; color: #444; }
+
+    @media (max-width: 600px) {
+      .controls {
+        flex-direction: column;
+        align-items: center;
+      }
     }
   </style>
 </head>
 <body>
+
   <h1>Gantt Takvimi</h1>
+
   <div class="controls">
     <button onclick="changeView('Day')">Günlük</button>
     <button onclick="changeView('Week')">Haftalık</button>
@@ -69,89 +68,94 @@
       <option value="">Sorumlu: Tümü</option>
     </select>
   </div>
-  <div class="gantt-container">
-    <svg id="gantt-target"></svg>
+
+  <div id="gantt-container">
+    <svg id="gantt"></svg>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js"></script>
   <script>
-    let gantt;
+    const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?gid=0&single=true&output=csv";
+
     let allTasks = [];
-    let currentView = 'Month';
+    let gantt;
 
     async function fetchData() {
-      const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
-      const res = await fetch(url);
+      const res = await fetch(CSV_URL);
       const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
+      const rows = text.trim().split("\n").map(r => r.split(","));
       const headers = rows.shift();
+      
+      const başlık = headers.indexOf("İş Başlığı");
+      const sorumlu = headers.indexOf("Sorumlu");
+      const başlangıç = headers.indexOf("Başlangıç Tarihi");
+      const bitiş = headers.indexOf("Bitiş Tarihi");
+      const durum = headers.indexOf("Durum");
+      const not = headers.indexOf("Not");
 
-      const baslikIdx = headers.indexOf("İş Başlığı");
-      const baslangicIdx = headers.indexOf("Başlangıç Tarihi");
-      const bitisIdx = headers.indexOf("Bitiş Tarihi");
-      const sorumluIdx = headers.indexOf("Sorumlu");
-      const notIdx = headers.indexOf("Not");
-      const durumIdx = headers.indexOf("Durum");
-
-      allTasks = rows.map((r, i) => ({
-        id: 'G' + (i+1),
-        name: r[baslikIdx],
-        start: toISO(r[baslangicIdx]),
-        end: toISO(r[bitisIdx]),
-        progress: r[durumIdx]?.toLowerCase().includes('tamam') ? 100 : r[durumIdx]?.toLowerCase().includes('devam') ? 50 : 0,
-        custom_class: r[durumIdx]?.toLowerCase().includes('tamam') ? 'bar-complete'
-                      : r[durumIdx]?.toLowerCase().includes('devam') ? 'bar-progress'
-                      : 'bar-pending',
-        sorumlu: r[sorumluIdx],
-        tip: r[notIdx] || ""
+      const tasks = rows.map((r, i) => ({
+        id: "task-" + i,
+        name: r[başlık],
+        start: formatDate(r[başlangıç]),
+        end: formatDate(r[bitiş]),
+        progress: 100,
+        custom_class: r[durum].toLowerCase().includes("tamam") ? "bar-complete" :
+                      r[durum].toLowerCase().includes("devam") ? "bar-progress" : "bar-pending",
+        responsible: r[sorumlu],
+        note: r[not]
       }));
 
-      const select = document.getElementById('filter-select');
-      const unique = [...new Set(allTasks.map(t => t.sorumlu).filter(Boolean))];
-      unique.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v; opt.textContent = v;
-        select.appendChild(opt);
-      });
+      allTasks = tasks;
+      populateFilterOptions(tasks.map(t => t.responsible));
+      renderGantt(tasks);
+    }
 
-      renderGantt(allTasks);
+    function formatDate(d) {
+      const parts = d.split(".");
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
 
     function renderGantt(tasks) {
-      document.getElementById('gantt-target').innerHTML = '';
-
-      gantt = new Gantt("#gantt-target", tasks, {
-        view_mode: currentView,
-        language: 'tr',
-        custom_popup_html: task => `<b>${task.name}</b><br><small>${task.tip}</small>`,
-        on_click: () => {},
-        on_date_change: () => {},
-        on_progress_change: () => {},
-        on_view_change: () => {},
+      document.getElementById("gantt").innerHTML = ""; // temizle
+      gantt = new Gantt("#gantt", tasks, {
+        view_mode: "Week",
+        language: "tr",
         bar_height: 24,
-        padding: 38,
-        step: 24,
-        show_today_line: true
+        padding: 36,
+        custom_popup_html: function(task) {
+          return `
+            <div class="details-container">
+              <strong>${task.name}</strong><br/>
+              <span class="popup-detail">${task.note || "Açıklama yok"}</span>
+            </div>
+          `;
+        },
+        on_click: () => {}, // kullanıcı müdahalesini engelle
+        on_date_change: () => false,
+        on_progress_change: () => false,
+        on_view_change: () => {}
       });
     }
 
-    function toISO(str) {
-      const parts = str.split(".");
-      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-      return str;
-    }
-
     function changeView(mode) {
-      currentView = mode;
-      renderGantt(filterList());
+      gantt.change_view_mode(mode);
     }
 
-    function filterList() {
-      const val = document.getElementById('filter-select').value;
-      return val ? allTasks.filter(t => t.sorumlu === val) : allTasks;
+    function populateFilterOptions(list) {
+      const select = document.getElementById("filter-select");
+      const unique = [...new Set(list)];
+      unique.forEach(name => {
+        const option = document.createElement("option");
+        option.value = name;
+        option.textContent = `Sorumlu: ${name}`;
+        select.appendChild(option);
+      });
     }
 
     function filterTasks() {
-      renderGantt(filterList());
+      const value = document.getElementById("filter-select").value;
+      const filtered = value ? allTasks.filter(t => t.responsible === value) : allTasks;
+      renderGantt(filtered);
     }
 
     fetchData();
