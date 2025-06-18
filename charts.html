@@ -1,104 +1,146 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>İş Grafik Analizleri</title>
-  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <meta charset="UTF-8" />
+  <title>İş Takip - Grafikler</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 1rem; background: #f4f4f4; }
-    h2 { text-align: center; color: #222; }
-    .chart-container { max-width: 900px; margin: 2rem auto; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    iframe { width: 100%; border: none; }
+    body {
+      font-family: sans-serif;
+      background: #f0f4f8;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h2 {
+      margin-top: 3rem;
+    }
+
+    .card {
+      flex: 1 1 180px;
+      padding: 1rem;
+      border-radius: 12px;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      font-size: 1.2rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+
+    .dashboard {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+
+    .bg-blue { background-color: #3b82f6; }
+    .bg-green { background-color: #22c55e; }
+    .bg-orange { background-color: #f97316; }
+    .bg-yellow { background-color: #eab308; color: black; }
+    .bg-purple { background-color: #8b5cf6; }
   </style>
 </head>
 <body>
-  <h2>İş Grafik Analizleri</h2>
-  <div id="chart1" class="chart-container"></div>
-  <div id="chart2" class="chart-container"></div>
-  <div id="chart3" class="chart-container"></div>
-  <div id="chart4" class="chart-container"></div>
+  <h1>📊 İş Takip Sistemi - Grafikler</h1>
+
+  <!-- Dashboard Kutuları -->
+  <div class="dashboard">
+    <div class="card bg-blue">Toplam İş<br><span id="total-tasks">-</span></div>
+    <div class="card bg-green">Tamamlanan<br><span id="completed-tasks">-</span></div>
+    <div class="card bg-orange">Devam Eden<br><span id="inprogress-tasks">-</span></div>
+    <div class="card bg-yellow">Bekleyen<br><span id="pending-tasks">-</span></div>
+    <div class="card bg-purple">Ortalama Süre<br><span id="avg-duration">- gün</span></div>
+  </div>
+
+  <!-- Grafik Alanları -->
+  <canvas id="chart1" height="200"></canvas>
+  <canvas id="chart2" height="200"></canvas>
+  <canvas id="chart3" height="200"></canvas>
+  <canvas id="chart4" height="200"></canvas>
 
   <script>
-    google.charts.load('current', {'packages':['corechart']});
-    google.charts.setOnLoadCallback(fetchAndDraw);
-
-    async function fetchAndDraw() {
+    async function loadCharts() {
       const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR3FYXQ_1zylldMKZ73oBRLvbE0QgfOfdZoR6ZP6Pay-D_YH2uuiptRt5XsJIQekxOkbwRplBBGNT4u/pub?output=csv";
       const res = await fetch(url);
       const text = await res.text();
-      const rows = text.trim().split('\n').map(r => r.split(','));
-      const headers = rows.shift();
+      const rows = text.trim().split('\n').slice(1).map(r => r.split(','));
 
-      // Kolon indeksleri
-      const sorumluIdx = headers.indexOf("Sorumlu");
-      const durumIdx = headers.indexOf("Durum");
-      const oncelikIdx = headers.indexOf("\u00d6ncelik");
-      const baslangicIdx = headers.indexOf("Başlangıç Tarihi");
-      const bitisIdx = headers.indexOf("Bitiş Tarihi");
+      const toplam = rows.length;
+      const tamam = rows.filter(r => r[8].toLowerCase().includes("tamam")).length;
+      const devam = rows.filter(r => r[8].toLowerCase().includes("devam")).length;
+      const bekleyen = rows.filter(r => !r[8].toLowerCase().includes("tamam") && !r[8].toLowerCase().includes("devam")).length;
 
-      const data = rows.map(r => ({
-        sorumlu: r[sorumluIdx],
-        durum: r[durumIdx],
-        oncelik: r[oncelikIdx],
-        sure: daysBetween(r[baslangicIdx], r[bitisIdx])
-      }));
+      const durations = rows.map(r => {
+        const start = new Date(r[4]);
+        const end = new Date(r[5]);
+        return isNaN(start) || isNaN(end) ? 0 : Math.round((end - start) / (1000 * 60 * 60 * 24));
+      }).filter(d => d > 0);
 
-      drawSorumluChart(data);
-      drawDurumChart(data);
-      drawOncelikChart(data);
-      drawSureChart(data);
+      const ortalama = durations.length ? Math.round(durations.reduce((a,b) => a+b, 0) / durations.length) : 0;
+
+      document.getElementById('total-tasks').innerText = toplam;
+      document.getElementById('completed-tasks').innerText = tamam;
+      document.getElementById('inprogress-tasks').innerText = devam;
+      document.getElementById('pending-tasks').innerText = bekleyen;
+      document.getElementById('avg-duration').innerText = `${ortalama} gün`;
+
+      // 1. Grafik: Sorumluya göre iş sayısı
+      const bySorumlu = {};
+      rows.forEach(r => {
+        const key = r[3].trim();
+        bySorumlu[key] = (bySorumlu[key] || 0) + 1;
+      });
+
+      new Chart(document.getElementById("chart1"), {
+        type: "bar",
+        data: {
+          labels: Object.keys(bySorumlu),
+          datasets: [{ label: "Sorumluya Göre İş", data: Object.values(bySorumlu), backgroundColor: "#3b82f6" }]
+        }
+      });
+
+      // 2. Grafik: Durum dağılımı
+      new Chart(document.getElementById("chart2"), {
+        type: "pie",
+        data: {
+          labels: ["Tamamlandı", "Devam Ediyor", "Bekleyen"],
+          datasets: [{ data: [tamam, devam, bekleyen], backgroundColor: ["#22c55e", "#3b82f6", "#eab308"] }]
+        }
+      });
+
+      // 3. Grafik: Öncelik dağılımı
+      const byPriority = {};
+      rows.forEach(r => {
+        const key = r[6].trim().toLowerCase();
+        byPriority[key] = (byPriority[key] || 0) + 1;
+      });
+
+      new Chart(document.getElementById("chart3"), {
+        type: "doughnut",
+        data: {
+          labels: Object.keys(byPriority),
+          datasets: [{ data: Object.values(byPriority), backgroundColor: ["#f97316", "#8b5cf6", "#0ea5e9"] }]
+        }
+      });
+
+      // 4. Grafik: İşlerin sürelerine göre dağılım (süre histogramı)
+      const byDuration = {};
+      durations.forEach(d => {
+        const bucket = `${d} gün`;
+        byDuration[bucket] = (byDuration[bucket] || 0) + 1;
+      });
+
+      new Chart(document.getElementById("chart4"), {
+        type: "bar",
+        data: {
+          labels: Object.keys(byDuration),
+          datasets: [{ label: "İş Süresi (gün)", data: Object.values(byDuration), backgroundColor: "#10b981" }]
+        }
+      });
     }
 
-    function daysBetween(start, end) {
-      try {
-        const s = new Date(start);
-        const e = new Date(end);
-        return (e - s) / (1000 * 60 * 60 * 24);
-      } catch { return 0; }
-    }
-
-    function drawSorumluChart(data) {
-      const counts = {};
-      data.forEach(d => { counts[d.sorumlu] = (counts[d.sorumlu] || 0) + 1; });
-      const chartData = [['Sorumlu', 'İş Sayısı']].concat(
-        Object.entries(counts)
-      );
-      const dt = google.visualization.arrayToDataTable(chartData);
-      const chart = new google.visualization.ColumnChart(document.getElementById('chart1'));
-      chart.draw(dt, {title: 'Sorumluya Göre İş Dağılımı'});
-    }
-
-    function drawDurumChart(data) {
-      const counts = {};
-      data.forEach(d => { counts[d.durum] = (counts[d.durum] || 0) + 1; });
-      const chartData = [['Durum', 'Adet']].concat(
-        Object.entries(counts)
-      );
-      const dt = google.visualization.arrayToDataTable(chartData);
-      const chart = new google.visualization.PieChart(document.getElementById('chart2'));
-      chart.draw(dt, {title: 'Duruma Göre İş Dağılımı'});
-    }
-
-    function drawOncelikChart(data) {
-      const counts = {};
-      data.forEach(d => { counts[d.oncelik] = (counts[d.oncelik] || 0) + 1; });
-      const chartData = [['Öncelik', 'Adet']].concat(
-        Object.entries(counts)
-      );
-      const dt = google.visualization.arrayToDataTable(chartData);
-      const chart = new google.visualization.ColumnChart(document.getElementById('chart3'));
-      chart.draw(dt, {title: 'Öncelik Durumuna Göre İşler'});
-    }
-
-    function drawSureChart(data) {
-      const chartData = [['Sorumlu', 'Süre (gün)']].concat(
-        data.map(d => [d.sorumlu + ' (' + d.durum + ')', d.sure])
-      );
-      const dt = google.visualization.arrayToDataTable(chartData);
-      const chart = new google.visualization.BarChart(document.getElementById('chart4'));
-      chart.draw(dt, {title: 'İş Süreleri Karşılaştırması'});
-    }
+    loadCharts();
   </script>
 </body>
 </html>
